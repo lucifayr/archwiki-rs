@@ -60,7 +60,7 @@ async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
     Ok(Html::parse_document(&body))
 }
 
-fn get_page_content<'a>(document: &'a Html) -> Option<ElementRef<'a>> {
+fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
     let selector =
         Selector::parse(".mw-parser-output").expect(".mw-parser-output should be valid selector");
     document.select(&selector).next()
