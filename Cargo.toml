@@ -9,4 +9,5 @@ edition = "2021"
 clap = { version = "4.2.5", features = ["derive"] }
 reqwest = "0.11.17"
 scraper = "0.16.0"
+thiserror = "1.0.40"
 tokio = { version = "1.28.0", features = ["full"] }

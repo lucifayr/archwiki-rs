@@ -1,5 +1,6 @@
 use clap::Parser;
 use scraper::{ElementRef, Html, Node, Selector};
+use thiserror::Error;
 
 #[derive(Parser)]
 struct CliArgs {
@@ -7,11 +8,26 @@ struct CliArgs {
     article: String,
 }
 
+#[derive(Error, Debug)]
+enum WikiError {
+    #[error("A network error occurred")]
+    NetworkError(#[from] reqwest::Error),
+    #[error("A HTML parsing error occurred")]
+    HtmlError(String),
+}
+
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
-    let document = fetch_article(&args.article).await.unwrap();
-    let content = get_article_content(&document).unwrap();
+    let document = fetch_article(&args.article).await?;
+    let content = match get_article_content(&document) {
+        Some(content) => content,
+        None => {
+            return Err(WikiError::HtmlError(
+                "Failed to find article content".to_owned(),
+            ))
+        }
+    };
 
     let res = content
         .descendants()
@@ -23,6 +39,7 @@ async fn main() {
         .join("");
 
     println!("{res}");
+    Ok(())
 }
 
 async fn fetch_article(article: &str) -> Result<Html, reqwest::Error> {
