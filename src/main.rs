@@ -42,6 +42,12 @@ async fn main() -> Result<(), WikiError> {
     Ok(())
 }
 
+async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
+    // The holy page
+    // https://wiki.archlinux.org/api.php
+    todo!()
+}
+
 async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
     let body = reqwest::get(format!(
         "https://wiki.archlinux.org/title/{title}",
