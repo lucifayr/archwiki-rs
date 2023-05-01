@@ -1,16 +1,17 @@
-use reqwest::Error;
-use scraper::{Html, Node, Selector};
+use clap::Parser;
+use scraper::{ElementRef, Html, Node, Selector};
+
+#[derive(Parser)]
+struct CliArgs {
+    // The title of the article to retrieve from the Archwiki
+    article: String,
+}
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
-    let body = reqwest::get("https://wiki.archlinux.org/title/Installation_guide")
-        .await?
-        .text()
-        .await?;
-
-    let document = Html::parse_document(&body);
-    let content_selector = Selector::parse(".mw-parser-output").unwrap();
-    let content = document.select(&content_selector).next().unwrap();
+async fn main() {
+    let args = CliArgs::parse();
+    let document = fetch_article(&args.article).await.unwrap();
+    let content = get_article_content(&document).unwrap();
 
     let res = content
         .descendants()
@@ -22,6 +23,22 @@ async fn main() -> Result<(), Error> {
         .join("");
 
     println!("{res}");
+}
 
-    Ok(())
+async fn fetch_article(article: &str) -> Result<Html, reqwest::Error> {
+    let body = reqwest::get(format!(
+        "https://wiki.archlinux.org/title/{title}",
+        title = article
+    ))
+    .await?
+    .text()
+    .await?;
+
+    Ok(Html::parse_document(&body))
+}
+
+fn get_article_content<'a>(document: &'a Html) -> Option<ElementRef<'a>> {
+    let selector =
+        Selector::parse(".mw-parser-output").expect(".mw-parser-output should be valid selector");
+    document.select(&selector).next()
 }
