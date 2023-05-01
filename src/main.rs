@@ -4,8 +4,8 @@ use thiserror::Error;
 
 #[derive(Parser)]
 struct CliArgs {
-    // The title of the article to retrieve from the Archwiki
-    article: String,
+    // The title of the page to retrieve from the Archwiki
+    page: String,
 }
 
 #[derive(Error, Debug)]
@@ -19,12 +19,12 @@ enum WikiError {
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
-    let document = fetch_article(&args.article).await?;
-    let content = match get_article_content(&document) {
+    let document = fetch_page(&args.page).await?;
+    let content = match get_page_content(&document) {
         Some(content) => content,
         None => {
             return Err(WikiError::HtmlError(
-                "Failed to find article content".to_owned(),
+                "Failed to find page content".to_owned(),
             ))
         }
     };
@@ -42,10 +42,10 @@ async fn main() -> Result<(), WikiError> {
     Ok(())
 }
 
-async fn fetch_article(article: &str) -> Result<Html, reqwest::Error> {
+async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
     let body = reqwest::get(format!(
         "https://wiki.archlinux.org/title/{title}",
-        title = article
+        title = page
     ))
     .await?
     .text()
@@ -54,7 +54,7 @@ async fn fetch_article(article: &str) -> Result<Html, reqwest::Error> {
     Ok(Html::parse_document(&body))
 }
 
-fn get_article_content<'a>(document: &'a Html) -> Option<ElementRef<'a>> {
+fn get_page_content<'a>(document: &'a Html) -> Option<ElementRef<'a>> {
     let selector =
         Selector::parse(".mw-parser-output").expect(".mw-parser-output should be valid selector");
     document.select(&selector).next()
