@@ -18,6 +18,7 @@ enum WikiError {
 
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
+    fetch_all_page_names().await.unwrap();
     let args = CliArgs::parse();
     let document = fetch_page(&args.page).await?;
     let content = match get_page_content(&document) {
@@ -43,21 +44,48 @@ async fn main() -> Result<(), WikiError> {
 }
 
 async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
-    // The holy page
-    // https://wiki.archlinux.org/api.php
+    let document = fetch_page("Table_of_contents").await.unwrap();
+    let selector = Selector::parse(".mw-parser-output").unwrap();
+
+    let hrefs = document
+        .select(&selector)
+        .next()
+        .unwrap()
+        .descendants()
+        .filter_map(|node| extract_href(node.value()))
+        .collect::<Vec<String>>();
+
+    println!("{}", hrefs.join("\n"));
     todo!()
 }
 
+fn extract_href(node: &Node) -> Option<String> {
+    if let Node::Element(e) = node {
+        if e.name() == "a" {
+            if let Some(href) = e.attr("href") {
+                Some(href.to_owned())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+async fn fetch_html(url: &str) -> Result<Html, reqwest::Error> {
+    let body = reqwest::get(url).await?.text().await?;
+    Ok(Html::parse_document(&body))
+}
+
 async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
-    let body = reqwest::get(format!(
+    fetch_html(&format!(
         "https://wiki.archlinux.org/title/{title}",
         title = page
     ))
-    .await?
-    .text()
-    .await?;
-
-    Ok(Html::parse_document(&body))
+    .await
 }
 
 fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
