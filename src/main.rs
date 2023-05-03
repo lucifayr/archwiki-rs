@@ -18,7 +18,9 @@ enum WikiError {
 
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
-    fetch_all_page_names().await.unwrap();
+    let pages = fetch_all_page_names().await?;
+    println!("{}", pages.join("\n"));
+
     let args = CliArgs::parse();
     let document = fetch_page(&args.page).await?;
     let content = match get_page_content(&document) {
@@ -30,7 +32,7 @@ async fn main() -> Result<(), WikiError> {
         }
     };
 
-    let res = content
+    let _res = content
         .descendants()
         .map(|node| match node.value() {
             Node::Text(text) => text.to_string(),
@@ -39,31 +41,52 @@ async fn main() -> Result<(), WikiError> {
         .collect::<Vec<String>>()
         .join("");
 
-    println!("{res}");
     Ok(())
 }
 
 async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
-    let document = fetch_page("Table_of_contents").await.unwrap();
+    let document = fetch_page("Table_of_contents").await?;
     let selector = Selector::parse(".mw-parser-output").unwrap();
 
-    let hrefs = document
+    let cat_hrefs = document
         .select(&selector)
         .next()
         .unwrap()
         .descendants()
-        .filter_map(|node| extract_href(node.value()))
+        .filter_map(|node| extract_a_tag_attr(node.value(), "href"))
+        .skip(1)
         .collect::<Vec<String>>();
 
-    println!("{}", hrefs.join("\n"));
-    todo!()
+    let mut pages = Vec::with_capacity(cat_hrefs.len());
+    for cat in cat_hrefs {
+        let res = fetch_page_names_from_categoriy(&cat).await;
+        pages.append(&mut res.unwrap_or(Vec::new()));
+    }
+
+    Ok(pages)
 }
 
-fn extract_href(node: &Node) -> Option<String> {
+async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> {
+    let selector = Selector::parse("#mw-pages").unwrap();
+    let document = fetch_html(&format!("https://wiki.archlinux.org{category}"))
+        .await
+        .unwrap();
+
+    Some(
+        document
+            .select(&selector)
+            .next()?
+            .descendants()
+            .filter_map(|node| extract_a_tag_attr(node.value(), "title"))
+            .collect::<Vec<String>>(),
+    )
+}
+
+fn extract_a_tag_attr(node: &Node, attr: &str) -> Option<String> {
     if let Node::Element(e) = node {
         if e.name() == "a" {
-            if let Some(href) = e.attr("href") {
-                Some(href.to_owned())
+            if let Some(attr) = e.attr(attr) {
+                Some(attr.to_owned())
             } else {
                 None
             }
