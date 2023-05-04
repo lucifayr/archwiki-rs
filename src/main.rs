@@ -1,4 +1,5 @@
 use clap::Parser;
+use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use pages::PAGES;
 use scraper::{ElementRef, Html, Node, Selector};
 use thiserror::Error;
@@ -24,7 +25,7 @@ async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
 
     let page = if !PAGES.contains(&args.page.as_str()) {
-        recommend_pages()
+        recommend_pages(&args.page)
     } else {
         &args.page
     };
@@ -51,8 +52,22 @@ async fn main() -> Result<(), WikiError> {
     Ok(())
 }
 
-fn recommend_pages<'a>() -> &'a str {
+fn recommend_pages<'a>(search: &str) -> &'a str {
+    let top_pages = get_top_pages(search, 10);
+    println!("{top_pages:?}");
     todo!()
+}
+
+fn get_top_pages<'a>(search: &str, amount: usize) -> Vec<&'a str> {
+    let matcher = SkimMatcherV2::default();
+    let mut ranked_pages = PAGES
+        .iter()
+        .map(|page| (matcher.fuzzy_match(page, search).unwrap(), *page))
+        .collect::<Vec<(i64, &str)>>();
+
+    println!("{search:?}");
+    ranked_pages.sort_by(|a, b| a.0.cmp(&b.0));
+    ranked_pages.into_iter().take(amount).map(|e| e.1).collect()
 }
 
 async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
