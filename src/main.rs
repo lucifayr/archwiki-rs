@@ -33,7 +33,6 @@ async fn main() -> Result<(), WikiError> {
 
     let page = if !PAGES.contains(&args.page.as_str()) {
         let recommendations = get_top_pages(&args.page, 5);
-        println!("Page not found\nSimiliar pages:\n");
         eprintln!("{}", recommendations.join("\n"));
         exit(2);
     } else {
@@ -50,7 +49,7 @@ async fn main() -> Result<(), WikiError> {
         }
     };
 
-    let _res = content
+    let res = content
         .descendants()
         .map(|node| match node.value() {
             Node::Text(text) => text.to_string(),
@@ -59,6 +58,7 @@ async fn main() -> Result<(), WikiError> {
         .collect::<Vec<String>>()
         .join("");
 
+    println!("{res}");
     Ok(())
 }
 
