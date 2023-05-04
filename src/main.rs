@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+
+use std::process::exit;
+
 use clap::Parser;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use pages::PAGES;
@@ -22,10 +26,16 @@ enum WikiError {
 
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
+    assert!(SkimMatcherV2::default()
+        .fuzzy_match("Neovim", "Neovi")
+        .is_some());
     let args = CliArgs::parse();
 
     let page = if !PAGES.contains(&args.page.as_str()) {
-        recommend_pages(&args.page)
+        let recommendations = get_top_pages(&args.page, 5);
+        println!("Page not found\nSimiliar pages:\n");
+        eprintln!("{}", recommendations.join("\n"));
+        exit(2);
     } else {
         &args.page
     };
@@ -52,24 +62,23 @@ async fn main() -> Result<(), WikiError> {
     Ok(())
 }
 
-fn recommend_pages<'a>(search: &str) -> &'a str {
-    let top_pages = get_top_pages(search, 10);
-    println!("{top_pages:?}");
-    todo!()
-}
-
 fn get_top_pages<'a>(search: &str, amount: usize) -> Vec<&'a str> {
     let matcher = SkimMatcherV2::default();
     let mut ranked_pages = PAGES
         .iter()
-        .map(|page| (matcher.fuzzy_match(page, search).unwrap(), *page))
+        .map(|page| (matcher.fuzzy_match(*page, search).unwrap_or(0), *page))
         .collect::<Vec<(i64, &str)>>();
 
-    println!("{search:?}");
     ranked_pages.sort_by(|a, b| a.0.cmp(&b.0));
-    ranked_pages.into_iter().take(amount).map(|e| e.1).collect()
+    ranked_pages
+        .into_iter()
+        .rev()
+        .take(amount)
+        .map(|e| e.1)
+        .collect()
 }
 
+// TODO: fix duplicate pages being found
 async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
     let document = fetch_page("Table_of_contents").await?;
     let selector = Selector::parse(".mw-parser-output").unwrap();
