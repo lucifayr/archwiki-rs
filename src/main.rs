@@ -1,6 +1,9 @@
 use clap::Parser;
+use pages::PAGES;
 use scraper::{ElementRef, Html, Node, Selector};
 use thiserror::Error;
+
+mod pages;
 
 #[derive(Parser)]
 struct CliArgs {
@@ -18,11 +21,15 @@ enum WikiError {
 
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
-    let pages = fetch_all_page_names().await?;
-    println!("{}", pages.join("\n"));
-
     let args = CliArgs::parse();
-    let document = fetch_page(&args.page).await?;
+
+    let page = if !PAGES.contains(&args.page.as_str()) {
+        recommend_pages()
+    } else {
+        &args.page
+    };
+
+    let document = fetch_page(page).await?;
     let content = match get_page_content(&document) {
         Some(content) => content,
         None => {
@@ -42,6 +49,10 @@ async fn main() -> Result<(), WikiError> {
         .join("");
 
     Ok(())
+}
+
+fn recommend_pages<'a>() -> &'a str {
+    todo!()
 }
 
 async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
