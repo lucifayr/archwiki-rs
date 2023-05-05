@@ -1,25 +1,32 @@
-#![allow(dead_code)]
+use std::{collections::HashMap, fs, io, process::exit};
 
-use std::{collections::HashMap, process::exit};
-
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
-use pages::PAGES;
 use scraper::{ElementRef, Html, Node, Selector};
 use thiserror::Error;
 
-mod pages;
+#[derive(Subcommand)]
+enum Commands {
+    ReadPage { page: String },
+    UpdateCategory { category: String },
+    UpdateAll,
+}
 
 #[derive(Parser)]
 struct CliArgs {
     // The title of the page to retrieve from the Archwiki
-    page: String,
+    #[command(subcommand)]
+    command: Commands,
 }
 
 #[derive(Error, Debug)]
 enum WikiError {
     #[error("A network error occurred")]
     NetworkError(#[from] reqwest::Error),
+    #[error("A yaml parsing error occurred")]
+    YamlParsingError(#[from] serde_yaml::Error),
+    #[error("An IO error occurred")]
+    IOError(#[from] io::Error),
     #[error("A HTML parsing error occurred")]
     HtmlError(String),
 }
@@ -27,13 +34,49 @@ enum WikiError {
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
+    let page_map: HashMap<String, Vec<String>> =
+        serde_yaml::from_str(&fs::read_to_string("pages.yml")?)?;
 
-    let page = if !PAGES.contains(&args.page.as_str()) {
-        let recommendations = get_top_pages(&args.page, 5);
+    match args.command {
+        Commands::ReadPage { page } => {
+            read_page(
+                &page,
+                &page_map
+                    .iter()
+                    .map(|(_k, v)| v.iter().map(|e| e.as_str()).collect())
+                    .reduce(|acc: Vec<&str>, e| acc.into_iter().chain(e).collect())
+                    .unwrap_or(Vec::new()),
+            )
+            .await?;
+        }
+        Commands::UpdateCategory { category } => {
+            match fetch_page_names_from_categoriy(&category).await {
+                Some(pages) => {
+                    let mut content = page_map.clone();
+                    content.insert(category, pages);
+                    let yaml = serde_yaml::to_string(&content)?;
+                    fs::write("pages.yml", yaml)?;
+                }
+                None => println!("Found no pages for category {category}"),
+            }
+        }
+        Commands::UpdateAll => {
+            let pages = fetch_all_page_names().await?;
+            let yaml = serde_yaml::to_string(&pages)?;
+            fs::write("pages.yml", yaml)?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn read_page(page: &str, pages: &[&str]) -> Result<(), WikiError> {
+    let page = if !pages.contains(&page) {
+        let recommendations = get_top_pages(page, 5, pages);
         eprintln!("{}", recommendations.join("\n"));
         exit(2);
     } else {
-        &args.page
+        page
     };
 
     let document = fetch_page(page).await?;
@@ -59,9 +102,9 @@ async fn main() -> Result<(), WikiError> {
     Ok(())
 }
 
-fn get_top_pages<'a>(search: &str, amount: usize) -> Vec<&'a str> {
+fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {
     let matcher = SkimMatcherV2::default();
-    let mut ranked_pages = PAGES
+    let mut ranked_pages = pages
         .iter()
         .map(|page| (matcher.fuzzy_match(*page, search).unwrap_or(0), *page))
         .collect::<Vec<(i64, &str)>>();
@@ -91,8 +134,9 @@ async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiErro
 
     let mut pages = HashMap::new();
     for cat in cat_hrefs {
-        let res = fetch_page_names_from_categoriy(&cat).await;
-        pages.insert(cat, res.unwrap_or(Vec::new()));
+        let cat_name = cat.split(":").last().unwrap_or("");
+        let res = fetch_page_names_from_categoriy(cat_name).await;
+        pages.insert(cat_name.to_owned(), res.unwrap_or(Vec::new()));
     }
 
     Ok(pages)
@@ -100,9 +144,11 @@ async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiErro
 
 async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> {
     let selector = Selector::parse("#mw-pages").unwrap();
-    let document = fetch_html(&format!("https://wiki.archlinux.org{category}"))
-        .await
-        .unwrap();
+    let document = fetch_html(&format!(
+        "https://wiki.archlinux.org/title/Category:{category}"
+    ))
+    .await
+    .unwrap();
 
     Some(
         document

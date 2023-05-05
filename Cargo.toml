@@ -10,5 +10,6 @@ clap = { version = "4.2.5", features = ["derive"] }
 fuzzy-matcher = "0.3.7"
 reqwest = "0.11.17"
 scraper = "0.16.0"
+serde_yaml = "0.9.21"
 thiserror = "1.0.40"
 tokio = { version = "1.28.0", features = ["full"] }
