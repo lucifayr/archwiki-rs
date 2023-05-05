@@ -1,3 +1,5 @@
+use std::{fs, io};
+
 pub const PAGES: &[&str] = &[
     ".NET",
     ".bashrc",
@@ -2159,3 +2161,12 @@ pub const PAGES: &[&str] = &[
     "Zsh",
     "Zswap",
 ];
+
+pub fn get_saved_pages() -> Result<Vec<String>, io::Error> {
+    let content = fs::read_to_string("/var/lib/archwiki-rs/pages")?;
+    Ok(content.lines().map(|l| l.to_owned()).collect())
+}
+
+pub fn save_pages(pages: Vec<String>) -> Result<(), io::Error> {
+    todo!()
+}

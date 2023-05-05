@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::process::exit;
+use std::{collections::HashMap, process::exit};
 
 use clap::Parser;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
@@ -26,9 +26,6 @@ enum WikiError {
 
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
-    assert!(SkimMatcherV2::default()
-        .fuzzy_match("Neovim", "Neovi")
-        .is_some());
     let args = CliArgs::parse();
 
     let page = if !PAGES.contains(&args.page.as_str()) {
@@ -79,7 +76,7 @@ fn get_top_pages<'a>(search: &str, amount: usize) -> Vec<&'a str> {
 }
 
 // TODO: fix duplicate pages being found
-async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
+async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiError> {
     let document = fetch_page("Table_of_contents").await?;
     let selector = Selector::parse(".mw-parser-output").unwrap();
 
@@ -92,10 +89,10 @@ async fn fetch_all_page_names() -> Result<Vec<String>, WikiError> {
         .skip(1)
         .collect::<Vec<String>>();
 
-    let mut pages = Vec::with_capacity(cat_hrefs.len());
+    let mut pages = HashMap::new();
     for cat in cat_hrefs {
         let res = fetch_page_names_from_categoriy(&cat).await;
-        pages.append(&mut res.unwrap_or(Vec::new()));
+        pages.insert(cat, res.unwrap_or(Vec::new()));
     }
 
     Ok(pages)
