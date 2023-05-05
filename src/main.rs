@@ -2,6 +2,7 @@ use std::{collections::HashMap, fs, io, process::exit};
 
 use clap::{Parser, Subcommand};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use itertools::Itertools;
 use scraper::{ElementRef, Html, Node, Selector};
 use thiserror::Error;
 
@@ -41,11 +42,15 @@ async fn main() -> Result<(), WikiError> {
         Commands::ReadPage { page } => {
             read_page(
                 &page,
-                &page_map
+                page_map
                     .values()
                     .map(|pages| pages.iter().map(|p| p.as_str()).collect())
                     .reduce(|acc: Vec<&str>, pages| acc.into_iter().chain(pages).collect())
-                    .unwrap_or(Vec::new()),
+                    .unwrap_or(Vec::new())
+                    .into_iter()
+                    .unique()
+                    .collect::<Vec<&str>>()
+                    .as_slice(),
             )
             .await?;
         }
