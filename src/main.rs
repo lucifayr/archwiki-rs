@@ -22,13 +22,13 @@ struct CliArgs {
 #[derive(Error, Debug)]
 enum WikiError {
     #[error("A network error occurred")]
-    NetworkError(#[from] reqwest::Error),
+    Network(#[from] reqwest::Error),
     #[error("A yaml parsing error occurred")]
-    YamlParsingError(#[from] serde_yaml::Error),
+    YamlParsing(#[from] serde_yaml::Error),
     #[error("An IO error occurred")]
-    IOError(#[from] io::Error),
+    IO(#[from] io::Error),
     #[error("A HTML parsing error occurred")]
-    HtmlError(String),
+    Html(String),
 }
 
 #[tokio::main]
@@ -42,9 +42,9 @@ async fn main() -> Result<(), WikiError> {
             read_page(
                 &page,
                 &page_map
-                    .iter()
-                    .map(|(_k, v)| v.iter().map(|e| e.as_str()).collect())
-                    .reduce(|acc: Vec<&str>, e| acc.into_iter().chain(e).collect())
+                    .values()
+                    .map(|pages| pages.iter().map(|p| p.as_str()).collect())
+                    .reduce(|acc: Vec<&str>, pages| acc.into_iter().chain(pages).collect())
                     .unwrap_or(Vec::new()),
             )
             .await?;
@@ -82,11 +82,7 @@ async fn read_page(page: &str, pages: &[&str]) -> Result<(), WikiError> {
     let document = fetch_page(page).await?;
     let content = match get_page_content(&document) {
         Some(content) => content,
-        None => {
-            return Err(WikiError::HtmlError(
-                "Failed to find page content".to_owned(),
-            ))
-        }
+        None => return Err(WikiError::Html("Failed to find page content".to_owned())),
     };
 
     let res = content
@@ -106,7 +102,7 @@ fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a 
     let matcher = SkimMatcherV2::default();
     let mut ranked_pages = pages
         .iter()
-        .map(|page| (matcher.fuzzy_match(*page, search).unwrap_or(0), *page))
+        .map(|page| (matcher.fuzzy_match(page, search).unwrap_or(0), *page))
         .collect::<Vec<(i64, &str)>>();
 
     ranked_pages.sort_by(|a, b| a.0.cmp(&b.0));
@@ -134,7 +130,7 @@ async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiErro
 
     let mut pages = HashMap::new();
     for cat in cat_hrefs {
-        let cat_name = cat.split(":").last().unwrap_or("");
+        let cat_name = cat.split(':').last().unwrap_or("");
         let res = fetch_page_names_from_categoriy(cat_name).await;
         pages.insert(cat_name.to_owned(), res.unwrap_or(Vec::new()));
     }
@@ -163,11 +159,7 @@ async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> 
 fn extract_a_tag_attr(node: &Node, attr: &str) -> Option<String> {
     if let Node::Element(e) = node {
         if e.name() == "a" {
-            if let Some(attr) = e.attr(attr) {
-                Some(attr.to_owned())
-            } else {
-                None
-            }
+            e.attr(attr).map(|attr| attr.to_owned())
         } else {
             None
         }
