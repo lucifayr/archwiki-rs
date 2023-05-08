@@ -8,14 +8,25 @@ use thiserror::Error;
 
 #[derive(Subcommand)]
 enum Commands {
+    #[command(
+        about = "Read a page from the Archwiki",
+        long_about = "Read a page from the Archwiki, if the page is not found similar page names are recommended. A list of page names is in the pages.yml file which can be updated with the 'update-all' and 'update-category' commands."
+    )]
     ReadPage { page: String },
+    #[command(
+        about = "Download all pages from a category",
+        long_about = "Download all pages from a category. Categories are stored in the pages.yml file."
+    )]
     UpdateCategory { category: String },
+    #[command(
+        about = "Download all pages from the Archwiki",
+        long_about = "Download all pages from the archwiki. Only the English pages are stored."
+    )]
     UpdateAll,
 }
 
 #[derive(Parser)]
 struct CliArgs {
-    // The title of the page to retrieve from the Archwiki
     #[command(subcommand)]
     command: Commands,
 }
