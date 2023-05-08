@@ -28,15 +28,15 @@ enum WikiError {
     YamlParsing(#[from] serde_yaml::Error),
     #[error("An IO error occurred")]
     IO(#[from] io::Error),
-    #[error("A HTML parsing error occurred")]
-    Html(String),
 }
 
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
-    let page_map: HashMap<String, Vec<String>> =
-        serde_yaml::from_str(&fs::read_to_string("pages.yml")?)?;
+    let page_map: HashMap<String, Vec<String>> = match fs::read_to_string("pages.yml") {
+        Ok(file) => serde_yaml::from_str(&file)?,
+        Err(_e) => HashMap::default(),
+    };
 
     match args.command {
         Commands::ReadPage { page } => {
@@ -76,18 +76,14 @@ async fn main() -> Result<(), WikiError> {
 }
 
 async fn read_page(page: &str, pages: &[&str]) -> Result<(), WikiError> {
-    let page = if !pages.contains(&page) {
-        let recommendations = get_top_pages(page, 5, pages);
-        eprintln!("{}", recommendations.join("\n"));
-        exit(2);
-    } else {
-        page
-    };
-
     let document = fetch_page(page).await?;
     let content = match get_page_content(&document) {
         Some(content) => content,
-        None => return Err(WikiError::Html("Failed to find page content".to_owned())),
+        None => {
+            let recommendations = get_top_pages(page, 5, pages);
+            eprintln!("{}", recommendations.join("\n"));
+            exit(2);
+        }
     };
 
     let res = content
