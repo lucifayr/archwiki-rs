@@ -42,12 +42,33 @@ enum WikiError {
     IO(#[from] io::Error),
     #[error("A path error occurred")]
     Path(String),
+    #[error("An HTML error occurred")]
+    Html(String),
 }
 
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
-    let page_map: HashMap<String, Vec<String>> = match fs::read_to_string("pages.yml") {
+    let base_dir = match BaseDirs::new() {
+        Some(base_dir) => base_dir,
+        None => {
+            return Err(WikiError::Path(
+                "Failed to get valid home directory".to_owned(),
+            ))
+        }
+    };
+
+    let dir_path = get_data_dir_path(base_dir)?;
+    create_data_dir(&dir_path)?;
+
+    let page_path = dir_path
+        + if cfg!(windows) {
+            "\\pages.yml"
+        } else {
+            "/pages.yml"
+        };
+
+    let page_map: HashMap<String, Vec<String>> = match fs::read_to_string(&page_path) {
         Ok(file) => serde_yaml::from_str(&file)?,
         Err(_e) => HashMap::default(),
     };
@@ -69,33 +90,38 @@ async fn main() -> Result<(), WikiError> {
             .await?;
         }
         Commands::UpdateCategory { category } => {
-            let path = get_data_dir_path(BaseDirs::new().unwrap()).unwrap() + "/pages.yml";
-            println!("{path}");
-
             match fetch_page_names_from_categoriy(&category).await {
                 Some(pages) => {
                     let mut content = page_map.clone();
                     content.insert(category, pages);
                     let yaml = serde_yaml::to_string(&content)?;
-                    fs::write(path, yaml)?;
+                    fs::write(&page_path, yaml)?;
                 }
                 None => println!("Found no pages for category {category}"),
             }
         }
         Commands::UpdateAll => {
-            let path = get_data_dir_path(BaseDirs::new().unwrap()).unwrap() + "/pages.yml";
-            println!("{path}");
             let pages = fetch_all_page_names().await?;
             let yaml = serde_yaml::to_string(&pages)?;
-            fs::write(path, yaml)?;
+            fs::write(&page_path, yaml)?;
         }
     }
 
     Ok(())
 }
 
+fn create_data_dir(path: &str) -> Result<(), WikiError> {
+    fs::create_dir_all(path)?;
+    Ok(())
+}
+
 fn get_data_dir_path(base_dir: BaseDirs) -> Result<String, WikiError> {
-    let postfix = "/archwiki-rs";
+    let postfix = if cfg!(windows) {
+        "\\archwiki-rs"
+    } else {
+        "/archwiki-rs"
+    };
+
     match base_dir.data_local_dir().to_str() {
         Some(path) => Ok(path.to_owned() + postfix),
         None => Err(WikiError::Path(
@@ -146,12 +172,15 @@ fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a 
 
 async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiError> {
     let document = fetch_page("Table_of_contents").await?;
-    let selector = Selector::parse(".mw-parser-output").unwrap();
+    let selector =
+        Selector::parse(".mw-parser-output").expect(".mw-parser-output to be a valid css selector");
 
-    let cat_hrefs = document
-        .select(&selector)
-        .next()
-        .unwrap()
+    let categories = match document.select(&selector).next() {
+        Some(next) => next,
+        None => return Err(WikiError::Html("No categories found".to_owned())),
+    };
+
+    let cat_hrefs = categories
         .descendants()
         .filter_map(|node| extract_a_tag_attr(node.value(), "href"))
         .skip(1)
@@ -168,12 +197,12 @@ async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiErro
 }
 
 async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> {
-    let selector = Selector::parse("#mw-pages").unwrap();
+    let selector = Selector::parse("#mw-pages").expect("#mw-pages to be a valid css selector");
     let document = fetch_html(&format!(
         "https://wiki.archlinux.org/title/Category:{category}"
     ))
     .await
-    .unwrap();
+    .ok()?;
 
     Some(
         document
