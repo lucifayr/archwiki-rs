@@ -1,5 +1,6 @@
 [package]
 name = "archwiki-rs"
+description = "A CLI tool to read pages from the Archwiki"
 version = "0.1.0"
 edition = "2021"
 
