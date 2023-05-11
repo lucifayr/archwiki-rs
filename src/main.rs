@@ -1,10 +1,12 @@
 use std::{collections::HashMap, fs, io, process::exit};
 
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 use directories::BaseDirs;
+use ego_tree::NodeRef;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use itertools::Itertools;
-use scraper::{ElementRef, Html, Node, Selector};
+use scraper::{node::Element, ElementRef, Html, Node, Selector};
 use thiserror::Error;
 
 #[derive(Subcommand)]
@@ -13,7 +15,12 @@ enum Commands {
         about = "Read a page from the Archwiki",
         long_about = "Read a page from the Archwiki, if the page is not found similar page names are recommended. A list of page names is in the pages.yml file which can be updated with the 'update-all' and 'update-category' commands."
     )]
-    ReadPage { page: String },
+    ReadPage {
+        #[arg(short, long)]
+        // Show URLs in output
+        show_urls: bool,
+        page: String,
+    },
     #[command(
         about = "Download all pages from a category",
         long_about = "Download all pages from a category. Categories are stored in the pages.yml file."
@@ -86,7 +93,7 @@ async fn main() -> Result<(), WikiError> {
     };
 
     match args.command {
-        Commands::ReadPage { page } => {
+        Commands::ReadPage { page, show_urls } => {
             read_page(
                 &page,
                 page_map
@@ -98,6 +105,7 @@ async fn main() -> Result<(), WikiError> {
                     .unique()
                     .collect::<Vec<&str>>()
                     .as_slice(),
+                show_urls,
             )
             .await?;
         }
@@ -142,7 +150,7 @@ fn get_data_dir_path(base_dir: BaseDirs) -> Result<String, WikiError> {
     }
 }
 
-async fn read_page(page: &str, pages: &[&str]) -> Result<(), WikiError> {
+async fn read_page(page: &str, pages: &[&str], show_urls: bool) -> Result<(), WikiError> {
     let document = fetch_page(page).await?;
     let content = match get_page_content(&document) {
         Some(content) => content,
@@ -154,16 +162,43 @@ async fn read_page(page: &str, pages: &[&str]) -> Result<(), WikiError> {
     };
 
     let res = content
-        .descendants()
-        .map(|node| match node.value() {
-            Node::Text(text) => text.to_string(),
-            _ => "".to_owned(),
-        })
+        .children()
+        .map(|node| format_children(node, show_urls))
         .collect::<Vec<String>>()
         .join("");
 
     println!("{res}");
     Ok(())
+}
+
+fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
+    match node.value() {
+        Node::Text(text) => text.to_string(),
+        Node::Element(e) => {
+            let child_text = node
+                .children()
+                .map(|node| format_children(node, show_urls))
+                .collect::<Vec<String>>()
+                .join("");
+            if e.name() == "a" && show_urls {
+                wrap_text_in_url(
+                    &child_text,
+                    &extract_tag_attr(e, &HtmlTag::A, "href").unwrap_or("".to_string()),
+                )
+            } else {
+                child_text
+            }
+        }
+        _ => node
+            .children()
+            .map(|node| format_children(node, show_urls))
+            .collect::<Vec<String>>()
+            .join(""),
+    }
+}
+
+fn wrap_text_in_url(text: &str, url: &str) -> String {
+    format!("{text}[{}]", url.cyan())
 }
 
 fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {
@@ -194,7 +229,13 @@ async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiErro
 
     let cat_hrefs = categories
         .descendants()
-        .filter_map(|node| extract_tag_attr(node.value(), &HtmlTag::A, "href"))
+        .filter_map(|node| {
+            if let Node::Element(e) = node.value() {
+                extract_tag_attr(e, &HtmlTag::A, "href")
+            } else {
+                None
+            }
+        })
         .skip(1)
         .collect::<Vec<String>>();
 
@@ -221,18 +262,20 @@ async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> 
             .select(&selector)
             .next()?
             .descendants()
-            .filter_map(|node| extract_tag_attr(node.value(), &HtmlTag::A, "title"))
+            .filter_map(|node| {
+                if let Node::Element(e) = node.value() {
+                    extract_tag_attr(e, &HtmlTag::A, "title")
+                } else {
+                    None
+                }
+            })
             .collect::<Vec<String>>(),
     )
 }
 
-fn extract_tag_attr(node: &Node, tag: &HtmlTag, attr: &str) -> Option<String> {
-    if let Node::Element(e) = node {
-        if e.name() == tag.name() {
-            e.attr(attr).map(|attr| attr.to_owned())
-        } else {
-            None
-        }
+fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<String> {
+    if element.name() == tag.name() {
+        element.attr(attr).map(|attr| attr.to_owned())
     } else {
         None
     }
