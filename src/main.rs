@@ -46,6 +46,18 @@ enum WikiError {
     Html(String),
 }
 
+enum HtmlTag {
+    A,
+}
+
+impl HtmlTag {
+    pub fn name(&self) -> String {
+        match *self {
+            HtmlTag::A => "a".to_owned(),
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
@@ -182,7 +194,7 @@ async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiErro
 
     let cat_hrefs = categories
         .descendants()
-        .filter_map(|node| extract_a_tag_attr(node.value(), "href"))
+        .filter_map(|node| extract_tag_attr(node.value(), &HtmlTag::A, "href"))
         .skip(1)
         .collect::<Vec<String>>();
 
@@ -209,14 +221,14 @@ async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> 
             .select(&selector)
             .next()?
             .descendants()
-            .filter_map(|node| extract_a_tag_attr(node.value(), "title"))
+            .filter_map(|node| extract_tag_attr(node.value(), &HtmlTag::A, "title"))
             .collect::<Vec<String>>(),
     )
 }
 
-fn extract_a_tag_attr(node: &Node, attr: &str) -> Option<String> {
+fn extract_tag_attr(node: &Node, tag: &HtmlTag, attr: &str) -> Option<String> {
     if let Node::Element(e) = node {
-        if e.name() == "a" {
+        if e.name() == tag.name() {
             e.attr(attr).map(|attr| attr.to_owned())
         } else {
             None
