@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.2.5", features = ["derive"] }
+directories = "5.0.1"
 fuzzy-matcher = "0.3.7"
 itertools = "0.10.5"
 reqwest = "0.11.17"

@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fs, io, process::exit};
 
 use clap::{Parser, Subcommand};
+use directories::BaseDirs;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use itertools::Itertools;
 use scraper::{ElementRef, Html, Node, Selector};
@@ -30,6 +31,8 @@ enum WikiError {
     IO(#[from] io::Error),
     #[error("A HTML parsing error occurred")]
     Html(String),
+    #[error("A path error occurred")]
+    Path(String),
 }
 
 #[tokio::main]
@@ -55,24 +58,39 @@ async fn main() -> Result<(), WikiError> {
             .await?;
         }
         Commands::UpdateCategory { category } => {
+            let path = get_data_dir_path(BaseDirs::new().unwrap()).unwrap() + "/pages.yml";
+            println!("{path}");
+
             match fetch_page_names_from_categoriy(&category).await {
                 Some(pages) => {
                     let mut content = page_map.clone();
                     content.insert(category, pages);
                     let yaml = serde_yaml::to_string(&content)?;
-                    fs::write("pages.yml", yaml)?;
+                    fs::write(path, yaml)?;
                 }
                 None => println!("Found no pages for category {category}"),
             }
         }
         Commands::UpdateAll => {
+            let path = get_data_dir_path(BaseDirs::new().unwrap()).unwrap() + "/pages.yml";
+            println!("{path}");
             let pages = fetch_all_page_names().await?;
             let yaml = serde_yaml::to_string(&pages)?;
-            fs::write("pages.yml", yaml)?;
+            fs::write(path, yaml)?;
         }
     }
 
     Ok(())
+}
+
+fn get_data_dir_path(base_dir: BaseDirs) -> Result<String, WikiError> {
+    let postfix = "/archwiki-rs";
+    match base_dir.data_local_dir().to_str() {
+        Some(path) => Ok(path.to_owned() + postfix),
+        None => Err(WikiError::Path(
+            "Failed to convert path to string".to_owned(),
+        )),
+    }
 }
 
 async fn read_page(page: &str, pages: &[&str]) -> Result<(), WikiError> {
@@ -119,7 +137,6 @@ fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a 
         .collect()
 }
 
-// TODO: fix duplicate pages being found
 async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiError> {
     let document = fetch_page("Table_of_contents").await?;
     let selector = Selector::parse(".mw-parser-output").unwrap();
