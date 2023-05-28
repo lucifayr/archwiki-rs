@@ -1,6 +1,7 @@
-if output=$(/usr/bin/archwiki-rs read-page $1 2>&1); then 
+command=$HOME/.cargo/bin/archwiki-rs
+if output=$($command read-page $1 2>&1); then 
     echo "$output" | less
 else
     selection=$(echo "$output" | fzf) 
-    /usr/bin/archwiki-rs read-page "$selection" | less
+    $command read-page "$selection" | less
 fi
