@@ -5,9 +5,11 @@ use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
-use formats::plain_text::read_page;
+use formats::plain_text::read_page_as_plain_text;
 use itertools::Itertools;
 use utils::{create_data_dir, get_data_dir_path};
+
+use crate::formats::PageFormat;
 
 mod categories;
 mod cli;
@@ -37,38 +39,44 @@ async fn main() -> Result<(), WikiError> {
             "/pages.yml"
         };
 
-    let page_map: HashMap<String, Vec<String>> = match fs::read_to_string(&pages_path) {
+    let pages_map: HashMap<String, Vec<String>> = match fs::read_to_string(&pages_path) {
         Ok(file) => serde_yaml::from_str(&file)?,
         Err(_e) => HashMap::default(),
     };
 
     match args.command {
-        Commands::ReadPage { page, show_urls } => {
-            let out = read_page(
-                &page,
-                page_map
-                    .values()
-                    .map(|pages| pages.iter().map(|p| p.as_str()).collect())
-                    .reduce(|acc: Vec<&str>, pages| acc.into_iter().chain(pages).collect())
-                    .unwrap_or(Vec::new())
-                    .into_iter()
-                    .unique()
-                    .collect::<Vec<&str>>()
-                    .as_slice(),
-                show_urls,
-            )
-            .await?;
+        Commands::ReadPage {
+            page,
+            show_urls,
+            format,
+        } => {
+            let pages = pages_map
+                .values()
+                .map(|pages| pages.iter().map(|p| p.as_str()).collect())
+                .reduce(|acc: Vec<&str>, pages| acc.into_iter().chain(pages).collect())
+                .unwrap_or(Vec::new())
+                .into_iter()
+                .unique()
+                .collect::<Vec<&str>>();
+
+            let out = match format {
+                PageFormat::PlainText => {
+                    read_page_as_plain_text(&page, pages.as_slice(), show_urls).await?
+                }
+                PageFormat::Markdown => String::new(),
+                PageFormat::Html => String::new(),
+            };
 
             println!("{out}");
         }
         Commands::ListCategories { flatten } => {
-            let out = list_categories(&page_map, flatten);
+            let out = list_categories(&pages_map, flatten);
             println!("{out}");
         }
         Commands::UpdateCategory { category } => {
             match fetch_page_names_from_categoriy(&category).await {
                 Some(pages) => {
-                    let mut content = page_map.clone();
+                    let mut content = pages_map.clone();
                     content.insert(category, pages);
                     let yaml = serde_yaml::to_string(&content)?;
                     fs::write(&pages_path, yaml)?;

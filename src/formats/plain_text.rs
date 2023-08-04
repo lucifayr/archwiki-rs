@@ -9,7 +9,11 @@ use crate::{
     utils::{extract_tag_attr, fetch_page, get_page_content, get_top_pages, HtmlTag},
 };
 
-pub async fn read_page(page: &str, pages: &[&str], show_urls: bool) -> Result<String, WikiError> {
+pub async fn read_page_as_plain_text(
+    page: &str,
+    pages: &[&str],
+    show_urls: bool,
+) -> Result<String, WikiError> {
     let document = fetch_page(page).await?;
     let content = match get_page_content(&document) {
         Some(content) => content,
