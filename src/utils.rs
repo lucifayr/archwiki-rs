@@ -20,14 +20,14 @@ impl HtmlTag {
     }
 }
 
-/// Selects the body of an Archwiki page
+/// Selects the body of an ArchWiki page
 pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
     let selector =
         Selector::parse(".mw-parser-output").expect(".mw-parser-output should be valid selector");
     document.select(&selector).next()
 }
 
-/// Gets an Archwiki pages entire content. Also updates all relative URLs to absolute URLs.
+/// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.
 /// `/title/Neovim` -> `https://wiki.archlinux.org/title/Neovim`
 pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
     let url = format!("https://wiki.archlinux.org/title/{page}");

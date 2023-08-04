@@ -9,10 +9,10 @@ use crate::{
     utils::{extract_tag_attr, fetch_page, get_page_content, get_top_pages, HtmlTag},
 };
 
-/// Reads the body of the Archwiki page as a plain text string, removing all tags and only leaving
+/// Reads the body of the ArchWiki page as a plain text string, removing all tags and only leaving
 /// the text node content. URLs can be shown in a markdown like syntax.
 ///
-/// If the Archwiki returns a 404 for the page being searched for the top 5 pages that are most
+/// If the ArchWiki returns a 404 for the page being searched for the top 5 pages that are most
 /// like the page that was given as an argument are printed to stderr and the program is forced to
 /// exit with status 2.
 ///

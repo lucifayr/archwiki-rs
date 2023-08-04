@@ -1,13 +1,13 @@
 [package]
 name = "archwiki-rs"
-description = "A CLI tool to read pages from the Archwiki"
+description = "A CLI tool to read pages from the ArchWiki"
 version = "1.0.1"
 edition = "2021"
 authors = ["Lucy Gschwantner lucygschwantner@gmail.com"]
 license = "MIT"
 repository = "https://github.com/jackboxx/archwiki-rs"
 readme = "README.md"
-keywords = ["Archwiki", "cli", "bar"]
+keywords = ["ArchWiki", "cli", "bar"]
 categories = ["command-line-interface"]
 
 [dependencies]

@@ -5,9 +5,9 @@ use crate::{
     utils::{fetch_page, get_page_content, get_top_pages},
 };
 
-/// Reads the body of the Archwiki page as a Markdown string.
+/// Reads the body of the ArchWiki page as a Markdown string.
 ///
-/// If the Archwiki returns a 404 for the page being searched for the top 5 pages that are most
+/// If the ArchWiki returns a 404 for the page being searched for the top 5 pages that are most
 /// like the page that was given as an argument are printed to stderr and the program is forced to
 /// exit with status 2.
 ///

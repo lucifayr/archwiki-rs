@@ -45,7 +45,7 @@ pub fn list_categories(categories: &HashMap<String, Vec<String>>, flatten: bool)
         .join("\n\n")
 }
 
-/// Scrapes the Archwiki for all page names and their immediate parent category. Category nesting
+/// Scrapes the ArchWiki for all page names and their immediate parent category. Category nesting
 /// is ignored as a category can be a sub category of multiple other categories.
 ///
 /// Caution this function will most likely take several minutes to finish (-, – )…zzzZZ
@@ -81,7 +81,7 @@ pub async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, Wiki
     Ok(pages)
 }
 
-/// Scrape the Archwiki for a list of all page names that belong to a specific category
+/// Scrape the ArchWiki for a list of all page names that belong to a specific category
 pub async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> {
     let selector = Selector::parse("#mw-pages").expect("#mw-pages to be a valid css selector");
 
