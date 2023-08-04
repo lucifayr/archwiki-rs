@@ -67,6 +67,12 @@ async fn main() -> Result<(), WikiError> {
 
             let cache_dir = base_dir.cache_dir().join("archwiki-rs");
 
+            let page = pages
+                .iter()
+                .find(|p| p.eq_ignore_ascii_case(&page))
+                .map(|p| p.to_owned().to_owned())
+                .unwrap_or(page);
+
             let out = if !ignore_cache
                 && page_cache_exists(&page, &format, &cache_dir, disable_cache_invalidation)
                     .unwrap_or(false)
