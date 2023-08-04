@@ -32,17 +32,18 @@ pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
     document.select(&selector).next()
 }
 
+pub fn update_relative_urls(html: &str) -> String {
+    html.replace("href=\"/", "href=\"https://wiki.archlinux.org/")
+}
+
 pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
-    fetch_html(&format!(
-        "https://wiki.archlinux.org/title/{title}",
-        title = page
-    ))
-    .await
+    fetch_html(&format!("https://wiki.archlinux.org/title/{page}",)).await
 }
 
 pub async fn fetch_html(url: &str) -> Result<Html, reqwest::Error> {
     let body = reqwest::get(url).await?.text().await?;
-    Ok(Html::parse_document(&body))
+    let body_with_abs_urls = update_relative_urls(&body);
+    Ok(Html::parse_document(&body_with_abs_urls))
 }
 
 pub fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {

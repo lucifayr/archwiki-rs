@@ -9,7 +9,7 @@ use formats::plain_text::read_page_as_plain_text;
 use itertools::Itertools;
 use utils::{create_data_dir, get_data_dir_path};
 
-use crate::formats::PageFormat;
+use crate::formats::{markdown::read_page_as_markdown, PageFormat};
 
 mod categories;
 mod cli;
@@ -63,7 +63,7 @@ async fn main() -> Result<(), WikiError> {
                 PageFormat::PlainText => {
                     read_page_as_plain_text(&page, pages.as_slice(), show_urls).await?
                 }
-                PageFormat::Markdown => String::new(),
+                PageFormat::Markdown => read_page_as_markdown(&page, pages.as_slice()).await?,
                 PageFormat::Html => String::new(),
             };
 

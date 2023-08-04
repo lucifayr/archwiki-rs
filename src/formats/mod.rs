@@ -1,5 +1,6 @@
 use clap::ValueEnum;
 
+pub mod markdown;
 pub mod plain_text;
 
 #[derive(Debug, Clone, ValueEnum)]
