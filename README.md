@@ -20,7 +20,9 @@ A CLI tool to read pages from the ArchWiki
 
 ## Installation
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
-or build it from source
+or build it from source. 
+
+After you are finished with the installation you should run [update-all](#updating-everything).
 
 ### crates.io
 
