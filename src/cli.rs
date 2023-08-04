@@ -21,9 +21,9 @@ pub enum Commands {
         about = "List all pages from the ArchWiki that have been downloaded.",
         long_about = "List all pages from the ArchWiki that have been downloaded. See 'update-all' or 'update-category' for information on downloading."
     )]
-    ListCategories {
+    ListPages {
         #[arg(short, long)]
-        /// Flatten all pages and don't show category names
+        /// Flatten all pages and don't show their category names
         flatten: bool,
     },
     #[command(

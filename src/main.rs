@@ -67,7 +67,7 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::ListCategories { flatten } => {
+        Commands::ListPages { flatten } => {
             let out = list_categories(&pages_map, flatten);
             println!("{out}");
         }

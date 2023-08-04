@@ -77,15 +77,15 @@ archwiki-rs update-category Xorg_commands
 ### Listing pages and categories
 
 ```sh
-archwiki-rs list-categories
+archwiki-rs list-pages
 ```
 
-This is outputs a styled human readable list but if you need an easily parseable list for a
-different program to use you can use the `-f` flag to flatten the output into a newline
-separated list that only contains the names of all pages
+This is outputs a styled human readable tree of categories and pages but if you need an easily 
+parseable list for a different program to use you can use the `-f` flag to flatten the output 
+into a newline separated list that only contains the names of all pages
 
 ```sh
-archwiki-rs list-categories -f
+archwiki-rs list-pages -f
 ```
 
 ### Page file location
