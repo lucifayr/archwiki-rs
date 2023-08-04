@@ -1,12 +1,34 @@
 use itertools::Itertools;
-use scraper::{Node, Selector};
+use scraper::{Html, Node, Selector};
 use std::collections::HashMap;
 
 use crate::{
     error::WikiError,
-    utils::{extract_tag_attr, fetch_html, fetch_page, HtmlTag},
+    utils::{extract_tag_attr, fetch_page, HtmlTag},
 };
 
+/// Returns a print ready list of the provided page names in
+/// 1. A tree format if `flatten` is `false`:
+/// Xfce:
+/// ───┤Thunar
+/// ───┤Xfce
+/// ───┤Xfwm
+///
+/// Xiaomi:
+/// ───┤Xiaomi Mi Notebook Air 13.3
+/// ───┤Xiaomi Mi Notebook Pro 15.6
+///
+/// 2. A newline separated list if `flatten` is `true`:
+/// Xsettingsd
+/// Xsettingsd
+/// Xterm
+/// Xtrabackup
+///
+/// Sorting behavior depends on if the list is flattened or not.
+///
+/// If it is not flattened the list is first ordered by category names and then by page names withing those
+/// categories.
+/// If it is flattened then it will by sorted by page names.
 pub fn list_categories(categories: &HashMap<String, Vec<String>>, flatten: bool) -> String {
     if flatten {
         return categories.values().flatten().sorted().join("\n");
@@ -23,6 +45,10 @@ pub fn list_categories(categories: &HashMap<String, Vec<String>>, flatten: bool)
         .join("\n\n")
 }
 
+/// Scrapes the Archwiki for all page names and their immediate parent category. Category nesting
+/// is ignored as a category can be a sub category of multiple other categories.
+///
+/// Caution this function will most likely take several minutes to finish (-, – )…zzzZZ
 pub async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiError> {
     let document = fetch_page("Table_of_contents").await?;
     let selector =
@@ -55,13 +81,13 @@ pub async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, Wiki
     Ok(pages)
 }
 
+/// Scrape the Archwiki for a list of all page names that belong to a specific category
 pub async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> {
     let selector = Selector::parse("#mw-pages").expect("#mw-pages to be a valid css selector");
-    let document = fetch_html(&format!(
-        "https://wiki.archlinux.org/title/Category:{category}"
-    ))
-    .await
-    .ok()?;
+
+    let url = format!("https://wiki.archlinux.org/title/Category:{category}");
+    let body = reqwest::get(&url).await.ok()?.text().await.ok()?;
+    let document = Html::parse_document(&body);
 
     Some(
         document

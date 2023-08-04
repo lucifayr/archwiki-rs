@@ -5,6 +5,14 @@ use crate::{
     utils::{fetch_page, get_page_content, get_top_pages},
 };
 
+/// Reads the body of the Archwiki page as a HTML string.
+///
+/// If the Archwiki returns a 404 for the page being searched for the top 5 pages that are most
+/// like the page that was given as an argument are printed to stderr and the program is forced to
+/// exit with status 2.
+///
+/// Errors:
+/// - If it fails to fetch the page
 pub async fn read_page_as_html(page: &str, pages: &[&str]) -> Result<String, WikiError> {
     let document = fetch_page(page).await?;
 

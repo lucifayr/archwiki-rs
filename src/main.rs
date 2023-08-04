@@ -76,6 +76,7 @@ async fn main() -> Result<(), WikiError> {
                 Some(pages) => {
                     let mut content = pages_map.clone();
                     content.insert(category, pages);
+
                     let yaml = serde_yaml::to_string(&content)?;
                     fs::write(&pages_path, yaml)?;
                 }
