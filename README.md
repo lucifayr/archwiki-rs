@@ -85,7 +85,7 @@ under the name `example.sh`.
 
 ### Downloading page info
 
-Page names are stored locally to prevent having to scrape the entire table of contents of
+The page names used for suggestions are stored locally to prevent having to scrape the entire table of contents of
 the ArchWiki with every command
 
 #### Updating everything
