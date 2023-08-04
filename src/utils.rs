@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 
-use std::fs;
+use std::{fs, path::Path};
 
 use directories::BaseDirs;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use scraper::{node::Element, ElementRef, Html, Selector};
 
-use crate::error::WikiError;
+use crate::{error::WikiError, formats::PageFormat};
 
 pub enum HtmlTag {
     A,
@@ -38,6 +38,54 @@ pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
     Ok(Html::parse_document(&body_with_abs_urls))
 }
 
+/// Check if a page has been cached. Different page formats are cached separately.
+pub fn page_cache_exists(page: &str, format: &PageFormat, cache_dir_path: &Path) -> bool {
+    let ext = match format {
+        PageFormat::PlainText => "",
+        PageFormat::Markdown => "md",
+        PageFormat::Html => "html",
+    };
+
+    let page_cache_path = cache_dir_path.join(page).with_extension(ext);
+    page_cache_path.exists()
+}
+
+/// Read a page from the page cache. Different page formats are cached separately.
+pub fn read_page_from_cache(
+    page: &str,
+    format: &PageFormat,
+    cache_dir_path: &Path,
+) -> Result<String, WikiError> {
+    let ext = match format {
+        PageFormat::PlainText => "",
+        PageFormat::Markdown => "md",
+        PageFormat::Html => "html",
+    };
+
+    let page_cache_path = cache_dir_path.join(page).with_extension(ext);
+    Ok(fs::read_to_string(page_cache_path)?)
+}
+
+/// Write a page to the page cache. Different page formats are cached separately.
+pub fn write_page_to_cache(
+    data: String,
+    page: &str,
+    format: &PageFormat,
+    cache_dir_path: &Path,
+) -> Result<(), WikiError> {
+    fs::create_dir_all(cache_dir_path)?;
+
+    let ext = match format {
+        PageFormat::PlainText => "",
+        PageFormat::Markdown => "md",
+        PageFormat::Html => "html",
+    };
+
+    let page_cache_path = cache_dir_path.join(page).with_extension(ext);
+    fs::write(page_cache_path, data.as_bytes())?;
+    Ok(())
+}
+
 pub fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {
     let matcher = SkimMatcherV2::default();
     let mut ranked_pages = pages
@@ -67,7 +115,9 @@ pub fn create_data_dir(path: &str) -> Result<(), WikiError> {
     Ok(())
 }
 
-pub fn get_data_dir_path(base_dir: BaseDirs) -> Result<String, WikiError> {
+// these functions should use path buffers instead of strings
+
+pub fn get_data_dir_path(base_dir: &BaseDirs) -> Result<String, WikiError> {
     let postfix = if cfg!(windows) {
         "\\archwiki-rs"
     } else {
@@ -75,6 +125,21 @@ pub fn get_data_dir_path(base_dir: BaseDirs) -> Result<String, WikiError> {
     };
 
     match base_dir.data_local_dir().to_str() {
+        Some(path) => Ok(path.to_owned() + postfix),
+        None => Err(WikiError::Path(
+            "Failed to convert path to string".to_owned(),
+        )),
+    }
+}
+
+pub fn get_cache_dir_path(base_dir: BaseDirs) -> Result<String, WikiError> {
+    let postfix = if cfg!(windows) {
+        "\\archwiki-rs"
+    } else {
+        "/archwiki-rs"
+    };
+
+    match base_dir.cache_dir().to_str() {
         Some(path) => Ok(path.to_owned() + postfix),
         None => Err(WikiError::Path(
             "Failed to convert path to string".to_owned(),

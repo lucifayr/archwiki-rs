@@ -10,6 +10,12 @@ pub enum Commands {
     )]
     ReadPage {
         #[arg(short, long)]
+        /// Don't cache the read page locally
+        no_cache_write: bool,
+        #[arg(short, long)]
+        /// Don't read the page from cache even if an entry for it is cached
+        ignore_cache: bool,
+        #[arg(short, long)]
         /// Show URLs for plain-text output
         show_urls: bool,
         #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]
