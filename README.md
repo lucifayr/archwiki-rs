@@ -8,12 +8,15 @@ A CLI tool to read pages from the ArchWiki
 - [Usage](#usage)
   * [Reading Pages](#reading-pages)
     + [Using a different format](#using-a-different-format)
+    + [Caching](#caching)
     + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found-̥̥̥n-̥̥̥)
   * [Downloading page info](#downloading-page-info)
     + [Updating everything](#updating-everything)
     + [Updating a specific category](#updating-a-specific-category)
   * [Listing pages and categories](#listing-pages-and-categories)
-  * [Page file location](#page-file-location)
+  * [File locations](#file-locations)
+    + [The page file](#the-page-file)
+    + [Page cache files](#page-cache-files)
 
 ## Installation
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
@@ -45,6 +48,12 @@ archwiki-rs read-page Neovim
 ```sh
 archwiki-rs read-page Neovim --format markdown
 ```
+
+#### Caching
+
+By default, pages are cached in the file system after they are fetched and subsequent
+request for that page then use that cache. The cache is invalidated if the cache file hasn't 
+been updated in the last 14 days.
 
 #### 404 page not found (-̥̥̥n-̥̥̥ )
 
@@ -102,8 +111,14 @@ newline separated list that only contains the names of all pages
 archwiki-rs list-pages -f
 ```
 
-### Page file location
+### File locations
+All file paths use the the [directories](https://crates.io/crates/directories) crate
 
-The file containing all pages is stored using the [directories](https://crates.io/crates/directories)
-crate. See [this](https://docs.rs/directories/latest/directories/struct.BaseDirs.html#method.data_local_dir)
-for more information. 
+#### The page file
+
+See [data_local_dir](https://docs.rs/directories/latest/directories/struct.BaseDirs.html#method.data_local_dir)
+for more information.
+
+#### Page cache files
+See [cache_dir](https://docs.rs/directories/latest/directories/struct.BaseDirs.html#method.cache_dir)
+for more information.
