@@ -7,6 +7,7 @@ A CLI tool to read pages from the ArchWiki
   * [Source](#source)
 - [Usage](#usage)
   * [Reading Pages](#reading-pages)
+    + [Basic request](#basic-request)
     + [Using a different format](#using-a-different-format)
     + [Caching](#caching)
     + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found-̥̥̥n-̥̥̥)
@@ -41,6 +42,8 @@ cp ./target/release/archwiki-rs $SOME_DIRECTORY_IN_YOUR_PATH # e.g. $HOME/.cargo
 ## Usage
 
 ### Reading Pages
+
+#### Basic request
 
 ```sh
 archwiki-rs read-page Neovim
