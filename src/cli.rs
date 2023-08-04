@@ -16,6 +16,10 @@ pub enum Commands {
         /// Don't read the page from cache even if an entry for it is cached
         ignore_cache: bool,
         #[arg(short, long)]
+        /// Don't invalidate the cache even if it is considered stale. A cache is considered stale
+        /// after it hasn't been updated in more then 14 days.
+        disable_cache_invalidation: bool,
+        #[arg(short, long)]
         /// Show URLs for plain-text output
         show_urls: bool,
         #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]

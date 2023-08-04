@@ -39,7 +39,14 @@ pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
 }
 
 /// Check if a page has been cached. Different page formats are cached separately.
-pub fn page_cache_exists(page: &str, format: &PageFormat, cache_dir_path: &Path) -> bool {
+/// If a page has existed for more then 14 days and `disable_cache_invalidation` is false
+/// this function will return false even if a cache file exists.
+pub fn page_cache_exists(
+    page: &str,
+    format: &PageFormat,
+    cache_dir_path: &Path,
+    disable_cache_invalidation: bool,
+) -> Result<bool, WikiError> {
     let ext = match format {
         PageFormat::PlainText => "",
         PageFormat::Markdown => "md",
@@ -47,7 +54,20 @@ pub fn page_cache_exists(page: &str, format: &PageFormat, cache_dir_path: &Path)
     };
 
     let page_cache_path = cache_dir_path.join(page).with_extension(ext);
-    page_cache_path.exists()
+    if !page_cache_path.exists() {
+        return Ok(false);
+    } else if disable_cache_invalidation {
+        return Ok(true);
+    }
+
+    let fourteen_days = 1209600;
+    let secs_since_modified = fs::File::open(page_cache_path)?
+        .metadata()?
+        .modified()?
+        .elapsed()?
+        .as_secs();
+
+    Ok(secs_since_modified < fourteen_days)
 }
 
 /// Read a page from the page cache. Different page formats are cached separately.

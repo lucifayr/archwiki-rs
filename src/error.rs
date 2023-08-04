@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, time::SystemTimeError};
 
 use thiserror::Error;
 
@@ -10,6 +10,8 @@ pub enum WikiError {
     YamlParsing(#[from] serde_yaml::Error),
     #[error("An IO error occurred")]
     IO(#[from] io::Error),
+    #[error("An system time error occurred")]
+    SystemTime(#[from] SystemTimeError),
     #[error("A path error occurred")]
     Path(String),
     #[error("An HTML error occurred")]

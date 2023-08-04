@@ -52,6 +52,7 @@ async fn main() -> Result<(), WikiError> {
             page,
             no_cache_write,
             ignore_cache,
+            disable_cache_invalidation,
             show_urls,
             format,
         } => {
@@ -66,7 +67,10 @@ async fn main() -> Result<(), WikiError> {
 
             let cache_dir = base_dir.cache_dir().join("archwiki-rs");
 
-            let out = if !ignore_cache && page_cache_exists(&page, &format, &cache_dir) {
+            let out = if !ignore_cache
+                && page_cache_exists(&page, &format, &cache_dir, disable_cache_invalidation)
+                    .unwrap_or(false)
+            {
                 read_page_from_cache(&page, &format, &cache_dir)?
             } else {
                 match format {
