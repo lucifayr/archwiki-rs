@@ -1,6 +1,20 @@
 # ArchWiki CLI 📖
 A CLI tool to read pages from the ArchWiki
 
+## Table of contents
+- [Installation](#installation)
+  * [crates.io](#cratesio)
+  * [Source](#source)
+- [Usage](#usage)
+  * [Reading Pages](#reading-pages)
+    + [Using a different format](#using-a-different-format)
+    + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found-̥̥̥n-̥̥̥)
+  * [Downloading page info](#downloading-page-info)
+    + [Updating everything](#updating-everything)
+    + [Updating a specific category](#updating-a-specific-category)
+  * [Listing pages and categories](#listing-pages-and-categories)
+  * [Page file location](#page-file-location)
+
 ## Installation
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
 or build it from source
