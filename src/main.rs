@@ -9,7 +9,7 @@ use formats::plain_text::read_page_as_plain_text;
 use itertools::Itertools;
 use utils::{create_data_dir, get_data_dir_path};
 
-use crate::formats::{markdown::read_page_as_markdown, PageFormat};
+use crate::formats::{html::read_page_as_html, markdown::read_page_as_markdown, PageFormat};
 
 mod categories;
 mod cli;
@@ -60,11 +60,9 @@ async fn main() -> Result<(), WikiError> {
                 .collect::<Vec<&str>>();
 
             let out = match format {
-                PageFormat::PlainText => {
-                    read_page_as_plain_text(&page, pages.as_slice(), show_urls).await?
-                }
-                PageFormat::Markdown => read_page_as_markdown(&page, pages.as_slice()).await?,
-                PageFormat::Html => String::new(),
+                PageFormat::PlainText => read_page_as_plain_text(&page, &pages, show_urls).await?,
+                PageFormat::Markdown => read_page_as_markdown(&page, &pages).await?,
+                PageFormat::Html => read_page_as_html(&page, &pages).await?,
             };
 
             println!("{out}");

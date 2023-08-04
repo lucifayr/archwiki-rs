@@ -1,8 +1,11 @@
+#![allow(dead_code)]
+
 use std::fs;
 
 use directories::BaseDirs;
+use ego_tree::NodeRef;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
-use scraper::{node::Element, ElementRef, Html, Selector};
+use scraper::{node::Element, ElementRef, Html, Node, Selector};
 
 use crate::error::WikiError;
 
@@ -24,6 +27,24 @@ pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<
     } else {
         None
     }
+}
+
+pub fn find_tag<'a>(node: NodeRef<'a, Node>, tag: &'a HtmlTag) -> Option<&'a Element> {
+    for child in node.children() {
+        if let Node::Element(e) = child.value() {
+            println!("{}", e.name());
+        }
+        match child.value() {
+            Node::Element(e) if e.name() == tag.name() => return Some(e),
+            _ => {
+                if let Some(element) = find_tag(child, tag) {
+                    return Some(element);
+                }
+            }
+        }
+    }
+
+    None
 }
 
 pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
