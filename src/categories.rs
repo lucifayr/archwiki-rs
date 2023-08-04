@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use scraper::{Node, Selector};
 use std::collections::HashMap;
 
@@ -5,6 +6,22 @@ use crate::{
     error::WikiError,
     utils::{extract_tag_attr, fetch_html, fetch_page, HtmlTag},
 };
+
+pub fn list_categories(categories: &HashMap<String, Vec<String>>, flatten: bool) -> String {
+    if flatten {
+        return categories.values().flatten().sorted().join("\n");
+    }
+
+    categories
+        .iter()
+        .sorted()
+        .map(|(cat, pages)| {
+            let list = pages.iter().map(|p| format!("───┤{p}")).join("\n");
+
+            format!("{cat}:\n{list}",)
+        })
+        .join("\n\n")
+}
 
 pub async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiError> {
     let document = fetch_page("Table_of_contents").await?;

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-use categories::{fetch_all_page_names, fetch_page_names_from_categoriy};
+use categories::{fetch_all_page_names, fetch_page_names_from_categoriy, list_categories};
 use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
@@ -59,6 +59,10 @@ async fn main() -> Result<(), WikiError> {
             )
             .await?;
 
+            println!("{out}");
+        }
+        Commands::ListCategories { flatten } => {
+            let out = list_categories(&page_map, flatten);
             println!("{out}");
         }
         Commands::UpdateCategory { category } => {

@@ -26,7 +26,7 @@ pub async fn read_page(page: &str, pages: &[&str], show_urls: bool) -> Result<St
         .collect::<Vec<String>>()
         .join("");
 
-    Ok(format!("{res}"))
+    Ok(res)
 }
 
 fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
