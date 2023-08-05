@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use scraper::{node::Element, ElementRef, Html, Selector};
@@ -37,72 +40,39 @@ pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
     Ok(Html::parse_document(&body_with_abs_urls))
 }
 
-/// Check if a page has been cached. Different page formats are cached separately.
-/// If a page has existed for more then 14 days and `disable_cache_invalidation` is false
-/// this function will return false even if a cache file exists.
-pub fn page_cache_exists(
-    page: &str,
-    format: &PageFormat,
-    cache_dir_path: &Path,
-    disable_cache_invalidation: bool,
-) -> Result<bool, WikiError> {
+/// Construct a path to cache a page. Different page formats are cached separately.
+/// Slashes are escaped with the unicode character ∕.
+pub fn create_page_path_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
     let ext = match format {
         PageFormat::PlainText => "",
         PageFormat::Markdown => "md",
         PageFormat::Html => "html",
     };
 
-    let page_cache_path = cache_dir_path.join(page).with_extension(ext);
-    if !page_cache_path.exists() {
+    cache_dir.join(&page.replace("/", "∕")).with_extension(ext)
+}
+
+/// Check if a page has been cached.
+/// If a page has existed for more then 14 days and `disable_cache_invalidation` is false
+/// this function will return false even if a cache file exists.
+pub fn page_cache_exists(
+    cache_location: &Path,
+    disable_cache_invalidation: bool,
+) -> Result<bool, WikiError> {
+    if !cache_location.exists() {
         return Ok(false);
     } else if disable_cache_invalidation {
         return Ok(true);
     }
 
     let fourteen_days = 1209600;
-    let secs_since_modified = fs::File::open(page_cache_path)?
+    let secs_since_modified = fs::File::open(cache_location)?
         .metadata()?
         .modified()?
         .elapsed()?
         .as_secs();
 
     Ok(secs_since_modified < fourteen_days)
-}
-
-/// Read a page from the page cache. Different page formats are cached separately.
-pub fn read_page_from_cache(
-    page: &str,
-    format: &PageFormat,
-    cache_dir_path: &Path,
-) -> Result<String, WikiError> {
-    let ext = match format {
-        PageFormat::PlainText => "",
-        PageFormat::Markdown => "md",
-        PageFormat::Html => "html",
-    };
-
-    let page_cache_path = cache_dir_path.join(page).with_extension(ext);
-    Ok(fs::read_to_string(page_cache_path)?)
-}
-
-/// Write a page to the page cache. Different page formats are cached separately.
-pub fn write_page_to_cache(
-    data: String,
-    page: &str,
-    format: &PageFormat,
-    cache_dir_path: &Path,
-) -> Result<(), WikiError> {
-    fs::create_dir_all(cache_dir_path)?;
-
-    let ext = match format {
-        PageFormat::PlainText => "",
-        PageFormat::Markdown => "md",
-        PageFormat::Html => "html",
-    };
-
-    let page_cache_path = cache_dir_path.join(page).with_extension(ext);
-    fs::write(page_cache_path, data.as_bytes())?;
-    Ok(())
 }
 
 pub fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {
