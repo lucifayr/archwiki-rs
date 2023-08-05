@@ -129,6 +129,13 @@ pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<
     }
 }
 
+/// Replaces relative URLs in certain HTML attributes with absolute URLs.
+/// The list of attributes is taken from https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
 fn update_relative_urls(html: &str) -> String {
     html.replace("href=\"/", "href=\"https://wiki.archlinux.org/")
+        .replace("src=\"/", "src=\"https://wiki.archlinux.org/")
+        .replace("data=\"/", "data=\"https://wiki.archlinux.org/")
+        .replace("manifest=\"/", "manifest=\"https://wiki.archlinux.org/")
+        .replace("ping=\"/", "ping=\"https://wiki.archlinux.org/")
+        .replace("poster=\"/", "poster=\"https://wiki.archlinux.org/")
 }
