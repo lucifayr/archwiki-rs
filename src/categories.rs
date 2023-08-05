@@ -29,9 +29,9 @@ use crate::{
 /// If it is not flattened the list is first ordered by category names and then by page names withing those
 /// categories.
 /// If it is flattened then it will by sorted by page names.
-pub fn list_categories(categories: &HashMap<String, Vec<String>>, flatten: bool) -> String {
+pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> String {
     if flatten {
-        return categories.values().flatten().sorted().join("\n");
+        return categories.values().flatten().unique().sorted().join("\n");
     }
 
     categories

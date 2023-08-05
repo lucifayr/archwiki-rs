@@ -1,13 +1,12 @@
 use std::{collections::HashMap, fs};
 
-use categories::{fetch_all_page_names, fetch_page_names_from_categoriy, list_categories};
+use categories::{fetch_all_page_names, fetch_page_names_from_categoriy, list_pages};
 use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
 use formats::plain_text::read_page_as_plain_text;
 use itertools::Itertools;
-use utils::{create_data_dir, get_data_dir_path};
 
 use crate::{
     formats::{html::read_page_as_html, markdown::read_page_as_markdown, PageFormat},
@@ -32,16 +31,10 @@ async fn main() -> Result<(), WikiError> {
         }
     };
 
-    let dir_path = get_data_dir_path(&base_dir)?;
-    create_data_dir(&dir_path)?;
+    let dir_path = base_dir.data_local_dir().join("archwiki-rs");
+    fs::create_dir_all(&dir_path)?;
 
-    let pages_path = dir_path
-        + if cfg!(windows) {
-            "\\pages.yml"
-        } else {
-            "/pages.yml"
-        };
-
+    let pages_path = dir_path.join("pages.yml");
     let pages_map: HashMap<String, Vec<String>> = match fs::read_to_string(&pages_path) {
         Ok(file) => serde_yaml::from_str(&file)?,
         Err(_e) => HashMap::default(),
@@ -95,7 +88,7 @@ async fn main() -> Result<(), WikiError> {
             println!("{out}");
         }
         Commands::ListPages { flatten } => {
-            let out = list_categories(&pages_map, flatten);
+            let out = list_pages(&pages_map, flatten);
             println!("{out}");
         }
         Commands::UpdateCategory { category } => {

@@ -2,7 +2,6 @@
 
 use std::{fs, path::Path};
 
-use directories::BaseDirs;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use scraper::{node::Element, ElementRef, Html, Selector};
 
@@ -127,43 +126,6 @@ pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<
         element.attr(attr).map(|attr| attr.to_owned())
     } else {
         None
-    }
-}
-
-pub fn create_data_dir(path: &str) -> Result<(), WikiError> {
-    fs::create_dir_all(path)?;
-    Ok(())
-}
-
-// these functions should use path buffers instead of strings
-
-pub fn get_data_dir_path(base_dir: &BaseDirs) -> Result<String, WikiError> {
-    let postfix = if cfg!(windows) {
-        "\\archwiki-rs"
-    } else {
-        "/archwiki-rs"
-    };
-
-    match base_dir.data_local_dir().to_str() {
-        Some(path) => Ok(path.to_owned() + postfix),
-        None => Err(WikiError::Path(
-            "Failed to convert path to string".to_owned(),
-        )),
-    }
-}
-
-pub fn get_cache_dir_path(base_dir: BaseDirs) -> Result<String, WikiError> {
-    let postfix = if cfg!(windows) {
-        "\\archwiki-rs"
-    } else {
-        "/archwiki-rs"
-    };
-
-    match base_dir.cache_dir().to_str() {
-        Some(path) => Ok(path.to_owned() + postfix),
-        None => Err(WikiError::Path(
-            "Failed to convert path to string".to_owned(),
-        )),
     }
 }
 
