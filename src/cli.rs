@@ -37,6 +37,11 @@ pub enum Commands {
         flatten: bool,
     },
     #[command(
+        about = "List all categories from the ArchWiki that have been downloaded",
+        long_about = "List categories  from the ArchWiki that have been downloaded. See 'update-all' or 'update-category' for information on downloading."
+    )]
+    ListCategories,
+    #[command(
         about = "Download all pages from a category",
         long_about = "Download all pages from a category. Categories are stored in the pages.yml file."
     )]

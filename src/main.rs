@@ -91,6 +91,10 @@ async fn main() -> Result<(), WikiError> {
             let out = list_pages(&pages_map, flatten);
             println!("{out}");
         }
+        Commands::ListCategories => {
+            let out = pages_map.keys().unique().sorted().join("\n");
+            println!("{out}");
+        }
         Commands::UpdateCategory { category } => {
             match fetch_page_names_from_categoriy(&category).await {
                 Some(pages) => {
