@@ -15,9 +15,7 @@ A CLI tool to read pages from the ArchWiki
     + [Updating everything](#updating-everything)
     + [Updating a specific category](#updating-a-specific-category)
   * [Listing pages and categories](#listing-pages-and-categories)
-  * [File locations](#file-locations)
-    + [The page file](#the-page-file)
-    + [Page cache files](#page-cache-files)
+  * [Other Information](#other-information)
 
 ## Installation
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
@@ -122,15 +120,18 @@ To do the same for categories you can run
 archwiki-rs list-categories
 ```
 
-### File locations
-All file paths use the [directories](https://crates.io/crates/directories) crate
+### Other Information
 
-#### The page file
+Other information such as the value/location of the `cache directory` can be obtained
+using the `info` command
 
-See [data_local_dir](https://docs.rs/directories/latest/directories/struct.BaseDirs.html#method.data_local_dir)
-for more information.
+```sh
+archwiki-rs info
+```
 
-#### Page cache files
-If you want to view your downloaded/cached pages in a separate program (e.g. [Obsidian](https://obsidian.md))
-this is the directory you need. For the exact location see [cache_dir](https://docs.rs/directories/latest/directories/struct.BaseDirs.html#method.cache_dir)
-for more information.
+To only get the value of an entry and not the name and description that belong to it you
+can use the `-o` flag
+
+```sh
+archwiki-rs info -o
+```
