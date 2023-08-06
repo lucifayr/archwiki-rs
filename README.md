@@ -123,7 +123,7 @@ archwiki-rs list-categories
 ```
 
 ### File locations
-All file paths use the the [directories](https://crates.io/crates/directories) crate
+All file paths use the [directories](https://crates.io/crates/directories) crate
 
 #### The page file
 
