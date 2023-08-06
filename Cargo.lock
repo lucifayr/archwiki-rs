@@ -89,7 +89,7 @@ dependencies = [
 
 [[package]]
 name = "archwiki-rs"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
  "clap",
  "colored",
