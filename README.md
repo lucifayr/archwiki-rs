@@ -116,6 +116,12 @@ newline separated list that only contains the names of all pages
 archwiki-rs list-pages -f
 ```
 
+To do the same for categories you can run
+
+```sh
+archwiki-rs list-categories
+```
+
 ### File locations
 All file paths use the the [directories](https://crates.io/crates/directories) crate
 
@@ -125,5 +131,6 @@ See [data_local_dir](https://docs.rs/directories/latest/directories/struct.BaseD
 for more information.
 
 #### Page cache files
-See [cache_dir](https://docs.rs/directories/latest/directories/struct.BaseDirs.html#method.cache_dir)
+If you want to view your downloaded/cached pages in a separate program (e.g. [Obsidian](https://obsidian.md))
+this is the directory you need. For the exact location see [cache_dir](https://docs.rs/directories/latest/directories/struct.BaseDirs.html#method.cache_dir)
 for more information.
