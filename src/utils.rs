@@ -49,7 +49,7 @@ pub fn create_page_path_path(page: &str, format: &PageFormat, cache_dir: &Path) 
         PageFormat::Html => "html",
     };
 
-    cache_dir.join(&page.replace("/", "∕")).with_extension(ext)
+    cache_dir.join(page.replace('/', "∕")).with_extension(ext)
 }
 
 /// Check if a page has been cached.
