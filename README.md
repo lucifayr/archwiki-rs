@@ -57,8 +57,8 @@ archwiki-rs read-page Neovim --format markdown
 #### Caching
 
 By default, pages are cached in the file system after they are fetched and subsequent
-request for that page then use that cache. The cache is invalidated if the cache file hasn't 
-been updated in the last 14 days.
+request for that page then use that cache. The cache is invalidated if the cached file hasn't 
+been modified in the last 14 days.
 
 #### 404 page not found (-̥̥̥n-̥̥̥ )
 
