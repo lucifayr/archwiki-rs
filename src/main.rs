@@ -32,10 +32,11 @@ async fn main() -> Result<(), WikiError> {
         }
     };
 
-    let dir_path = base_dir.data_local_dir().join("archwiki-rs");
-    fs::create_dir_all(&dir_path)?;
+    let cache_dir = base_dir.cache_dir().join("archwiki-rs");
+    let data_dir = base_dir.data_local_dir().join("archwiki-rs");
+    fs::create_dir_all(&data_dir)?;
 
-    let pages_path = dir_path.join("pages.yml");
+    let pages_path = data_dir.join("pages.yml");
     let pages_map: HashMap<String, Vec<String>> = match fs::read_to_string(&pages_path) {
         Ok(file) => serde_yaml::from_str(&file)?,
         Err(_e) => HashMap::default(),
@@ -58,8 +59,6 @@ async fn main() -> Result<(), WikiError> {
                 .into_iter()
                 .unique()
                 .collect::<Vec<&str>>();
-
-            let cache_dir = base_dir.cache_dir().join("archwiki-rs");
 
             let page = pages
                 .iter()
@@ -112,6 +111,49 @@ async fn main() -> Result<(), WikiError> {
             let pages = fetch_all_page_names().await?;
             let yaml = serde_yaml::to_string(&pages)?;
             fs::write(&pages_path, yaml)?;
+        }
+        Commands::Info {
+            show_cache_dir,
+            show_data_dir,
+            only_values,
+        } => {
+            let all_false = !show_data_dir && !show_cache_dir;
+            let info = [
+                (
+                    show_cache_dir || all_false,
+                    cache_dir,
+                    "cache directory",
+                    "stores caches of ArchWiki pages after download to speed up future requests",
+                ),
+                (
+                    show_data_dir || all_false, 
+                    data_dir,
+                    "data directory",  
+                    "stores the 'pages.yml' file that is used for suggestions about what ArchWiki pages exist"
+                ),
+            ];
+
+            let out = info
+                .iter()
+                .filter_map(|entry| {
+                    if entry.0 {
+                        if only_values {
+                            Some(format!("{val}", val = entry.1.to_string_lossy()))
+                        } else {
+                            Some(format!(
+                                "{name:20} | {desc:90} | {val}",
+                                name = entry.2,
+                                desc = entry.3,
+                                val = entry.1.to_string_lossy()
+                            ))
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .join("\n");
+
+            println!("{out}");
         }
     }
 
