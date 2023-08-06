@@ -1,4 +1,4 @@
-# ArchWiki CLI 📖
+# archwiki-rs 📖
 A CLI tool to read pages from the ArchWiki
 
 ## Table of contents
