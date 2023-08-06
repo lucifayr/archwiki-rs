@@ -21,5 +21,6 @@ itertools = "0.10.5"
 reqwest = "0.11.17"
 scraper = "0.16.0"
 serde_yaml = "0.9.21"
+termination = "0.1.2"
 thiserror = "1.0.40"
 tokio = { version = "1.28.0", features = ["full"] }

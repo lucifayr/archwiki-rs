@@ -101,6 +101,7 @@ dependencies = [
  "reqwest",
  "scraper",
  "serde_yaml",
+ "termination",
  "thiserror",
  "tokio",
 ]
@@ -1626,6 +1627,26 @@ dependencies = [
  "futf",
  "mac",
  "utf-8",
+]
+
+[[package]]
+name = "termination"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a61efcbb8bfb6df289d4ebb8e9065dc69f45cfef5391d584ff176968156e244"
+dependencies = [
+ "termination_attrib",
+]
+
+[[package]]
+name = "termination_attrib"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b68a5f1d9c0cdfec550ad26c32532f5b576e99583abc5c4a82395e89b725f4cf"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

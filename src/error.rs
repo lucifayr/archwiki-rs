@@ -16,4 +16,6 @@ pub enum WikiError {
     Path(String),
     #[error("An HTML error occurred")]
     Html(String),
+    #[error("{}", .0)]
+    NoPageFound(String),
 }

@@ -20,6 +20,7 @@ mod formats;
 mod utils;
 
 #[tokio::main]
+#[termination::display]
 async fn main() -> Result<(), WikiError> {
     let args = CliArgs::parse();
     let base_dir = match BaseDirs::new() {
