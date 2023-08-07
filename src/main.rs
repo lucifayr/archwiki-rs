@@ -34,6 +34,7 @@ async fn main() -> Result<(), WikiError> {
 
     let cache_dir = base_dir.cache_dir().join("archwiki-rs");
     let data_dir = base_dir.data_local_dir().join("archwiki-rs");
+    fs::create_dir_all(&cache_dir)?;
     fs::create_dir_all(&data_dir)?;
 
     let pages_path = data_dir.join("pages.yml");
