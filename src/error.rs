@@ -4,17 +4,17 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum WikiError {
-    #[error("A network error occurred")]
+    #[error("A network error occurred.\nERROR: {}", .0)]
     Network(#[from] reqwest::Error),
-    #[error("A yaml parsing error occurred")]
+    #[error("A yaml parsing error occurred.\nERROR: {}", .0)]
     YamlParsing(#[from] serde_yaml::Error),
-    #[error("An IO error occurred")]
+    #[error("An IO error occurred.\nERROR: {}", .0)]
     IO(#[from] io::Error),
-    #[error("An system time error occurred")]
+    #[error("A system time error occurred.\nERROR: {}", .0)]
     SystemTime(#[from] SystemTimeError),
-    #[error("A path error occurred")]
+    #[error("A path error occurred.\nERROR: {}", .0)]
     Path(String),
-    #[error("An HTML error occurred")]
+    #[error("A HTML error occurred.\nERROR: {}", .0)]
     Html(String),
     #[error("{}", .0)]
     NoPageFound(String),
