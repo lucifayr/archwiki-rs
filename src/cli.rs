@@ -69,6 +69,7 @@ pub enum Commands {
 }
 
 #[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct CliArgs {
     #[command(subcommand)]
     pub command: Commands,
