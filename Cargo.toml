@@ -7,7 +7,7 @@ authors = ["Lucy Gschwantner lucygschwantner@gmail.com"]
 license = "MIT"
 repository = "https://github.com/jackboxx/archwiki-rs"
 readme = "README.md"
-keywords = ["ArchWiki", "cli", "bar"]
+keywords = ["ArchWiki", "cli"]
 categories = ["command-line-interface"]
 
 [dependencies]
