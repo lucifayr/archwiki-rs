@@ -1,4 +1,4 @@
-name: Rust CI
+name: CI
 
 on:
   push:
@@ -19,3 +19,5 @@ jobs:
       run: cargo build --verbose
     - name: Lint
       run: cargo clippy --verbose
+    - name: Test
+      run: cargo test --verbose

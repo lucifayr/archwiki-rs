@@ -119,6 +119,7 @@ fn update_relative_urls(html: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_to_save_file_name() {
