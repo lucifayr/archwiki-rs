@@ -98,6 +98,7 @@ dependencies = [
  "fuzzy-matcher",
  "html2md",
  "itertools",
+ "regex",
  "reqwest",
  "scraper",
  "serde_yaml",

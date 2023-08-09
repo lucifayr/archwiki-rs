@@ -6,6 +6,7 @@ use std::{
 };
 
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use regex::Regex;
 use scraper::{node::Element, ElementRef, Html, Selector};
 
 use crate::{error::WikiError, formats::PageFormat};
@@ -41,15 +42,20 @@ pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
 }
 
 /// Construct a path to cache a page. Different page formats are cached separately.
-/// Slashes are escaped with the unicode character ∕.
-pub fn create_page_path_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
+/// All none word characters are escaped with an '_'
+pub fn create_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
     let ext = match format {
         PageFormat::PlainText => "",
         PageFormat::Markdown => "md",
         PageFormat::Html => "html",
     };
 
-    cache_dir.join(page.replace('/', "∕")).with_extension(ext)
+    cache_dir.join(&to_save_file_name(page)).with_extension(ext)
+}
+
+pub fn to_save_file_name(page: &str) -> String {
+    let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
+    regex.replace_all(page, "_").to_string()
 }
 
 /// Check if a page has been cached.
@@ -108,4 +114,24 @@ fn update_relative_urls(html: &str) -> String {
         .replace("manifest=\"/", "manifest=\"https://wiki.archlinux.org/")
         .replace("ping=\"/", "ping=\"https://wiki.archlinux.org/")
         .replace("poster=\"/", "poster=\"https://wiki.archlinux.org/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_to_save_file_name() {
+        let cases = [
+            ("Neovim", "Neovim"),
+            ("3D Mouse", "3D_Mouse"),
+            ("/etc/fstab", "_etc_fstab"),
+            (".NET", "_NET"),
+            ("ASUS MeMO Pad 7 (ME176C(X))", "ASUS_MeMO_Pad_7__ME176C_X__"),
+        ];
+
+        for (input, output) in cases {
+            assert_eq!(output, to_save_file_name(input));
+        }
+    }
 }
