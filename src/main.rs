@@ -24,6 +24,8 @@ const PAGE_FILE_NAME: &str = "pages.yml";
 #[tokio::main]
 #[termination::display]
 async fn main() -> Result<(), WikiError> {
+    human_panic::setup_panic!();
+
     let args = CliArgs::parse();
     let base_dir = match BaseDirs::new() {
         Some(base_dir) => base_dir,
