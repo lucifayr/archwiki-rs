@@ -10,7 +10,7 @@ A CLI tool to read pages from the ArchWiki
     + [Basic request](#basic-request)
     + [Using a different format](#using-a-different-format)
     + [Caching](#caching)
-    + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found-̥̥̥n-̥̥̥)
+    + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found--̥̥̥n-̥̥̥-)
   * [Downloading page info](#downloading-page-info)
     + [Updating everything](#updating-everything)
     + [Updating a specific category](#updating-a-specific-category)
