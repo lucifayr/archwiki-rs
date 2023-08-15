@@ -19,6 +19,8 @@ mod error;
 mod formats;
 mod utils;
 
+const PAGE_FILE_NAME: &str = "pages.yml";
+
 #[tokio::main]
 #[termination::display]
 async fn main() -> Result<(), WikiError> {
@@ -37,10 +39,10 @@ async fn main() -> Result<(), WikiError> {
     fs::create_dir_all(&cache_dir)?;
     fs::create_dir_all(&data_dir)?;
 
-    let pages_path = data_dir.join("pages.yml");
+    let pages_path = data_dir.join(PAGE_FILE_NAME);
     let pages_map: HashMap<String, Vec<String>> = match fs::read_to_string(&pages_path) {
         Ok(file) => serde_yaml::from_str(&file)?,
-        Err(_e) => HashMap::default(),
+        Err(_) => HashMap::default(),
     };
 
     match args.command {
@@ -68,9 +70,10 @@ async fn main() -> Result<(), WikiError> {
                 .unwrap_or(page);
 
             let page_cache_path = create_page_path(&page, &format, &cache_dir);
-            let out = if !ignore_cache
-                && page_cache_exists(&page_cache_path, disable_cache_invalidation).unwrap_or(false)
-            {
+            let use_cached_page = !ignore_cache
+                && page_cache_exists(&page_cache_path, disable_cache_invalidation).unwrap_or(false);
+
+            let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
                 match format {
@@ -118,16 +121,16 @@ async fn main() -> Result<(), WikiError> {
             show_data_dir,
             only_values,
         } => {
-            let all_false = !show_data_dir && !show_cache_dir;
+            let no_flags_provided = !show_data_dir && !show_cache_dir;
             let info = [
                 (
-                    show_cache_dir || all_false,
+                    show_cache_dir || no_flags_provided,
                     cache_dir,
                     "cache directory",
                     "stores caches of ArchWiki pages after download to speed up future requests",
                 ),
                 (
-                    show_data_dir || all_false, 
+                    show_data_dir || no_flags_provided,
                     data_dir,
                     "data directory",  
                     "stores the 'pages.yml' file that is used for suggestions about what ArchWiki pages exist"
@@ -137,20 +140,16 @@ async fn main() -> Result<(), WikiError> {
             let out = info
                 .iter()
                 .filter_map(|entry| {
-                    if entry.0 {
-                        if only_values {
-                            Some(format!("{val}", val = entry.1.to_string_lossy()))
-                        } else {
-                            Some(format!(
-                                "{name:20} | {desc:90} | {val}",
-                                name = entry.2,
-                                desc = entry.3,
-                                val = entry.1.to_string_lossy()
-                            ))
-                        }
+                    entry.0.then_some(if only_values {
+                        format!("{val}", val = entry.1.to_string_lossy())
                     } else {
-                        None
-                    }
+                        format!(
+                            "{name:20} | {desc:90} | {val}",
+                            name = entry.2,
+                            desc = entry.3,
+                            val = entry.1.to_string_lossy()
+                        )
+                    })
                 })
                 .join("\n");
 

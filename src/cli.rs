@@ -2,6 +2,13 @@ use clap::{Parser, Subcommand};
 
 use crate::formats::PageFormat;
 
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+pub struct CliArgs {
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
 #[derive(Subcommand)]
 pub enum Commands {
     #[command(
@@ -66,11 +73,4 @@ pub enum Commands {
         /// Only show values and not the properties they belong to or their descriptions
         only_values: bool,
     },
-}
-
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-pub struct CliArgs {
-    #[command(subcommand)]
-    pub command: Commands,
 }

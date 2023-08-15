@@ -50,10 +50,10 @@ pub fn create_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> Pa
         PageFormat::Html => "html",
     };
 
-    cache_dir.join(&to_save_file_name(page)).with_extension(ext)
+    cache_dir.join(to_save_file_name(page)).with_extension(ext)
 }
 
-pub fn to_save_file_name(page: &str) -> String {
+fn to_save_file_name(page: &str) -> String {
     let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
     regex.replace_all(page, "_").to_string()
 }
