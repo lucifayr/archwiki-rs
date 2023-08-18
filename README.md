@@ -16,6 +16,7 @@ A CLI tool to read pages from the ArchWiki
     + [Updating a specific category](#updating-a-specific-category)
   * [Listing pages and categories](#listing-pages-and-categories)
   * [Other Information](#other-information)
+- [Plugins](#plugins)
 
 ## Installation
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
@@ -135,3 +136,10 @@ can use the `-o` flag
 ```sh
 archwiki-rs info -o
 ```
+
+## Plugins
+
+Here's a list of programs that have plugins for `archwiki-rs` to make your life easier
+
+- [Neovim](https://github.com/Jackboxx/archwiki-nvim)
+- [Obsidian](https://github.com/Jackboxx/archwiki-obsidian)
