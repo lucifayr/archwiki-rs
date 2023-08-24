@@ -10,7 +10,7 @@ use itertools::Itertools;
 
 use crate::{
     formats::{html::read_page_as_html, markdown::read_page_as_markdown, PageFormat},
-    utils::{create_page_path, page_cache_exists},
+    utils::{create_page_path, fetch_page_langs, format_page_lang, page_cache_exists},
 };
 
 mod categories;
@@ -92,6 +92,33 @@ async fn main() -> Result<(), WikiError> {
             }
 
             println!("{out}");
+        }
+        Commands::ReadPageLanguages { show_urls, page } => {
+            let pages = pages_map
+                .values()
+                .map(|pages| pages.iter().map(|p| p.as_str()).collect())
+                .reduce(|acc: Vec<&str>, pages| acc.into_iter().chain(pages).collect())
+                .unwrap_or(Vec::new())
+                .into_iter()
+                .unique()
+                .collect::<Vec<&str>>();
+
+            let page = pages
+                .iter()
+                .find(|p| p.eq_ignore_ascii_case(&page))
+                .map(|p| p.to_owned().to_owned())
+                .unwrap_or(page);
+
+            let langs = fetch_page_langs(&page).await?;
+
+            println!(
+                "{}",
+                langs
+                    .into_iter()
+                    .map(|l| format_page_lang(&l, show_urls))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
         }
         Commands::ListPages { flatten } => {
             let out = list_pages(&pages_map, flatten);

@@ -34,6 +34,13 @@ pub enum Commands {
         format: PageFormat,
         page: String,
     },
+    #[command(about = "", long_about = "")]
+    ReadPageLanguages {
+        #[arg(short, long)]
+        /// Show URLs of the pages in the languages
+        show_urls: bool,
+        page: String,
+    },
     #[command(
         about = "List all pages from the ArchWiki that have been downloaded",
         long_about = "List all pages from the ArchWiki that have been downloaded. See 'update-all' or 'update-category' for information on downloading."

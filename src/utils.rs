@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -10,6 +8,14 @@ use regex::Regex;
 use scraper::{node::Element, ElementRef, Html, Selector};
 
 use crate::{error::WikiError, formats::PageFormat};
+
+const BASE_WIKI_URL: &str = "https://wiki.archlinux.org/title/";
+
+#[derive(Debug, Clone)]
+pub struct PageLanguage {
+    pub lang: String,
+    pub page_link: String,
+}
 
 pub enum HtmlTag {
     A,
@@ -30,10 +36,22 @@ pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
     document.select(&selector).next()
 }
 
+pub async fn fetch_page_langs(page: &str) -> Result<Vec<PageLanguage>, reqwest::Error> {
+    let url = format!("{BASE_WIKI_URL}{page}");
+
+    let doc = fetch_page(page).await?;
+    let default_lang = PageLanguage {
+        lang: "English".to_owned(),
+        page_link: url,
+    };
+
+    Ok(vec![vec![default_lang], get_page_languages(&doc)].concat())
+}
+
 /// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.
 /// `/title/Neovim` -> `https://wiki.archlinux.org/title/Neovim`
 pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
-    let url = format!("https://wiki.archlinux.org/title/{page}");
+    let url = format!("{BASE_WIKI_URL}{page}");
 
     let body = reqwest::get(&url).await?.text().await?;
     let body_with_abs_urls = update_relative_urls(&body);
@@ -51,11 +69,6 @@ pub fn create_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> Pa
     };
 
     cache_dir.join(to_save_file_name(page)).with_extension(ext)
-}
-
-fn to_save_file_name(page: &str) -> String {
-    let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
-    regex.replace_all(page, "_").to_string()
 }
 
 /// Check if a page has been cached.
@@ -103,6 +116,36 @@ pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<
     } else {
         None
     }
+}
+
+pub fn format_page_lang(lang: &PageLanguage, show_urls: bool) -> String {
+    if show_urls {
+        format!("{} ({})", lang.lang, lang.page_link)
+    } else {
+        format!("{}", lang.lang)
+    }
+}
+
+fn to_save_file_name(page: &str) -> String {
+    let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
+    regex.replace_all(page, "_").to_string()
+}
+
+fn get_page_languages(document: &Html) -> Vec<PageLanguage> {
+    let selector = Selector::parse(".interlanguage-link-target")
+        .expect(".interlanguage-link-target should be valid selector");
+
+    document
+        .select(&selector)
+        .map(|e| PageLanguage {
+            lang: e
+                .text()
+                .next()
+                .map(|t| t.to_owned())
+                .unwrap_or(String::new()),
+            page_link: extract_tag_attr(e.value(), &HtmlTag::A, "href").unwrap_or(String::new()),
+        })
+        .collect()
 }
 
 /// Replaces relative URLs in certain HTML attributes with absolute URLs.
