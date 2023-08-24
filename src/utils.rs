@@ -36,16 +36,20 @@ pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
     document.select(&selector).next()
 }
 
-pub async fn fetch_page_langs(page: &str) -> Result<Vec<PageLanguage>, reqwest::Error> {
-    let url = format!("{BASE_WIKI_URL}{page}");
+pub async fn fetch_page_langs(page: &str, pages: &[&str]) -> Result<Vec<PageLanguage>, WikiError> {
+    let document = fetch_page(page).await?;
 
-    let doc = fetch_page(page).await?;
-    let default_lang = PageLanguage {
-        lang: "English".to_owned(),
-        page_link: url,
+    if let None = get_page_content(&document) {
+        let recommendations = get_top_pages(page, 5, pages);
+        return Err(WikiError::NoPageFound(recommendations.join("\n")));
     };
 
-    Ok(vec![vec![default_lang], get_page_languages(&doc)].concat())
+    let default_lang = PageLanguage {
+        lang: "English".to_owned(),
+        page_link: format!("{BASE_WIKI_URL}{page}"),
+    };
+
+    Ok(vec![vec![default_lang], get_page_languages(&document)].concat())
 }
 
 /// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.

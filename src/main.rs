@@ -109,7 +109,7 @@ async fn main() -> Result<(), WikiError> {
                 .map(|p| p.to_owned().to_owned())
                 .unwrap_or(page);
 
-            let langs = fetch_page_langs(&page).await?;
+            let langs = fetch_page_langs(&page, &pages).await?;
 
             println!(
                 "{}",
