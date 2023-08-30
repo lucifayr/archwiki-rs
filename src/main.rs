@@ -5,12 +5,12 @@ use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
-use formats::plain_text::read_page_as_plain_text;
+use formats::plain_text::convert_page_to_plain_text;
 use itertools::Itertools;
 
 use crate::{
-    formats::{html::read_page_as_html, markdown::read_page_as_markdown, PageFormat},
-    utils::{create_page_path, page_cache_exists},
+    formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
+    utils::{create_page_path, fetch_page, page_cache_exists},
 };
 
 mod categories;
@@ -78,12 +78,16 @@ async fn main() -> Result<(), WikiError> {
             let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
+                let document = fetch_page(&page).await?;
+
                 match format {
                     PageFormat::PlainText => {
-                        read_page_as_plain_text(&page, &pages, show_urls).await?
+                        convert_page_to_plain_text(&document, &page, &pages, show_urls).await?
                     }
-                    PageFormat::Markdown => read_page_as_markdown(&page, &pages).await?,
-                    PageFormat::Html => read_page_as_html(&page, &pages).await?,
+                    PageFormat::Markdown => {
+                        convert_page_to_markdown(&document, &page, &pages).await?
+                    }
+                    PageFormat::Html => convert_page_to_html(&document, &page, &pages).await?,
                 }
             };
 

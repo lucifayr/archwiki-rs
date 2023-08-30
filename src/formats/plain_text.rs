@@ -1,27 +1,29 @@
 use colored::Colorize;
 use ego_tree::NodeRef;
-use scraper::Node;
+use scraper::{Html, Node};
 
 use crate::{
     error::WikiError,
-    utils::{extract_tag_attr, fetch_page, get_page_content, get_top_pages, HtmlTag},
+    utils::{extract_tag_attr, get_page_content, get_top_pages, HtmlTag},
 };
 
-/// Reads the body of the ArchWiki page as a plain text string, removing all tags and only leaving
-/// the text node content. URLs can be shown in a markdown like syntax.
+/// Converts the body of the ArchWiki page to a plain text string, removing all tags and
+/// only leaving the text node content. URLs can be shown in a markdown like syntax.
 ///
-/// If the ArchWiki returns a 404 for the page being searched for the top 5 pages that are most
+/// the body of the ArchWiki page to a Markdown string.
+///
+/// If the ArchWiki page doesn't have content the top 5 pages that are most
 /// like the page that was given as an argument are returned as a `NoPageFound` error.
 ///
 /// Errors:
 /// - If it fails to fetch the page
-pub async fn read_page_as_plain_text(
+pub async fn convert_page_to_plain_text(
+    document: &Html,
     page: &str,
     pages: &[&str],
     show_urls: bool,
 ) -> Result<String, WikiError> {
-    let document = fetch_page(page).await?;
-    let content = match get_page_content(&document) {
+    let content = match get_page_content(document) {
         Some(content) => content,
         None => {
             let recommendations = get_top_pages(page, 5, pages);
