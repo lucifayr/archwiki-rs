@@ -10,7 +10,7 @@ use itertools::Itertools;
 
 use crate::{
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
-    utils::{create_page_path, fetch_page, page_cache_exists},
+    utils::{create_cache_page_path, fetch_page, page_cache_exists},
 };
 
 mod categories;
@@ -71,7 +71,7 @@ async fn main() -> Result<(), WikiError> {
                 .map(|p| p.to_owned().to_owned())
                 .unwrap_or(page);
 
-            let page_cache_path = create_page_path(&page, &format, &cache_dir);
+            let page_cache_path = create_cache_page_path(&page, &format, &cache_dir);
             let use_cached_page = !ignore_cache
                 && page_cache_exists(&page_cache_path, disable_cache_invalidation).unwrap_or(false);
 

@@ -44,7 +44,7 @@ pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
 
 /// Construct a path to cache a page. Different page formats are cached separately.
 /// All none word characters are escaped with an '_'
-pub fn create_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
+pub fn create_cache_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
     let ext = match format {
         PageFormat::PlainText => "",
         PageFormat::Markdown => "md",
