@@ -106,3 +106,110 @@ fn format_table(node: NodeRef<Node>, show_urls: bool) -> String {
 fn wrap_text_in_url(text: &str, url: &str) -> String {
     format!("{text}[{url}]", url = url.cyan())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::PAGE_CONTENT_CLASS;
+    use pretty_assertions::assert_eq;
+
+    #[tokio::test]
+    async fn test_convert_page_to_markdown() {
+        {
+            let page = "plain page";
+            let input = format!(
+                r#"<div class="{PAGE_CONTENT_CLASS}">
+    <h3>Hello, world!</h3>
+    <div>how <span><bold>are</bold></span> you</div>
+    I'm great
+</div>"#
+            );
+
+            let expected_output = format!(
+                r#"
+    Hello, world!
+    how are you
+    I'm great
+"#
+            );
+
+            let document = Html::parse_document(&input);
+            let output = convert_page_to_plain_text(&document, page, &[], false)
+                .await
+                .unwrap();
+
+            assert_eq!(output, expected_output);
+        }
+
+        {
+            let page = "page with links";
+            let input = format!(
+                r#"<div class="{PAGE_CONTENT_CLASS}">
+    <h3>Hello, world!</h3>
+    <a href="example.com">example</a>
+</div>"#
+            );
+
+            let expected_output = format!(
+                r#"
+    Hello, world!
+    example[{url}]
+"#,
+                url = "example.com".cyan()
+            );
+
+            let document = Html::parse_document(&input);
+            let output = convert_page_to_plain_text(&document, page, &[], true)
+                .await
+                .unwrap();
+
+            dbg!(&output);
+            assert_eq!(output, expected_output);
+        }
+    }
+
+    #[tokio::test]
+    #[allow(unreachable_code)]
+    async fn test_recommendations() {
+        return;
+        todo!("make fuzzy matcher better");
+
+        let page = "noexistent page";
+        let input = format!("<div>nothing here</div>");
+
+        let recommendations = [
+            "noexistent pa",
+            "noexist",
+            "existent page",
+            "page",
+            "existent p",
+            "gdjaskfjslsvcsf",
+            "jkjzcffsdfsf",
+            "fjffjfsdfds",
+        ];
+
+        let document = Html::parse_document(&input);
+        let output = convert_page_to_plain_text(&document, page, &recommendations, false)
+            .await
+            .unwrap_err();
+
+        dbg!(&output);
+
+        match output {
+            WikiError::NoPageFound(pages) => {
+                assert_eq!(
+                    pages,
+                    [
+                        "noexistent pa",
+                        "noexist",
+                        "existent page",
+                        "page",
+                        "existent p",
+                    ]
+                    .join("\n")
+                )
+            }
+            _ => panic!("expected ouput to be WikiError::NoPageFound"),
+        }
+    }
+}

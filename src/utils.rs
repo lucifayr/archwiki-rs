@@ -1,15 +1,16 @@
-#![allow(dead_code)]
-
 use std::{
     fs,
     path::{Path, PathBuf},
 };
 
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use itertools::Itertools;
 use regex::Regex;
 use scraper::{node::Element, ElementRef, Html, Selector};
 
 use crate::{error::WikiError, formats::PageFormat};
+
+pub const PAGE_CONTENT_CLASS: &str = "mw-parser-output";
 
 pub enum HtmlTag {
     A,
@@ -25,8 +26,8 @@ impl HtmlTag {
 
 /// Selects the body of an ArchWiki page
 pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
-    let selector =
-        Selector::parse(".mw-parser-output").expect(".mw-parser-output should be valid selector");
+    let class = format!(".{PAGE_CONTENT_CLASS}");
+    let selector = Selector::parse(&class).expect(&format!("{class} should be valid selector"));
     document.select(&selector).next()
 }
 
@@ -82,13 +83,17 @@ pub fn page_cache_exists(
 }
 
 pub fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {
-    let matcher = SkimMatcherV2::default();
-    let mut ranked_pages = pages
+    let matcher = SkimMatcherV2::default().ignore_case();
+    let ranked_pages = pages
         .iter()
-        .map(|page| (matcher.fuzzy_match(page, search).unwrap_or(0), *page))
+        .filter_map(|page| {
+            matcher
+                .fuzzy_match(search, page)
+                .map(|x| (x, page.to_owned()))
+        })
+        .sorted_by(|a, b| a.0.cmp(&b.0))
         .collect::<Vec<(i64, &str)>>();
 
-    ranked_pages.sort_by(|a, b| a.0.cmp(&b.0));
     ranked_pages
         .into_iter()
         .rev()
@@ -133,6 +138,49 @@ mod tests {
 
         for (input, output) in cases {
             assert_eq!(output, to_save_file_name(input));
+        }
+    }
+
+    #[test]
+    #[allow(unreachable_code)]
+    fn test_get_top_pages() {
+        return;
+        todo!("make fuzzy matcher better");
+        // short list
+        {
+            let out = get_top_pages("test", 2, &["tes", "tester", "Hippo"]);
+            dbg!(&out);
+            assert_eq!(out, ["tes", "tester"].to_vec());
+        }
+
+        // long list
+        {
+            let search = "noexistent item";
+
+            let recommendations = [
+                "noexistent ie",
+                "noexist",
+                "existent it",
+                "item",
+                "existent i",
+                "gdjaskfjslsvcsf",
+                "jkjzcffsdfsf",
+                "fjffjfsdfds",
+            ];
+
+            let out = get_top_pages(search, 5, &recommendations);
+
+            assert_eq!(
+                out,
+                [
+                    "noexistent pa",
+                    "noexist",
+                    "existent page",
+                    "page",
+                    "existent p",
+                ]
+                .to_vec()
+            );
         }
     }
 }
