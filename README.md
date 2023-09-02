@@ -14,7 +14,10 @@ A CLI tool to read pages from the ArchWiki
   * [Downloading page info](#downloading-page-info)
     + [Updating everything](#updating-everything)
     + [Updating a specific category](#updating-a-specific-category)
-  * [Listing pages and categories](#listing-pages-and-categories)
+  * [Listing ArchWiki information](#listing-archwiki-information)
+    + [Listing pages](#listing-pages)
+    + [Listing categories](#listing-categories)
+    + [Listing languages](#listing-languages)
   * [Other Information](#other-information)
 - [Plugins](#plugins)
 
@@ -101,7 +104,9 @@ Be warned, since this scrapes multiple thousand links, this is very slow (-, - )
 archwiki-rs update-category Xorg_commands
 ```
 
-### Listing pages and categories
+### Listing ArchWiki information
+
+#### Listing pages
 
 ```sh
 archwiki-rs list-pages
@@ -115,10 +120,20 @@ newline separated list that only contains the names of all pages
 archwiki-rs list-pages -f
 ```
 
+#### Listing categories
+
 To do the same for categories you can run
 
 ```sh
 archwiki-rs list-categories
+```
+
+#### Listing languages
+
+And the same for available languages
+
+```sh
+archwiki-rs list-languages
 ```
 
 ### Other Information

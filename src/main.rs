@@ -10,6 +10,7 @@ use itertools::Itertools;
 
 use crate::{
     formats::{html::read_page_as_html, markdown::read_page_as_markdown, PageFormat},
+    languages::{fetch_all_langs, format_lang_table},
     utils::{create_page_path, page_cache_exists},
 };
 
@@ -17,7 +18,9 @@ mod categories;
 mod cli;
 mod error;
 mod formats;
+mod languages;
 mod utils;
+mod wiki_api;
 
 const PAGE_FILE_NAME: &str = "pages.yml";
 
@@ -101,6 +104,12 @@ async fn main() -> Result<(), WikiError> {
             let out = pages_map.keys().unique().sorted().join("\n");
             println!("{out}");
         }
+        Commands::ListLanguages => {
+            let langs = fetch_all_langs().await?;
+            let out = format_lang_table(&langs);
+
+            println!("{out}");
+        }
         Commands::UpdateCategory { category } => {
             match fetch_page_names_from_categoriy(&category).await {
                 Some(pages) => {
@@ -125,6 +134,12 @@ async fn main() -> Result<(), WikiError> {
         } => {
             let no_flags_provided = !show_data_dir && !show_cache_dir;
             let info = [
+                (
+                    true,
+                    "VALUE".into(),
+                    "NAME",
+                    "DESCRIPTION",
+                ),
                 (
                     show_cache_dir || no_flags_provided,
                     cache_dir,
