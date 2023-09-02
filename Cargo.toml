@@ -23,6 +23,8 @@ itertools = "0.10.5"
 regex = "1.9.3"
 reqwest = "0.11.17"
 scraper = "0.16.0"
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.105"
 serde_yaml = "0.9.21"
 termination = "0.1.2"
 thiserror = "1.0.40"

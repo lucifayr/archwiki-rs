@@ -17,7 +17,9 @@ mod categories;
 mod cli;
 mod error;
 mod formats;
+mod languages;
 mod utils;
+mod wiki_api;
 
 const PAGE_FILE_NAME: &str = "pages.yml";
 
