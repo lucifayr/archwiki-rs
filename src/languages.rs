@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use serde::Deserialize;
 
-use crate::wiki_api::ApiResponse;
+use crate::{error::WikiError, wiki_api::ApiResponse};
 
 const LANGUAGE_API_URL: &str =
     "https://wiki.archlinux.org/api.php?action=query&meta=siteinfo&siprop=languages&format=json";
@@ -18,15 +18,15 @@ pub struct Language {
     name: String,
 }
 
-pub async fn fetch_all_langs() -> Result<Vec<Language>, reqwest::Error> {
+pub async fn fetch_all_langs() -> Result<Vec<Language>, WikiError> {
     let body = reqwest::get(LANGUAGE_API_URL).await?.text().await?;
-    let json: ApiResponse<LanguageApiResponse> = serde_json::from_str(&body).unwrap();
+    let json: ApiResponse<LanguageApiResponse> = serde_json::from_str(&body)?;
 
     Ok(json.query.languages)
 }
 
 pub fn format_lang_table(langs: &[Language]) -> String {
-    let mut table = format!("{c1:20} | {c2:90}\n", c1 = "code", c2 = "name");
+    let mut table = format!("{c1:20} | {c2:90}\n", c1 = "CODE", c2 = "NAME");
     let body = langs
         .iter()
         .sorted_by(|a, b| a.code.cmp(&b.code))
