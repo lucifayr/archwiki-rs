@@ -10,6 +10,7 @@ use itertools::Itertools;
 
 use crate::{
     formats::{html::read_page_as_html, markdown::read_page_as_markdown, PageFormat},
+    languages::{fetch_all_langs, format_lang_table},
     utils::{create_page_path, page_cache_exists},
 };
 
@@ -101,6 +102,12 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::ListCategories => {
             let out = pages_map.keys().unique().sorted().join("\n");
+            println!("{out}");
+        }
+        Commands::ListLanguages => {
+            let langs = fetch_all_langs().await?;
+            let out = format_lang_table(&langs);
+
             println!("{out}");
         }
         Commands::UpdateCategory { category } => {

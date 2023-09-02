@@ -20,7 +20,6 @@ pub struct Language {
 
 pub async fn fetch_all_langs() -> Result<Vec<Language>, reqwest::Error> {
     let body = reqwest::get(LANGUAGE_API_URL).await?.text().await?;
-    dbg!(&body);
     let json: ApiResponse<LanguageApiResponse> = serde_json::from_str(&body).unwrap();
 
     Ok(json.query.languages)
