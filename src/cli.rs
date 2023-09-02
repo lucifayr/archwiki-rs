@@ -49,17 +49,15 @@ pub enum Commands {
     )]
     ListCategories,
     #[command(
-        about = "Download all pages from a category",
-        long_about = "Download all pages from a category. Categories are stored in the pages.yml file."
-    )]
-    #[command(
         about = "List all languages that the ArchWiki supports",
         long_about = "List all languages that the ArchWiki supports."
     )]
     ListLanguages,
-    UpdateCategory {
-        category: String,
-    },
+    #[command(
+        about = "Download all pages from a category",
+        long_about = "Download all pages from a category. Categories are stored in the pages.yml file."
+    )]
+    UpdateCategory { category: String },
     #[command(
         about = "Download all pages from the ArchWiki",
         long_about = "Download all pages from the archwiki. Only the English pages are stored."
