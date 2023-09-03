@@ -4,7 +4,8 @@ use std::collections::HashMap;
 
 use crate::{
     error::WikiError,
-    utils::{extract_tag_attr, fetch_page, HtmlTag},
+    utils::{extract_tag_attr, HtmlTag},
+    wiki_api::fetch_page,
 };
 
 /// Returns a print ready list of the provided page names in

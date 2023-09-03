@@ -11,7 +11,8 @@ use itertools::Itertools;
 use crate::{
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
-    utils::{create_cache_page_path, fetch_page, page_cache_exists},
+    utils::{create_cache_page_path, page_cache_exists},
+    wiki_api::fetch_page,
 };
 
 mod categories;
