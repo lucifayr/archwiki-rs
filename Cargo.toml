@@ -16,7 +16,6 @@ clap = { version = "4.2.5", features = ["derive"] }
 colored = "2.0.0"
 directories = "5.0.1"
 ego-tree = "0.6.2"
-fuzzy-matcher = "0.3.7"
 html2md = "0.2.14"
 human-panic = "1.1.5"
 itertools = "0.10.5"
