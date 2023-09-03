@@ -5,13 +5,13 @@ use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
-use formats::plain_text::read_page_as_plain_text;
+use formats::plain_text::convert_page_to_plain_text;
 use itertools::Itertools;
 
 use crate::{
-    formats::{html::read_page_as_html, markdown::read_page_as_markdown, PageFormat},
+    formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
-    utils::{create_page_path, page_cache_exists},
+    utils::{create_cache_page_path, fetch_page, page_cache_exists},
 };
 
 mod categories;
@@ -74,19 +74,23 @@ async fn main() -> Result<(), WikiError> {
                 .map(|p| p.to_owned().to_owned())
                 .unwrap_or(page);
 
-            let page_cache_path = create_page_path(&page, &format, &cache_dir);
+            let page_cache_path = create_cache_page_path(&page, &format, &cache_dir);
             let use_cached_page = !ignore_cache
                 && page_cache_exists(&page_cache_path, disable_cache_invalidation).unwrap_or(false);
 
             let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
+                let document = fetch_page(&page).await?;
+
                 match format {
                     PageFormat::PlainText => {
-                        read_page_as_plain_text(&page, &pages, show_urls).await?
+                        convert_page_to_plain_text(&document, &page, &pages, show_urls).await?
                     }
-                    PageFormat::Markdown => read_page_as_markdown(&page, &pages).await?,
-                    PageFormat::Html => read_page_as_html(&page, &pages).await?,
+                    PageFormat::Markdown => {
+                        convert_page_to_markdown(&document, &page, &pages).await?
+                    }
+                    PageFormat::Html => convert_page_to_html(&document, &page, &pages).await?,
                 }
             };
 

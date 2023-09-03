@@ -1,18 +1,22 @@
+use scraper::Html;
+
 use crate::{
     error::WikiError,
-    utils::{fetch_page, get_page_content, get_top_pages},
+    utils::{get_page_content, get_top_pages},
 };
 
-/// Reads the body of the ArchWiki page as a HTML string.
+/// Converts the body of the ArchWiki page to a HTML string.
 ///
-/// If the ArchWiki returns a 404 for the page being searched for the top 5 pages that are most
+/// If the ArchWiki page doesn't have content the top 5 pages that are most
 /// like the page that was given as an argument are returned as a `NoPageFound` error.
 ///
 /// Errors:
 /// - If it fails to fetch the page
-pub async fn read_page_as_html(page: &str, pages: &[&str]) -> Result<String, WikiError> {
-    let document = fetch_page(page).await?;
-
+pub async fn convert_page_to_html(
+    document: &Html,
+    page: &str,
+    pages: &[&str],
+) -> Result<String, WikiError> {
     let content = match get_page_content(&document) {
         Some(content) => content,
         None => {
@@ -27,4 +31,33 @@ pub async fn read_page_as_html(page: &str, pages: &[&str]) -> Result<String, Wik
         body = content.html()
     );
     Ok(res)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::PAGE_CONTENT_CLASS;
+    use pretty_assertions::assert_eq;
+
+    #[tokio::test]
+    async fn test_convert_page_to_html() {
+        let page = "test page";
+        let input = format!(
+            r#"<div class="{PAGE_CONTENT_CLASS}">
+    <title>Hello, world!</title>
+</div>"#
+        );
+
+        let expected_output = format!(
+            r#"<h1>{page}</h1>
+<div class="{PAGE_CONTENT_CLASS}">
+    <title>Hello, world!</title>
+</div>"#
+        );
+
+        let document = Html::parse_document(&input);
+        let output = convert_page_to_html(&document, page, &[]).await.unwrap();
+
+        assert_eq!(output, expected_output);
+    }
 }
