@@ -4,7 +4,7 @@ use scraper::{Html, Node};
 
 use crate::{
     error::WikiError,
-    utils::{extract_tag_attr, get_page_content, get_top_pages, HtmlTag},
+    utils::{extract_tag_attr, get_page_content, search_for_similar_pages, HtmlTag},
 };
 
 /// Converts the body of the ArchWiki page to a plain text string, removing all tags and
@@ -20,13 +20,12 @@ use crate::{
 pub async fn convert_page_to_plain_text(
     document: &Html,
     page: &str,
-    pages: &[&str],
     show_urls: bool,
 ) -> Result<String, WikiError> {
     let content = match get_page_content(document) {
         Some(content) => content,
         None => {
-            let recommendations = get_top_pages(page, 5, pages);
+            let recommendations = search_for_similar_pages(page, None, None).await?;
             return Err(WikiError::NoPageFound(recommendations.join("\n")));
         }
     };
@@ -134,7 +133,7 @@ mod tests {
             );
 
             let document = Html::parse_document(&input);
-            let output = convert_page_to_plain_text(&document, page, &[], false)
+            let output = convert_page_to_plain_text(&document, page, false)
                 .await
                 .unwrap();
 
@@ -159,57 +158,12 @@ mod tests {
             );
 
             let document = Html::parse_document(&input);
-            let output = convert_page_to_plain_text(&document, page, &[], true)
+            let output = convert_page_to_plain_text(&document, page, true)
                 .await
                 .unwrap();
 
             dbg!(&output);
             assert_eq!(output, expected_output);
-        }
-    }
-
-    #[tokio::test]
-    #[allow(unreachable_code)]
-    async fn test_recommendations() {
-        return;
-        todo!("make fuzzy matcher better");
-
-        let page = "noexistent page";
-        let input = format!("<div>nothing here</div>");
-
-        let recommendations = [
-            "noexistent pa",
-            "noexist",
-            "existent page",
-            "page",
-            "existent p",
-            "gdjaskfjslsvcsf",
-            "jkjzcffsdfsf",
-            "fjffjfsdfds",
-        ];
-
-        let document = Html::parse_document(&input);
-        let output = convert_page_to_plain_text(&document, page, &recommendations, false)
-            .await
-            .unwrap_err();
-
-        dbg!(&output);
-
-        match output {
-            WikiError::NoPageFound(pages) => {
-                assert_eq!(
-                    pages,
-                    [
-                        "noexistent pa",
-                        "noexist",
-                        "existent page",
-                        "page",
-                        "existent p",
-                    ]
-                    .join("\n")
-                )
-            }
-            _ => panic!("expected ouput to be WikiError::NoPageFound"),
         }
     }
 }

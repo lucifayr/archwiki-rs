@@ -86,12 +86,10 @@ async fn main() -> Result<(), WikiError> {
 
                 match format {
                     PageFormat::PlainText => {
-                        convert_page_to_plain_text(&document, &page, &pages, show_urls).await?
+                        convert_page_to_plain_text(&document, &page, show_urls).await?
                     }
-                    PageFormat::Markdown => {
-                        convert_page_to_markdown(&document, &page, &pages).await?
-                    }
-                    PageFormat::Html => convert_page_to_html(&document, &page, &pages).await?,
+                    PageFormat::Markdown => convert_page_to_markdown(&document, &page).await?,
+                    PageFormat::Html => convert_page_to_html(&document, &page).await?,
                 }
             };
 

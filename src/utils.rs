@@ -3,7 +3,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use itertools::Itertools;
 use regex::Regex;
 use scraper::{node::Element, ElementRef, Html, Selector};
@@ -11,7 +10,7 @@ use scraper::{node::Element, ElementRef, Html, Selector};
 use crate::{
     error::{InvalidApiResponseError, WikiError},
     formats::PageFormat,
-    wiki_api::OpenSearchItem,
+    wiki_api::{fetch_open_search, OpenSearchItem},
 };
 
 pub const PAGE_CONTENT_CLASS: &str = "mw-parser-output";
@@ -35,13 +34,29 @@ pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
     document.select(&selector).next()
 }
 
+pub fn open_search_to_page_names(
+    search_result: &[OpenSearchItem],
+) -> Result<Vec<String>, WikiError> {
+    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
+        InvalidApiResponseError::OpenSearchMissingNthElement(1),
+    ))?;
+
+    if let OpenSearchItem::Array(names) = page_names {
+        Ok(names.to_owned())
+    } else {
+        Err(WikiError::InvalidApiResponse(
+            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(1),
+        ))
+    }
+}
+
 /// Convert an open search response into a list of name and URL pairs
 ///
 /// Errors:
 /// - If the search results don't have an array as the 1. and 3. elements in the list
 /// - If the arrays in the search results have different lengths
 pub fn open_search_to_page_url_tupel(
-    search_result: Vec<OpenSearchItem>,
+    search_result: &[OpenSearchItem],
 ) -> Result<Vec<(String, String)>, WikiError> {
     let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
         InvalidApiResponseError::OpenSearchMissingNthElement(1),
@@ -60,7 +75,7 @@ pub fn open_search_to_page_url_tupel(
             }
 
             Ok(names
-                .into_iter()
+                .iter()
                 .zip(urls)
                 .map(|(a, b)| (a.to_owned(), b.to_owned()))
                 .collect_vec())
@@ -111,24 +126,16 @@ pub fn page_cache_exists(
     Ok(secs_since_modified < fourteen_days)
 }
 
-pub fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {
-    let matcher = SkimMatcherV2::default().ignore_case();
-    let ranked_pages = pages
-        .iter()
-        .filter_map(|page| {
-            matcher
-                .fuzzy_match(search, page)
-                .map(|x| (x, page.to_owned()))
-        })
-        .sorted_by(|a, b| a.0.cmp(&b.0))
-        .collect::<Vec<(i64, &str)>>();
+pub async fn search_for_similar_pages(
+    search: &str,
+    lang: Option<&str>,
+    limit: Option<u16>,
+) -> Result<Vec<String>, WikiError> {
+    let lang = lang.unwrap_or("en");
+    let limit = limit.unwrap_or(5);
 
-    ranked_pages
-        .into_iter()
-        .rev()
-        .take(amount)
-        .map(|e| e.1)
-        .collect()
+    let search_res = fetch_open_search(search, lang, limit).await?;
+    open_search_to_page_names(&search_res)
 }
 
 pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<String> {
@@ -199,21 +206,21 @@ mod tests {
         ];
 
         assert_eq!(
-            open_search_to_page_url_tupel(valid_input).unwrap(),
+            open_search_to_page_url_tupel(&valid_input).unwrap(),
             vec![
                 ("name 1".to_owned(), "url 1".to_owned()),
                 ("name 2".to_owned(), "url 2".to_owned())
             ]
         );
 
-        match open_search_to_page_url_tupel(missing_elements).unwrap_err() {
+        match open_search_to_page_url_tupel(&missing_elements).unwrap_err() {
             WikiError::InvalidApiResponse(res) => {
                 assert_eq!(res, InvalidApiResponseError::OpenSearchMissingNthElement(1))
             }
             _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
 
-        match open_search_to_page_url_tupel(not_arrays).unwrap_err() {
+        match open_search_to_page_url_tupel(&not_arrays).unwrap_err() {
             WikiError::InvalidApiResponse(res) => {
                 assert_eq!(
                     res,
@@ -223,7 +230,7 @@ mod tests {
             _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
 
-        match open_search_to_page_url_tupel(different_lengths).unwrap_err() {
+        match open_search_to_page_url_tupel(&different_lengths).unwrap_err() {
             WikiError::InvalidApiResponse(res) => {
                 assert_eq!(res, InvalidApiResponseError::OpenSearchArraysLengthMismatch)
             }

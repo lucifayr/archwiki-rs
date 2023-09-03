@@ -2,7 +2,7 @@ use scraper::Html;
 
 use crate::{
     error::WikiError,
-    utils::{get_page_content, get_top_pages},
+    utils::{get_page_content, search_for_similar_pages},
 };
 
 /// Converts the body of the ArchWiki page to a Markdown string.
@@ -12,15 +12,11 @@ use crate::{
 ///
 /// Errors:
 /// - If it fails to fetch the page
-pub async fn convert_page_to_markdown(
-    document: &Html,
-    page: &str,
-    pages: &[&str],
-) -> Result<String, WikiError> {
+pub async fn convert_page_to_markdown(document: &Html, page: &str) -> Result<String, WikiError> {
     let content = match get_page_content(document) {
         Some(content) => content,
         None => {
-            let recommendations = get_top_pages(page, 5, pages);
+            let recommendations = search_for_similar_pages(page, None, None).await?;
             return Err(WikiError::NoPageFound(recommendations.join("\n")));
         }
     };
@@ -52,9 +48,7 @@ mod tests {
         );
 
         let document = Html::parse_document(&input);
-        let output = convert_page_to_markdown(&document, page, &[])
-            .await
-            .unwrap();
+        let output = convert_page_to_markdown(&document, page).await.unwrap();
 
         assert_eq!(output, expected_output);
     }
