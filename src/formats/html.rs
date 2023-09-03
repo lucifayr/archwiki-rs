@@ -1,32 +1,16 @@
 use scraper::Html;
 
-use crate::{
-    error::WikiError,
-    utils::{get_page_content, search_for_similar_pages},
-};
+use crate::utils::get_page_content;
 
-/// Converts the body of the ArchWiki page to a HTML string.
-///
-/// If the ArchWiki page doesn't have content the top 5 pages that are most
-/// like the page that was given as an argument are returned as a `NoPageFound` error.
-///
-/// Errors:
-/// - If it fails to fetch the page
-pub async fn convert_page_to_html(document: &Html, page: &str) -> Result<String, WikiError> {
-    let content = match get_page_content(&document) {
-        Some(content) => content,
-        None => {
-            let recommendations = search_for_similar_pages(page, None, None).await?;
-            return Err(WikiError::NoPageFound(recommendations.join("\n")));
-        }
-    };
+/// Converts the body of the ArchWiki page to a HTML string
+pub fn convert_page_to_html(document: &Html, page: &str) -> String {
+    let content = get_page_content(document).expect("page should have content");
 
-    let res = format!(
+    format!(
         "<h1>{heading}</h1>\n{body}",
         heading = page,
         body = content.html()
-    );
-    Ok(res)
+    )
 }
 
 #[cfg(test)]
@@ -52,7 +36,7 @@ mod tests {
         );
 
         let document = Html::parse_document(&input);
-        let output = convert_page_to_html(&document, page).await.unwrap();
+        let output = convert_page_to_html(&document, page);
 
         assert_eq!(output, expected_output);
     }

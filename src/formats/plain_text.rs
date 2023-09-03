@@ -2,41 +2,18 @@ use colored::Colorize;
 use ego_tree::NodeRef;
 use scraper::{Html, Node};
 
-use crate::{
-    error::WikiError,
-    utils::{extract_tag_attr, get_page_content, search_for_similar_pages, HtmlTag},
-};
+use crate::utils::{extract_tag_attr, get_page_content, HtmlTag};
 
 /// Converts the body of the ArchWiki page to a plain text string, removing all tags and
 /// only leaving the text node content. URLs can be shown in a markdown like syntax.
-///
-/// the body of the ArchWiki page to a Markdown string.
-///
-/// If the ArchWiki page doesn't have content the top 5 pages that are most
-/// like the page that was given as an argument are returned as a `NoPageFound` error.
-///
-/// Errors:
-/// - If it fails to fetch the page
-pub async fn convert_page_to_plain_text(
-    document: &Html,
-    page: &str,
-    show_urls: bool,
-) -> Result<String, WikiError> {
-    let content = match get_page_content(document) {
-        Some(content) => content,
-        None => {
-            let recommendations = search_for_similar_pages(page, None, None).await?;
-            return Err(WikiError::NoPageFound(recommendations.join("\n")));
-        }
-    };
+pub fn convert_page_to_plain_text(document: &Html, show_urls: bool) -> String {
+    let content = get_page_content(document).expect("page should have content");
 
-    let res = content
+    content
         .children()
         .map(|node| format_children(node, show_urls))
         .collect::<Vec<String>>()
-        .join("");
-
-    Ok(res)
+        .join("")
 }
 
 fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
@@ -115,7 +92,6 @@ mod tests {
     #[tokio::test]
     async fn test_convert_page_to_markdown() {
         {
-            let page = "plain page";
             let input = format!(
                 r#"<div class="{PAGE_CONTENT_CLASS}">
     <h3>Hello, world!</h3>
@@ -133,9 +109,7 @@ mod tests {
             );
 
             let document = Html::parse_document(&input);
-            let output = convert_page_to_plain_text(&document, page, false)
-                .await
-                .unwrap();
+            let output = convert_page_to_plain_text(&document, false);
 
             assert_eq!(output, expected_output);
         }
@@ -158,9 +132,7 @@ mod tests {
             );
 
             let document = Html::parse_document(&input);
-            let output = convert_page_to_plain_text(&document, page, true)
-                .await
-                .unwrap();
+            let output = convert_page_to_plain_text(&document, true);
 
             dbg!(&output);
             assert_eq!(output, expected_output);

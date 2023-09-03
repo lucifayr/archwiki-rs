@@ -51,7 +51,7 @@ pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> S
 ///
 /// Caution this function will most likely take several minutes to finish (-, – )…zzzZZ
 pub async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiError> {
-    let document = fetch_page("Table_of_contents").await?;
+    let document = fetch_page("Table_of_contents", None).await?;
     let selector =
         Selector::parse(".mw-parser-output").expect(".mw-parser-output to be a valid css selector");
 

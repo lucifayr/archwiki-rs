@@ -60,21 +60,6 @@ async fn main() -> Result<(), WikiError> {
             show_urls,
             format,
         } => {
-            let pages = pages_map
-                .values()
-                .map(|pages| pages.iter().map(|p| p.as_str()).collect())
-                .reduce(|acc: Vec<&str>, pages| acc.into_iter().chain(pages).collect())
-                .unwrap_or(Vec::new())
-                .into_iter()
-                .unique()
-                .collect::<Vec<&str>>();
-
-            let page = pages
-                .iter()
-                .find(|p| p.eq_ignore_ascii_case(&page))
-                .map(|p| p.to_owned().to_owned())
-                .unwrap_or(page);
-
             let page_cache_path = create_cache_page_path(&page, &format, &cache_dir);
             let use_cached_page = !ignore_cache
                 && page_cache_exists(&page_cache_path, disable_cache_invalidation).unwrap_or(false);
@@ -82,14 +67,12 @@ async fn main() -> Result<(), WikiError> {
             let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
-                let document = fetch_page(&page).await?;
+                let document = fetch_page(&page, None).await?;
 
                 match format {
-                    PageFormat::PlainText => {
-                        convert_page_to_plain_text(&document, &page, show_urls).await?
-                    }
-                    PageFormat::Markdown => convert_page_to_markdown(&document, &page).await?,
-                    PageFormat::Html => convert_page_to_html(&document, &page).await?,
+                    PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),
+                    PageFormat::Markdown => convert_page_to_markdown(&document, &page),
+                    PageFormat::Html => convert_page_to_html(&document, &page),
                 }
             };
 
