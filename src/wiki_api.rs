@@ -30,7 +30,7 @@ pub async fn fetch_open_search(
     // the first item in the response should be the search term
     debug_assert_eq!(res.get(0), Some(&OpenSearchItem::Single(search.to_owned())));
 
-    return Ok(res);
+    Ok(res)
 }
 
 /// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.

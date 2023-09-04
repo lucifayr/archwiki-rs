@@ -27,13 +27,6 @@ impl HtmlTag {
     }
 }
 
-/// Selects the body of an ArchWiki page
-pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
-    let class = format!(".{PAGE_CONTENT_CLASS}");
-    let selector = Selector::parse(&class).expect(&format!("{class} should be valid selector"));
-    document.select(&selector).next()
-}
-
 /// Construct a path to cache a page. Different page formats are cached separately.
 /// All none word characters are escaped with an '_'
 pub fn create_cache_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
@@ -67,6 +60,14 @@ pub fn page_cache_exists(
         .as_secs();
 
     Ok(secs_since_modified < fourteen_days)
+}
+
+/// Selects the body of an ArchWiki page
+pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
+    let class = format!(".{PAGE_CONTENT_CLASS}");
+    let selector =
+        Selector::parse(&class).unwrap_or_else(|_| panic!("{class} should be valid selector"));
+    document.select(&selector).next()
 }
 
 pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<String> {

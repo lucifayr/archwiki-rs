@@ -115,7 +115,6 @@ mod tests {
         }
 
         {
-            let page = "page with links";
             let input = format!(
                 r#"<div class="{PAGE_CONTENT_CLASS}">
     <h3>Hello, world!</h3>

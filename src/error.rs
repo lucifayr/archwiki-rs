@@ -3,6 +3,7 @@ use std::{fmt, io, time::SystemTimeError};
 use thiserror::Error;
 
 #[derive(Debug, PartialEq, Eq)]
+#[allow(clippy::enum_variant_names)]
 pub enum InvalidApiResponseError {
     OpenSearchMissingNthElement(usize),
     OpenSearchNthElementShouldBeArray(usize),
