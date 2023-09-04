@@ -3,19 +3,16 @@ use url::Url;
 
 use crate::{
     error::WikiError,
-    utils::{open_search_get_exact_match_url, open_search_to_page_names, update_relative_urls},
+    search::{
+        open_search_get_exact_match_url, open_search_to_page_names, OpenSearchItem,
+        TextSearchApiResponse, TextSearchItem,
+    },
+    utils::update_relative_urls,
 };
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct ApiResponse<T> {
     pub query: T,
-}
-
-#[derive(Debug, PartialEq, Eq, serde::Deserialize)]
-#[serde(untagged)]
-pub enum OpenSearchItem {
-    Single(String),
-    Array(Vec<String>),
 }
 
 pub async fn fetch_open_search(
@@ -31,6 +28,22 @@ pub async fn fetch_open_search(
     debug_assert_eq!(res.get(0), Some(&OpenSearchItem::Single(search.to_owned())));
 
     Ok(res)
+}
+
+pub async fn fetch_text_search(
+    search: &str,
+    lang: &str,
+    limit: u16,
+) -> Result<Vec<TextSearchItem>, WikiError> {
+    let url = format!("https://wiki.archlinux.org/api.php?action=query&list=search&format=json&srwhat=text&uselang={lang}&srlimit={limit}&srsearch={search}");
+    let body = reqwest::get(url).await?.text().await?;
+    let mut res: ApiResponse<TextSearchApiResponse> = serde_json::from_str(&body)?;
+
+    for item in res.query.search.as_mut_slice() {
+        item.prettify_snippet(search);
+    }
+
+    Ok(res.query.search)
 }
 
 /// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.

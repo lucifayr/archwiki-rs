@@ -16,7 +16,7 @@ pub fn convert_page_to_plain_text(document: &Html, show_urls: bool) -> String {
         .join("")
 }
 
-fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
+pub fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
     match node.value() {
         Node::Text(text) => text.to_string(),
         Node::Element(e) => match e.name() {

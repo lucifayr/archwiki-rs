@@ -3,15 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use itertools::Itertools;
 use regex::Regex;
 use scraper::{node::Element, ElementRef, Html, Selector};
 
-use crate::{
-    error::{InvalidApiResponseError, WikiError},
-    formats::PageFormat,
-    wiki_api::OpenSearchItem,
-};
+use crate::{error::WikiError, formats::PageFormat};
 
 pub const PAGE_CONTENT_CLASS: &str = "mw-parser-output";
 
@@ -89,101 +84,6 @@ pub fn update_relative_urls(html: &str, base_url: &str) -> String {
         .replace("poster=\"/", &format!("poster=\"{base_url}/"))
 }
 
-/// Convert an open search response into a list of name and URL pairs
-///
-/// Errors:
-/// - If the search results don't have an array as the 1. and 3. elements in the list
-/// - If the arrays in the search results have different lengths
-#[allow(dead_code)]
-pub fn open_search_to_page_url_tupel(
-    search_result: &[OpenSearchItem],
-) -> Result<Vec<(String, String)>, WikiError> {
-    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
-        InvalidApiResponseError::OpenSearchMissingNthElement(1),
-    ))?;
-
-    let page_urls = search_result.get(3).ok_or(WikiError::InvalidApiResponse(
-        InvalidApiResponseError::OpenSearchMissingNthElement(3),
-    ))?;
-
-    if let OpenSearchItem::Array(names) = page_names {
-        if let OpenSearchItem::Array(urls) = page_urls {
-            if names.len() != urls.len() {
-                return Err(WikiError::InvalidApiResponse(
-                    InvalidApiResponseError::OpenSearchArraysLengthMismatch,
-                ));
-            }
-
-            Ok(names
-                .iter()
-                .zip(urls)
-                .map(|(a, b)| (a.to_owned(), b.to_owned()))
-                .collect_vec())
-        } else {
-            Err(WikiError::InvalidApiResponse(
-                InvalidApiResponseError::OpenSearchNthElementShouldBeArray(3),
-            ))
-        }
-    } else {
-        Err(WikiError::InvalidApiResponse(
-            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(1),
-        ))
-    }
-}
-
-pub fn open_search_to_page_names(
-    search_result: &[OpenSearchItem],
-) -> Result<Vec<String>, WikiError> {
-    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
-        InvalidApiResponseError::OpenSearchMissingNthElement(1),
-    ))?;
-
-    if let OpenSearchItem::Array(names) = page_names {
-        Ok(names.to_owned())
-    } else {
-        Err(WikiError::InvalidApiResponse(
-            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(1),
-        ))
-    }
-}
-
-/// Checks if the open search result contains a name that exactly matches the provided page name.
-/// If there is a match the corresponding page URL is returned.
-pub fn open_search_get_exact_match_url(
-    page: &str,
-    search_result: &[OpenSearchItem],
-) -> Result<Option<String>, WikiError> {
-    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
-        InvalidApiResponseError::OpenSearchMissingNthElement(1),
-    ))?;
-
-    let page_urls = search_result.get(3).ok_or(WikiError::InvalidApiResponse(
-        InvalidApiResponseError::OpenSearchMissingNthElement(3),
-    ))?;
-
-    let OpenSearchItem::Array(names) = page_names else {
-        return Err(WikiError::InvalidApiResponse(
-            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(1),
-        ))
-    };
-
-    let OpenSearchItem::Array(urls) = page_urls  else {
-        return Err(WikiError::InvalidApiResponse(
-            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(3),
-        ))
-    };
-
-    if let Some(name) = names.get(0) {
-        if name == page {
-            Ok(urls.get(0).cloned())
-        } else {
-            Ok(None)
-        }
-    } else {
-        Ok(None)
-    }
-}
-
 fn to_save_file_name(page: &str) -> String {
     let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
     regex.replace_all(page, "_").to_string()
@@ -206,62 +106,6 @@ mod tests {
 
         for (input, output) in cases {
             assert_eq!(output, to_save_file_name(input));
-        }
-    }
-
-    #[test]
-    fn test_process_open_search() {
-        let valid_input = vec![
-            OpenSearchItem::Single("test".to_owned()),
-            OpenSearchItem::Array(vec!["name 1".to_owned(), "name 2".to_owned()]),
-            OpenSearchItem::Array(vec![]),
-            OpenSearchItem::Array(vec!["url 1".to_owned(), "url 2".to_owned()]),
-        ];
-
-        let missing_elements = vec![OpenSearchItem::Single("test".to_owned())];
-        let not_arrays = vec![
-            OpenSearchItem::Single("test".to_owned()),
-            OpenSearchItem::Array(vec!["name 1".to_owned(), "name 2".to_owned()]),
-            OpenSearchItem::Array(vec![]),
-            OpenSearchItem::Single("invalid".to_owned()),
-        ];
-        let different_lengths = vec![
-            OpenSearchItem::Single("test".to_owned()),
-            OpenSearchItem::Array(vec!["name 1".to_owned()]),
-            OpenSearchItem::Array(vec![]),
-            OpenSearchItem::Array(vec!["url 1".to_owned(), "url 2".to_owned()]),
-        ];
-
-        assert_eq!(
-            open_search_to_page_url_tupel(&valid_input).unwrap(),
-            vec![
-                ("name 1".to_owned(), "url 1".to_owned()),
-                ("name 2".to_owned(), "url 2".to_owned())
-            ]
-        );
-
-        match open_search_to_page_url_tupel(&missing_elements).unwrap_err() {
-            WikiError::InvalidApiResponse(res) => {
-                assert_eq!(res, InvalidApiResponseError::OpenSearchMissingNthElement(1))
-            }
-            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
-        }
-
-        match open_search_to_page_url_tupel(&not_arrays).unwrap_err() {
-            WikiError::InvalidApiResponse(res) => {
-                assert_eq!(
-                    res,
-                    InvalidApiResponseError::OpenSearchNthElementShouldBeArray(3)
-                )
-            }
-            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
-        }
-
-        match open_search_to_page_url_tupel(&different_lengths).unwrap_err() {
-            WikiError::InvalidApiResponse(res) => {
-                assert_eq!(res, InvalidApiResponseError::OpenSearchArraysLengthMismatch)
-            }
-            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
     }
 }

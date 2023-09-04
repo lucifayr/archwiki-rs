@@ -11,6 +11,9 @@ A CLI tool to read pages from the ArchWiki
     + [Using a different format](#using-a-different-format)
     + [Caching](#caching)
     + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found--̥̥̥n-̥̥̥-)
+  * [Searching the ArchWiki](#searching-the-archwiki)
+    + [Search by title](#search-by-title)
+    + [Search for text](#search-for-text)
   * [Downloading page info](#downloading-page-info)
     + [Updating everything](#updating-everything)
     + [Updating a specific category](#updating-a-specific-category)
@@ -80,6 +83,25 @@ uses stderr to give the user suggestions on what they might have wanted to type.
 
 An example shell script to do something like this is available in the [repository](https://github.com/jackboxx/archwiki-rs)
 under the name `example.sh`.
+
+### Searching the ArchWiki
+
+#### Search by title
+
+```sh
+archwiki-rs search "Emacs"
+```
+
+This returns a table of pages with a similar title and their URLs 
+
+#### Search for text
+
+```sh
+archwiki-rs search "shell" -t
+```
+
+This returns a table of pages which contain the search term and the snippet of text
+that the search term is in
 
 ### Downloading page info
 
