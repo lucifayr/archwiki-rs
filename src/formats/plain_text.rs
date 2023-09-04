@@ -90,7 +90,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[tokio::test]
-    async fn test_convert_page_to_markdown() {
+    async fn test_convert_page_to_plain_text() {
         {
             let input = format!(
                 r#"<div class="{PAGE_CONTENT_CLASS}">
