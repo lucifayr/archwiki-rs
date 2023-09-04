@@ -23,9 +23,7 @@ A CLI tool to read pages from the ArchWiki
 
 ## Installation
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
-or build it from source. 
-
-After you are finished with the installation you should run [update-all](#updating-everything).
+or build it from source
 
 ### crates.io
 
@@ -65,9 +63,7 @@ been modified in the last 14 days.
 #### 404 page not found (-̥̥̥n-̥̥̥ )
 
 If the page you are searching for doesn't exist, a list of the pages that are most similar
-(in name) to the page you asked for will be output instead of the page content. The
-categories are stored locally and can be fetched with the [update-all](#updating-everything) 
-command.
+(in name) to the page you asked for will be output instead of the page content 
 
 ```sh
 archwiki-rs read-page Neovi
@@ -87,7 +83,7 @@ under the name `example.sh`.
 
 ### Downloading page info
 
-The page names used for suggestions are stored locally to prevent having to scrape the entire table of contents of
+Page names are stored locally to prevent having to scrape the entire table of contents of
 the ArchWiki with every command
 
 #### Updating everything
