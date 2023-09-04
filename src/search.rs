@@ -75,7 +75,6 @@ pub fn format_open_search_table(name_url_pairs: &[(String, String)]) -> String {
 /// Errors:
 /// - If the search results don't have an array as the 1. and 3. elements in the list
 /// - If the arrays in the search results have different lengths
-#[allow(dead_code)]
 pub fn open_search_to_page_url_tupel(
     search_result: &[OpenSearchItem],
 ) -> Result<Vec<(String, String)>, WikiError> {
