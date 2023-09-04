@@ -79,13 +79,13 @@ pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<
 
 /// Replaces relative URLs in certain HTML attributes with absolute URLs.
 /// The list of attributes is taken from https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
-pub fn update_relative_urls(html: &str) -> String {
-    html.replace("href=\"/", "href=\"https://wiki.archlinux.org/")
-        .replace("src=\"/", "src=\"https://wiki.archlinux.org/")
-        .replace("data=\"/", "data=\"https://wiki.archlinux.org/")
-        .replace("manifest=\"/", "manifest=\"https://wiki.archlinux.org/")
-        .replace("ping=\"/", "ping=\"https://wiki.archlinux.org/")
-        .replace("poster=\"/", "poster=\"https://wiki.archlinux.org/")
+pub fn update_relative_urls(html: &str, base_url: &str) -> String {
+    html.replace("href=\"/", &format!("href=\"{base_url}/"))
+        .replace("src=\"/", &format!("src=\"{base_url}/"))
+        .replace("data=\"/", &format!("data=\"{base_url}/"))
+        .replace("manifest=\"/", &format!("manifest=\"{base_url}/"))
+        .replace("ping=\"/", &format!("ping=\"{base_url}/"))
+        .replace("poster=\"/", &format!("poster=\"{base_url}/"))
 }
 
 /// Convert an open search response into a list of name and URL pairs

@@ -107,6 +107,7 @@ dependencies = [
  "termination",
  "thiserror",
  "tokio",
+ "url",
 ]
 
 [[package]]

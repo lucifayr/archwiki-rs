@@ -1,4 +1,5 @@
 use scraper::Html;
+use url::Url;
 
 use crate::{
     error::WikiError,
@@ -47,8 +48,16 @@ pub async fn fetch_page(page: &str, lang: Option<&str>) -> Result<Html, WikiErro
         return Err(WikiError::NoPageFound(similar_pages.join("\n")));
     };
 
+    let parsed_url = Url::parse(&url)
+        .unwrap_or(Url::parse("https://wiki.archlinux.org").expect("should be a valid URL"));
+    let base_url = format!(
+        "{schema}://{host}",
+        schema = parsed_url.scheme(),
+        host = parsed_url.host_str().unwrap_or("")
+    );
+
     let body = reqwest::get(&url).await?.text().await?;
-    let body_with_abs_urls = update_relative_urls(&body);
+    let body_with_abs_urls = update_relative_urls(&body, &base_url);
 
     Ok(Html::parse_document(&body_with_abs_urls))
 }
