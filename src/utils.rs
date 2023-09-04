@@ -3,12 +3,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use itertools::Itertools;
 use regex::Regex;
 use scraper::{node::Element, ElementRef, Html, Selector};
 
-use crate::{error::WikiError, formats::PageFormat};
+use crate::{
+    error::{InvalidApiResponseError, WikiError},
+    formats::PageFormat,
+    wiki_api::OpenSearchItem,
+};
 
 pub const PAGE_CONTENT_CLASS: &str = "mw-parser-output";
 
@@ -24,24 +27,6 @@ impl HtmlTag {
     }
 }
 
-/// Selects the body of an ArchWiki page
-pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
-    let class = format!(".{PAGE_CONTENT_CLASS}");
-    let selector = Selector::parse(&class).expect(&format!("{class} should be valid selector"));
-    document.select(&selector).next()
-}
-
-/// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.
-/// `/title/Neovim` -> `https://wiki.archlinux.org/title/Neovim`
-pub async fn fetch_page(page: &str) -> Result<Html, reqwest::Error> {
-    let url = format!("https://wiki.archlinux.org/title/{page}");
-
-    let body = reqwest::get(&url).await?.text().await?;
-    let body_with_abs_urls = update_relative_urls(&body);
-
-    Ok(Html::parse_document(&body_with_abs_urls))
-}
-
 /// Construct a path to cache a page. Different page formats are cached separately.
 /// All none word characters are escaped with an '_'
 pub fn create_cache_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
@@ -52,11 +37,6 @@ pub fn create_cache_page_path(page: &str, format: &PageFormat, cache_dir: &Path)
     };
 
     cache_dir.join(to_save_file_name(page)).with_extension(ext)
-}
-
-fn to_save_file_name(page: &str) -> String {
-    let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
-    regex.replace_all(page, "_").to_string()
 }
 
 /// Check if a page has been cached.
@@ -82,24 +62,12 @@ pub fn page_cache_exists(
     Ok(secs_since_modified < fourteen_days)
 }
 
-pub fn get_top_pages<'a>(search: &str, amount: usize, pages: &[&'a str]) -> Vec<&'a str> {
-    let matcher = SkimMatcherV2::default().ignore_case();
-    let ranked_pages = pages
-        .iter()
-        .filter_map(|page| {
-            matcher
-                .fuzzy_match(search, page)
-                .map(|x| (x, page.to_owned()))
-        })
-        .sorted_by(|a, b| a.0.cmp(&b.0))
-        .collect::<Vec<(i64, &str)>>();
-
-    ranked_pages
-        .into_iter()
-        .rev()
-        .take(amount)
-        .map(|e| e.1)
-        .collect()
+/// Selects the body of an ArchWiki page
+pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
+    let class = format!(".{PAGE_CONTENT_CLASS}");
+    let selector =
+        Selector::parse(&class).unwrap_or_else(|_| panic!("{class} should be valid selector"));
+    document.select(&selector).next()
 }
 
 pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<String> {
@@ -112,13 +80,113 @@ pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<
 
 /// Replaces relative URLs in certain HTML attributes with absolute URLs.
 /// The list of attributes is taken from https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
-fn update_relative_urls(html: &str) -> String {
-    html.replace("href=\"/", "href=\"https://wiki.archlinux.org/")
-        .replace("src=\"/", "src=\"https://wiki.archlinux.org/")
-        .replace("data=\"/", "data=\"https://wiki.archlinux.org/")
-        .replace("manifest=\"/", "manifest=\"https://wiki.archlinux.org/")
-        .replace("ping=\"/", "ping=\"https://wiki.archlinux.org/")
-        .replace("poster=\"/", "poster=\"https://wiki.archlinux.org/")
+pub fn update_relative_urls(html: &str, base_url: &str) -> String {
+    html.replace("href=\"/", &format!("href=\"{base_url}/"))
+        .replace("src=\"/", &format!("src=\"{base_url}/"))
+        .replace("data=\"/", &format!("data=\"{base_url}/"))
+        .replace("manifest=\"/", &format!("manifest=\"{base_url}/"))
+        .replace("ping=\"/", &format!("ping=\"{base_url}/"))
+        .replace("poster=\"/", &format!("poster=\"{base_url}/"))
+}
+
+/// Convert an open search response into a list of name and URL pairs
+///
+/// Errors:
+/// - If the search results don't have an array as the 1. and 3. elements in the list
+/// - If the arrays in the search results have different lengths
+#[allow(dead_code)]
+pub fn open_search_to_page_url_tupel(
+    search_result: &[OpenSearchItem],
+) -> Result<Vec<(String, String)>, WikiError> {
+    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
+        InvalidApiResponseError::OpenSearchMissingNthElement(1),
+    ))?;
+
+    let page_urls = search_result.get(3).ok_or(WikiError::InvalidApiResponse(
+        InvalidApiResponseError::OpenSearchMissingNthElement(3),
+    ))?;
+
+    if let OpenSearchItem::Array(names) = page_names {
+        if let OpenSearchItem::Array(urls) = page_urls {
+            if names.len() != urls.len() {
+                return Err(WikiError::InvalidApiResponse(
+                    InvalidApiResponseError::OpenSearchArraysLengthMismatch,
+                ));
+            }
+
+            Ok(names
+                .iter()
+                .zip(urls)
+                .map(|(a, b)| (a.to_owned(), b.to_owned()))
+                .collect_vec())
+        } else {
+            Err(WikiError::InvalidApiResponse(
+                InvalidApiResponseError::OpenSearchNthElementShouldBeArray(3),
+            ))
+        }
+    } else {
+        Err(WikiError::InvalidApiResponse(
+            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(1),
+        ))
+    }
+}
+
+pub fn open_search_to_page_names(
+    search_result: &[OpenSearchItem],
+) -> Result<Vec<String>, WikiError> {
+    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
+        InvalidApiResponseError::OpenSearchMissingNthElement(1),
+    ))?;
+
+    if let OpenSearchItem::Array(names) = page_names {
+        Ok(names.to_owned())
+    } else {
+        Err(WikiError::InvalidApiResponse(
+            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(1),
+        ))
+    }
+}
+
+/// Checks if the open search result contains a name that exactly matches the provided page name.
+/// If there is a match the corresponding page URL is returned.
+pub fn open_search_get_exact_match_url(
+    page: &str,
+    search_result: &[OpenSearchItem],
+) -> Result<Option<String>, WikiError> {
+    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
+        InvalidApiResponseError::OpenSearchMissingNthElement(1),
+    ))?;
+
+    let page_urls = search_result.get(3).ok_or(WikiError::InvalidApiResponse(
+        InvalidApiResponseError::OpenSearchMissingNthElement(3),
+    ))?;
+
+    let OpenSearchItem::Array(names) = page_names else {
+        return Err(WikiError::InvalidApiResponse(
+            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(1),
+        ))
+    };
+
+    let OpenSearchItem::Array(urls) = page_urls  else {
+        return Err(WikiError::InvalidApiResponse(
+            InvalidApiResponseError::OpenSearchNthElementShouldBeArray(3),
+        ))
+    };
+
+    if let Some(name) = names.get(0) {
+        if name == page {
+            Ok(urls.get(0).cloned())
+        } else {
+            Ok(None)
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+fn to_save_file_name(page: &str) -> String {
+    let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
+    regex.replace_all(page, "_").to_string()
 }
 
 #[cfg(test)]
@@ -142,45 +210,58 @@ mod tests {
     }
 
     #[test]
-    #[allow(unreachable_code)]
-    fn test_get_top_pages() {
-        return;
-        todo!("make fuzzy matcher better");
-        // short list
-        {
-            let out = get_top_pages("test", 2, &["tes", "tester", "Hippo"]);
-            dbg!(&out);
-            assert_eq!(out, ["tes", "tester"].to_vec());
+    fn test_process_open_search() {
+        let valid_input = vec![
+            OpenSearchItem::Single("test".to_owned()),
+            OpenSearchItem::Array(vec!["name 1".to_owned(), "name 2".to_owned()]),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Array(vec!["url 1".to_owned(), "url 2".to_owned()]),
+        ];
+
+        let missing_elements = vec![OpenSearchItem::Single("test".to_owned())];
+        let not_arrays = vec![
+            OpenSearchItem::Single("test".to_owned()),
+            OpenSearchItem::Array(vec!["name 1".to_owned(), "name 2".to_owned()]),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Single("invalid".to_owned()),
+        ];
+        let different_lengths = vec![
+            OpenSearchItem::Single("test".to_owned()),
+            OpenSearchItem::Array(vec!["name 1".to_owned()]),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Array(vec!["url 1".to_owned(), "url 2".to_owned()]),
+        ];
+
+        assert_eq!(
+            open_search_to_page_url_tupel(&valid_input).unwrap(),
+            vec![
+                ("name 1".to_owned(), "url 1".to_owned()),
+                ("name 2".to_owned(), "url 2".to_owned())
+            ]
+        );
+
+        match open_search_to_page_url_tupel(&missing_elements).unwrap_err() {
+            WikiError::InvalidApiResponse(res) => {
+                assert_eq!(res, InvalidApiResponseError::OpenSearchMissingNthElement(1))
+            }
+            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
 
-        // long list
-        {
-            let search = "noexistent item";
+        match open_search_to_page_url_tupel(&not_arrays).unwrap_err() {
+            WikiError::InvalidApiResponse(res) => {
+                assert_eq!(
+                    res,
+                    InvalidApiResponseError::OpenSearchNthElementShouldBeArray(3)
+                )
+            }
+            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
+        }
 
-            let recommendations = [
-                "noexistent ie",
-                "noexist",
-                "existent it",
-                "item",
-                "existent i",
-                "gdjaskfjslsvcsf",
-                "jkjzcffsdfsf",
-                "fjffjfsdfds",
-            ];
-
-            let out = get_top_pages(search, 5, &recommendations);
-
-            assert_eq!(
-                out,
-                [
-                    "noexistent pa",
-                    "noexist",
-                    "existent page",
-                    "page",
-                    "existent p",
-                ]
-                .to_vec()
-            );
+        match open_search_to_page_url_tupel(&different_lengths).unwrap_err() {
+            WikiError::InvalidApiResponse(res) => {
+                assert_eq!(res, InvalidApiResponseError::OpenSearchArraysLengthMismatch)
+            }
+            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
     }
 }
