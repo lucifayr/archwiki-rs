@@ -3,19 +3,13 @@ use url::Url;
 
 use crate::{
     error::WikiError,
-    utils::{open_search_get_exact_match_url, open_search_to_page_names, update_relative_urls},
+    open_search::{open_search_get_exact_match_url, open_search_to_page_names, OpenSearchItem},
+    utils::update_relative_urls,
 };
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct ApiResponse<T> {
     pub query: T,
-}
-
-#[derive(Debug, PartialEq, Eq, serde::Deserialize)]
-#[serde(untagged)]
-pub enum OpenSearchItem {
-    Single(String),
-    Array(Vec<String>),
 }
 
 pub async fn fetch_open_search(

@@ -1,0 +1,206 @@
+use itertools::Itertools;
+
+use crate::error::WikiError;
+
+#[derive(Debug, PartialEq, Eq, serde::Deserialize)]
+#[serde(untagged)]
+pub enum OpenSearchItem {
+    Single(String),
+    Array(Vec<String>),
+}
+
+pub fn format_open_search_table(name_url_pairs: &[(String, String)]) -> String {
+    let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "URL");
+    let body = name_url_pairs
+        .iter()
+        .map(|(name, url)| format!("{name:20} | {url:90}"))
+        .collect_vec()
+        .join("\n");
+
+    table += &body;
+    table
+}
+
+/// Convert an open search response into a list of name and URL pairs
+///
+/// Errors:
+/// - If the search results don't have an array as the 1. and 3. elements in the list
+/// - If the arrays in the search results have different lengths
+#[allow(dead_code)]
+pub fn open_search_to_page_url_tupel(
+    search_result: &[OpenSearchItem],
+) -> Result<Vec<(String, String)>, WikiError> {
+    use crate::error::InvalidApiResponseError as IAR;
+
+    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
+        IAR::OpenSearchMissingNthElement(1),
+    ))?;
+
+    let page_urls = search_result.get(3).ok_or(WikiError::InvalidApiResponse(
+        IAR::OpenSearchMissingNthElement(3),
+    ))?;
+
+    if let OpenSearchItem::Array(names) = page_names {
+        if let OpenSearchItem::Array(urls) = page_urls {
+            if names.len() != urls.len() {
+                return Err(WikiError::InvalidApiResponse(
+                    IAR::OpenSearchArraysLengthMismatch,
+                ));
+            }
+
+            Ok(names
+                .iter()
+                .zip(urls)
+                .map(|(a, b)| (a.to_owned(), b.to_owned()))
+                .collect_vec())
+        } else {
+            Err(WikiError::InvalidApiResponse(
+                IAR::OpenSearchNthElementShouldBeArray(3),
+            ))
+        }
+    } else {
+        Err(WikiError::InvalidApiResponse(
+            IAR::OpenSearchNthElementShouldBeArray(1),
+        ))
+    }
+}
+
+pub fn open_search_to_page_names(
+    search_result: &[OpenSearchItem],
+) -> Result<Vec<String>, WikiError> {
+    use crate::error::InvalidApiResponseError as IAR;
+
+    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
+        IAR::OpenSearchMissingNthElement(1),
+    ))?;
+
+    if let OpenSearchItem::Array(names) = page_names {
+        Ok(names.to_owned())
+    } else {
+        Err(WikiError::InvalidApiResponse(
+            IAR::OpenSearchNthElementShouldBeArray(1),
+        ))
+    }
+}
+
+/// Checks if the open search result contains a name that exactly matches the provided page name.
+/// If there is a match the corresponding page URL is returned.
+pub fn open_search_get_exact_match_url(
+    page: &str,
+    search_result: &[OpenSearchItem],
+) -> Result<Option<String>, WikiError> {
+    use crate::error::InvalidApiResponseError as IAR;
+
+    let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
+        IAR::OpenSearchMissingNthElement(1),
+    ))?;
+
+    let page_urls = search_result.get(3).ok_or(WikiError::InvalidApiResponse(
+        IAR::OpenSearchMissingNthElement(3),
+    ))?;
+
+    let OpenSearchItem::Array(names) = page_names else {
+        return Err(WikiError::InvalidApiResponse(
+            IAR::OpenSearchNthElementShouldBeArray(1),
+        ))
+    };
+
+    let OpenSearchItem::Array(urls) = page_urls  else {
+        return Err(WikiError::InvalidApiResponse(
+            IAR::OpenSearchNthElementShouldBeArray(3),
+        ))
+    };
+
+    if let Some(name) = names.get(0) {
+        if name == page {
+            Ok(urls.get(0).cloned())
+        } else {
+            Ok(None)
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::InvalidApiResponseError as IAR;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_process_open_search() {
+        let valid_input = vec![
+            OpenSearchItem::Single("test".to_owned()),
+            OpenSearchItem::Array(vec!["name 1".to_owned(), "name 2".to_owned()]),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Array(vec!["url 1".to_owned(), "url 2".to_owned()]),
+        ];
+
+        let missing_elements = vec![OpenSearchItem::Single("test".to_owned())];
+        let not_arrays = vec![
+            OpenSearchItem::Single("test".to_owned()),
+            OpenSearchItem::Array(vec!["name 1".to_owned(), "name 2".to_owned()]),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Single("invalid".to_owned()),
+        ];
+        let different_lengths = vec![
+            OpenSearchItem::Single("test".to_owned()),
+            OpenSearchItem::Array(vec!["name 1".to_owned()]),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Array(vec!["url 1".to_owned(), "url 2".to_owned()]),
+        ];
+
+        assert_eq!(
+            open_search_to_page_url_tupel(&valid_input).unwrap(),
+            vec![
+                ("name 1".to_owned(), "url 1".to_owned()),
+                ("name 2".to_owned(), "url 2".to_owned())
+            ]
+        );
+
+        match open_search_to_page_url_tupel(&missing_elements).unwrap_err() {
+            WikiError::InvalidApiResponse(res) => {
+                assert_eq!(res, IAR::OpenSearchMissingNthElement(1))
+            }
+            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
+        }
+
+        match open_search_to_page_url_tupel(&not_arrays).unwrap_err() {
+            WikiError::InvalidApiResponse(res) => {
+                assert_eq!(res, IAR::OpenSearchNthElementShouldBeArray(3))
+            }
+            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
+        }
+
+        match open_search_to_page_url_tupel(&different_lengths).unwrap_err() {
+            WikiError::InvalidApiResponse(res) => {
+                assert_eq!(res, IAR::OpenSearchArraysLengthMismatch)
+            }
+            _ => panic!("expected error to be of type 'InvalidApiResponse'"),
+        }
+    }
+
+    #[test]
+    fn test_format_search_table() {
+        let pairs = vec![
+            ("page 1".to_owned(), "url 1".to_owned()),
+            ("page 2".to_owned(), "url 2".to_owned()),
+            ("page 3".to_owned(), "url 3".to_owned()),
+        ];
+
+        let res = format_open_search_table(&pairs);
+        let res_row_count = res.split('\n').collect_vec().len();
+        let third_page = res
+            .split('\n')
+            .nth(3)
+            .unwrap()
+            .split('|')
+            .next()
+            .unwrap()
+            .trim();
+
+        assert_eq!(res_row_count, 4);
+        assert_eq!(third_page, "page 3");
+    }
+}

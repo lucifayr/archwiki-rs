@@ -35,6 +35,19 @@ pub enum Commands {
         page: String,
     },
     #[command(
+        about = "Search the ArchWiki for pages",
+        long_about = "Search the ArchWiki for pages. Uses the 'opensearch' API to perform queries."
+    )]
+    Search {
+        search: String,
+        #[arg(short, long, default_value_t = String::from("en"))]
+        /// Preferred language of the content to search for
+        lang: String,
+        #[arg(short = 'L', long, default_value_t = 5)]
+        /// Maximum number of results
+        limit: u16,
+    },
+    #[command(
         about = "List all pages from the ArchWiki that have been downloaded",
         long_about = "List all pages from the ArchWiki that have been downloaded. See 'update-all' or 'update-category' for information on downloading."
     )]
