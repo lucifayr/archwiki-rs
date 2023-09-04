@@ -1,6 +1,8 @@
+use colored::Colorize;
 use itertools::Itertools;
+use scraper::Html;
 
-use crate::error::WikiError;
+use crate::{error::WikiError, formats::plain_text::format_children};
 
 #[derive(Debug, PartialEq, Eq, serde::Deserialize)]
 #[serde(untagged)]
@@ -19,6 +21,31 @@ pub struct TextSearchItem {
     pub title: String,
     pub snippet: String,
 }
+
+impl TextSearchItem {
+    pub fn prettify_snippet(&mut self, search: &str) {
+        let frag = Html::parse_fragment(&self.snippet);
+        let new_snip = frag
+            .root_element()
+            .children()
+            .map(|node| format_children(node, false))
+            .collect::<Vec<String>>()
+            .join("")
+            .replace('\n', " ");
+
+        if let Ok(rgx) = regex::RegexBuilder::new(&format!("({search})"))
+            .case_insensitive(true)
+            .build()
+        {
+            self.snippet = rgx
+                .replace_all(&new_snip, format!("{}", "$1".cyan()))
+                .to_string();
+        } else {
+            self.snippet = new_snip;
+        }
+    }
+}
+
 pub fn format_text_search_table(search_result: &[TextSearchItem]) -> String {
     let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "SNIPPET");
     let body = search_result

@@ -37,7 +37,11 @@ pub async fn fetch_text_search(
 ) -> Result<Vec<TextSearchItem>, WikiError> {
     let url = format!("https://wiki.archlinux.org/api.php?action=query&list=search&format=json&srwhat=text&uselang={lang}&srlimit={limit}&srsearch={search}");
     let body = reqwest::get(url).await?.text().await?;
-    let res: ApiResponse<TextSearchApiResponse> = serde_json::from_str(&body)?;
+    let mut res: ApiResponse<TextSearchApiResponse> = serde_json::from_str(&body)?;
+
+    for item in res.query.search.as_mut_slice() {
+        item.prettify_snippet(search);
+    }
 
     Ok(res.query.search)
 }
