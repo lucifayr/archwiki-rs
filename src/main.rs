@@ -11,9 +11,9 @@ use itertools::Itertools;
 use crate::{
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
-    open_search::{format_open_search_table, open_search_to_page_url_tupel},
+    search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
     utils::{create_cache_page_path, page_cache_exists},
-    wiki_api::{fetch_open_search, fetch_page},
+    wiki_api::{fetch_open_search, fetch_page, fetch_text_search},
 };
 
 mod categories;
@@ -21,7 +21,7 @@ mod cli;
 mod error;
 mod formats;
 mod languages;
-mod open_search;
+mod search;
 mod utils;
 mod wiki_api;
 
@@ -88,10 +88,16 @@ async fn main() -> Result<(), WikiError> {
             search,
             limit,
             lang,
+            text_search,
         } => {
-            let search_rs = fetch_open_search(&search, &lang, limit).await?;
-            let name_url_pairs = open_search_to_page_url_tupel(&search_rs)?;
-            let out = format_open_search_table(&name_url_pairs);
+            let out = if !text_search {
+                let search_res = fetch_open_search(&search, &lang, limit).await?;
+                let name_url_pairs = open_search_to_page_url_tupel(&search_res)?;
+                format_open_search_table(&name_url_pairs)
+            } else {
+                let search_res = fetch_text_search(&search, &lang, limit).await?;
+                format_text_search_table(&search_res)
+            };
 
             println!("{out}");
         }

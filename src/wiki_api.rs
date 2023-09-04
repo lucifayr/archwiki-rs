@@ -3,7 +3,10 @@ use url::Url;
 
 use crate::{
     error::WikiError,
-    open_search::{open_search_get_exact_match_url, open_search_to_page_names, OpenSearchItem},
+    search::{
+        open_search_get_exact_match_url, open_search_to_page_names, OpenSearchItem,
+        TextSearchApiResponse, TextSearchItem,
+    },
     utils::update_relative_urls,
 };
 
@@ -25,6 +28,18 @@ pub async fn fetch_open_search(
     debug_assert_eq!(res.get(0), Some(&OpenSearchItem::Single(search.to_owned())));
 
     Ok(res)
+}
+
+pub async fn fetch_text_search(
+    search: &str,
+    lang: &str,
+    limit: u16,
+) -> Result<Vec<TextSearchItem>, WikiError> {
+    let url = format!("https://wiki.archlinux.org/api.php?action=query&list=search&format=json&srwhat=text&uselang={lang}&srlimit={limit}&srsearch={search}");
+    let body = reqwest::get(url).await?.text().await?;
+    let res: ApiResponse<TextSearchApiResponse> = serde_json::from_str(&body)?;
+
+    Ok(res.query.search)
 }
 
 /// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.

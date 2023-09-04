@@ -9,6 +9,28 @@ pub enum OpenSearchItem {
     Array(Vec<String>),
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct TextSearchApiResponse {
+    pub search: Vec<TextSearchItem>,
+}
+
+#[derive(Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct TextSearchItem {
+    pub title: String,
+    pub snippet: String,
+}
+pub fn format_text_search_table(search_result: &[TextSearchItem]) -> String {
+    let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "SNIPPET");
+    let body = search_result
+        .iter()
+        .map(|item| format!("{:20} | {:90}", item.title, item.snippet))
+        .collect_vec()
+        .join("\n");
+
+    table += &body;
+    table
+}
+
 pub fn format_open_search_table(name_url_pairs: &[(String, String)]) -> String {
     let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "URL");
     let body = name_url_pairs
@@ -182,7 +204,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_search_table() {
+    fn test_format_open_search_table() {
         let pairs = vec![
             ("page 1".to_owned(), "url 1".to_owned()),
             ("page 2".to_owned(), "url 2".to_owned()),
@@ -202,5 +224,41 @@ mod tests {
 
         assert_eq!(res_row_count, 4);
         assert_eq!(third_page, "page 3");
+    }
+
+    #[test]
+    fn test_format_text_search_table() {
+        let items = vec![
+            TextSearchItem {
+                title: "page 1".to_owned(),
+                snippet: "snippet 1".to_owned(),
+            },
+            TextSearchItem {
+                title: "page 2".to_owned(),
+                snippet: "snippet 2".to_owned(),
+            },
+            TextSearchItem {
+                title: "page 3".to_owned(),
+                snippet: "snippet 3".to_owned(),
+            },
+            TextSearchItem {
+                title: "page 4".to_owned(),
+                snippet: "snippet 4".to_owned(),
+            },
+        ];
+
+        let res = format_text_search_table(&items);
+        let res_row_count = res.split('\n').collect_vec().len();
+        let third_page = res
+            .split('\n')
+            .nth(3)
+            .unwrap()
+            .split('|')
+            .nth(1)
+            .unwrap()
+            .trim();
+
+        assert_eq!(res_row_count, 5);
+        assert_eq!(third_page, "snippet 3");
     }
 }
