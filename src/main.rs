@@ -140,7 +140,7 @@ async fn main() -> Result<(), WikiError> {
             let no_flags_provided = !show_data_dir && !show_cache_dir;
             let info = [
                 (
-                    true,
+                    !only_values,
                     "VALUE".into(),
                     "NAME",
                     "DESCRIPTION",
