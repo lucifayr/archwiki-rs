@@ -130,8 +130,8 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::SyncWiki => {
-            fetch_all_pages().await?;
+        Commands::SyncWiki { hide_progress } => {
+            fetch_all_pages(hide_progress).await?;
         }
         Commands::Info {
             show_cache_dir,

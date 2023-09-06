@@ -1,3 +1,4 @@
+use indicatif::ProgressBar;
 use itertools::Itertools;
 use scraper::{Html, Node, Selector};
 use std::collections::HashMap;
@@ -57,7 +58,9 @@ pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> S
 /// is ignored as a category can be a sub category of multiple other categories.
 ///
 /// Caution this function will most likely take several minutes to finish (-, – )…zzzZZ
-pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError> {
+pub async fn fetch_all_pages(
+    hide_progress: bool,
+) -> Result<HashMap<String, Vec<String>>, WikiError> {
     let url = "https://wiki.archlinux.org/index.php?title=Special:Categories&offset=&limit=10000";
     let document = fetch_page_by_url(
         Url::parse(url).unwrap_or_else(|_| panic!("{url} should be a valid url")),
@@ -81,10 +84,17 @@ pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError
 
     let mut wiki_map = HashMap::new();
 
+    let bar = ProgressBar::new(items.len().try_into().unwrap_or(0));
+
+    if hide_progress {
+        bar.finish_and_clear();
+    }
+
     for item in items {
         let pages = fetch_page_names_from_categoriy(&item.url).await?;
-
         wiki_map.insert(item.name, pages);
+
+        bar.inc(1);
     }
 
     Ok(wiki_map)

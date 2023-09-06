@@ -78,7 +78,11 @@ pub enum Commands {
         about = "Download all pages from the ArchWiki",
         long_about = "Download all pages from the archwiki"
     )]
-    SyncWiki,
+    SyncWiki {
+        #[arg(short = 'H', long)]
+        /// Hide progress indicators
+        hide_progress: bool,
+    },
     #[command(
         about = "Retrive information related to this tool",
         long_about = "Retrive information related to this tool. All Info is shown by default."
