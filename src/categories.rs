@@ -1,11 +1,18 @@
 use itertools::Itertools;
 use scraper::{Html, Node, Selector};
 use std::collections::HashMap;
+use url::Url;
+
+#[derive(Debug, Clone)]
+struct CategoryListItem {
+    name: String,
+    url: String,
+}
 
 use crate::{
     error::WikiError,
-    utils::{extract_tag_attr, HtmlTag},
-    wiki_api::fetch_page,
+    utils::{extract_tag_attr, get_elements_by_tag, HtmlTag},
+    wiki_api::fetch_page_by_url,
 };
 
 /// Returns a print ready list of the provided page names in
@@ -50,58 +57,74 @@ pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> S
 /// is ignored as a category can be a sub category of multiple other categories.
 ///
 /// Caution this function will most likely take several minutes to finish (-, – )…zzzZZ
-pub async fn fetch_all_page_names() -> Result<HashMap<String, Vec<String>>, WikiError> {
-    let document = fetch_page("Table_of_contents", None).await?;
-    let selector =
-        Selector::parse(".mw-parser-output").expect(".mw-parser-output to be a valid css selector");
+pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError> {
+    let url = "https://wiki.archlinux.org/index.php?title=Special:Categories&offset=&limit=10000";
+    let document = fetch_page_by_url(
+        Url::parse(url).unwrap_or_else(|_| panic!("{url} should be a valid url")),
+    )
+    .await?;
 
-    let categories = match document.select(&selector).next() {
-        Some(next) => next,
-        None => return Err(WikiError::Html("No categories found".to_owned())),
+    let body_class = ".mw-spcontent";
+    let selector = Selector::parse(body_class)
+        .unwrap_or_else(|_| panic!("{body_class} should be valid selector"));
+
+    let body = document.select(&selector).next().unwrap();
+
+    let category_list_element = get_elements_by_tag(*body, &HtmlTag::Ul)
+        .into_iter()
+        .next()
+        .unwrap();
+
+    let items = parse_category_list(category_list_element)
+        .into_iter()
+        .collect_vec();
+
+    let mut wiki_map = HashMap::new();
+
+    for item in items {
+        let pages = fetch_page_names_from_categoriy(&item.url).await?;
+
+        wiki_map.insert(item.name, pages);
+    }
+
+    Ok(wiki_map)
+}
+
+fn parse_category_list(list_node: ego_tree::NodeRef<'_, scraper::Node>) -> Vec<CategoryListItem> {
+    let list_items = get_elements_by_tag(list_node, &HtmlTag::Li);
+    list_items
+        .into_iter()
+        .flat_map(|li| {
+            let a_tag = li.first_child()?;
+            let a_tag_element = a_tag.value().as_element()?;
+
+            let name = a_tag.first_child()?.value().as_text()?.to_string();
+            let url = extract_tag_attr(&a_tag_element, &HtmlTag::A, "href")?;
+
+            Some(CategoryListItem { name, url })
+        })
+        .collect()
+}
+
+/// Scrape the ArchWiki for a list of all page names that belong to a specific category
+async fn fetch_page_names_from_categoriy(url_str: &str) -> Result<Vec<String>, WikiError> {
+    let selector = Selector::parse("#mw-pages").expect("#mw-pages to be a valid css selector");
+
+    let body = reqwest::get(url_str).await?.text().await?;
+    let document = Html::parse_document(&body);
+
+    let Some(page_container) =  document.select(&selector).next() else {
+        return Ok(vec![])
     };
 
-    let cat_hrefs = categories
+    Ok(page_container
         .descendants()
         .filter_map(|node| {
             if let Node::Element(e) = node.value() {
-                extract_tag_attr(e, &HtmlTag::A, "href")
+                extract_tag_attr(e, &HtmlTag::A, "title")
             } else {
                 None
             }
         })
-        .skip(1)
-        .collect::<Vec<String>>();
-
-    let mut pages = HashMap::new();
-    for cat in cat_hrefs {
-        let cat_name = cat.split(':').last().unwrap_or("");
-        let res = fetch_page_names_from_categoriy(cat_name).await;
-        pages.insert(cat_name.to_owned(), res.unwrap_or(Vec::new()));
-    }
-
-    Ok(pages)
-}
-
-/// Scrape the ArchWiki for a list of all page names that belong to a specific category
-pub async fn fetch_page_names_from_categoriy(category: &str) -> Option<Vec<String>> {
-    let selector = Selector::parse("#mw-pages").expect("#mw-pages to be a valid css selector");
-
-    let url = format!("https://wiki.archlinux.org/title/Category:{category}");
-    let body = reqwest::get(&url).await.ok()?.text().await.ok()?;
-    let document = Html::parse_document(&body);
-
-    Some(
-        document
-            .select(&selector)
-            .next()?
-            .descendants()
-            .filter_map(|node| {
-                if let Node::Element(e) = node.value() {
-                    extract_tag_attr(e, &HtmlTag::A, "title")
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<String>>(),
-    )
+        .collect())
 }

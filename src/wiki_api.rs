@@ -7,7 +7,7 @@ use crate::{
         open_search_get_exact_match_url, open_search_to_page_names, OpenSearchItem,
         TextSearchApiResponse, TextSearchItem,
     },
-    utils::{get_page_content, update_relative_urls},
+    utils::update_relative_urls,
 };
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -89,12 +89,5 @@ pub async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
     let body = reqwest::get(url).await?.text().await?;
     let body_with_abs_urls = update_relative_urls(&body, &base_url);
 
-    let document = Html::parse_document(&body_with_abs_urls);
-    if get_page_content(&document).is_none() {
-        return Err(WikiError::NoPageFound(
-            "page is not a valid ArchWiki page".to_owned(),
-        ));
-    }
-
-    Ok(document)
+    Ok(Html::parse_document(&body_with_abs_urls))
 }

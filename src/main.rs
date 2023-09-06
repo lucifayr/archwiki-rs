@@ -1,6 +1,5 @@
 use std::{collections::HashMap, fs};
 
-use categories::{fetch_all_page_names, fetch_page_names_from_categoriy, list_pages};
 use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
@@ -11,10 +10,11 @@ use url::Url;
 use wiki_api::fetch_page_by_url;
 
 use crate::{
+    categories::{fetch_all_pages, list_pages},
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
-    utils::{create_cache_page_path, page_cache_exists},
+    utils::{create_cache_page_path, get_page_content, page_cache_exists},
     wiki_api::{fetch_open_search, fetch_page, fetch_text_search},
 };
 
@@ -73,7 +73,16 @@ async fn main() -> Result<(), WikiError> {
                 fs::read_to_string(&page_cache_path)?
             } else {
                 let document = match Url::parse(&page) {
-                    Ok(url) => fetch_page_by_url(url).await?,
+                    Ok(url) => {
+                        let document = fetch_page_by_url(url).await?;
+                        if get_page_content(&document).is_none() {
+                            return Err(WikiError::NoPageFound(
+                                "page is not a valid ArchWiki page".to_owned(),
+                            ));
+                        }
+
+                        document
+                    }
                     Err(_) => fetch_page(&page, lang.as_ref().map(|x| x.as_str())).await?,
                 };
 
@@ -121,22 +130,8 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::UpdateCategory { category } => {
-            match fetch_page_names_from_categoriy(&category).await {
-                Some(pages) => {
-                    let mut content = pages_map.clone();
-                    content.insert(category, pages);
-
-                    let yaml = serde_yaml::to_string(&content)?;
-                    fs::write(&pages_path, yaml)?;
-                }
-                None => println!("Found no pages for category {category}"),
-            }
-        }
-        Commands::UpdateAll => {
-            let pages = fetch_all_page_names().await?;
-            let yaml = serde_yaml::to_string(&pages)?;
-            fs::write(&pages_path, yaml)?;
+        Commands::SyncWiki => {
+            fetch_all_pages().await?;
         }
         Commands::Info {
             show_cache_dir,
