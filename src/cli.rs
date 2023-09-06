@@ -76,7 +76,7 @@ pub enum Commands {
     ListLanguages,
     #[command(
         about = "Download all pages from the ArchWiki",
-        long_about = "Download all pages from the archwiki"
+        long_about = "Download all pages from the ArchWiki."
     )]
     SyncWiki {
         #[arg(short = 'H', long)]

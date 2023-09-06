@@ -14,9 +14,8 @@ A CLI tool to read pages from the ArchWiki
   * [Searching the ArchWiki](#searching-the-archwiki)
     + [Search by title](#search-by-title)
     + [Search for text](#search-for-text)
-  * [Downloading page info](#downloading-page-info)
-    + [Updating everything](#updating-everything)
-    + [Updating a specific category](#updating-a-specific-category)
+  * [Downloading wiki info](#downloading-wiki-info)
+    + [Possible speed-ups](#possible-speed-ups)
   * [Listing ArchWiki information](#listing-archwiki-information)
     + [Listing pages](#listing-pages)
     + [Listing categories](#listing-categories)
@@ -103,23 +102,25 @@ archwiki-rs search "shell" -t
 This returns a table of pages which contain the search term and the snippet of text
 that the search term is in
 
-### Downloading page info
+### Downloading wiki info
 
 Page names are stored locally to prevent having to scrape the entire table of contents of
-the ArchWiki with every command
+the ArchWiki with every command.
 
-#### Updating everything
-
-```sh
-archwiki-rs update-all
-```
-
+Use this command to fetch all page name. 
 Be warned, since this scrapes multiple thousand links, this is very slow (-, - )…zzzZZ
 
-#### Updating a specific category
+```sh
+archwiki-rs sync-wiki
+```
+
+#### Possible speed-ups
+
+If you don't mind your CPU and network becoming a bit saturated you can increase the
+amount of threads used to fetch data from the wiki
 
 ```sh
-archwiki-rs update-category Xorg_commands
+archwiki-rs sync-wiki -t 8
 ```
 
 ### Listing ArchWiki information
