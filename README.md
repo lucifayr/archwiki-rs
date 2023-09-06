@@ -27,7 +27,7 @@ A CLI tool to read pages from the ArchWiki
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
 or build it from source.
 
-After installation you might want to run [`sync-wiki`](#downloading-wiki-info) command.
+After installation you might want to run the [`sync-wiki`](#downloading-wiki-info) command.
 
 ### crates.io
 
@@ -109,7 +109,7 @@ that the search term is in
 Page names are stored locally to prevent having to scrape the entire table of contents of
 the ArchWiki with every command.
 
-Use this command to fetch all page name. 
+Use this command to fetch all page names. 
 Be warned, since this scrapes multiple thousand links, this can be quite  slow (-, - )…zzzZZ
 
 ```sh
