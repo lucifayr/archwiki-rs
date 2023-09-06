@@ -60,6 +60,7 @@ async fn main() -> Result<(), WikiError> {
             ignore_cache,
             disable_cache_invalidation,
             show_urls,
+            lang,
             format,
         } => {
             let page_cache_path = create_cache_page_path(&page, &format, &cache_dir);
@@ -69,7 +70,7 @@ async fn main() -> Result<(), WikiError> {
             let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
-                let document = fetch_page(&page, None).await?;
+                let document = fetch_page(&page, lang.as_ref().map(|x| x.as_str())).await?;
 
                 match format {
                     PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),

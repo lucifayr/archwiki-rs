@@ -29,6 +29,9 @@ pub enum Commands {
         #[arg(short, long)]
         /// Show URLs for plain-text output
         show_urls: bool,
+        #[arg(short, long)]
+        /// Preferred page language
+        lang: Option<String>,
         #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]
         /// The format that the page should be displayed in
         format: PageFormat,
