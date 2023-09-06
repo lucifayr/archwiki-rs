@@ -83,7 +83,7 @@ async fn main() -> Result<(), WikiError> {
 
                         document
                     }
-                    Err(_) => fetch_page(&page, lang.as_ref().map(|x| x.as_str())).await?,
+                    Err(_) => fetch_page(&page, lang.as_deref()).await?,
                 };
 
                 match format {

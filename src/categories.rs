@@ -114,7 +114,7 @@ pub async fn fetch_all_pages(
                         }
                     };
 
-                    res.push((item.name.clone(), pages));
+                    res.push((item.name, pages));
                     bar.inc(1);
                 }
 
@@ -126,7 +126,7 @@ pub async fn fetch_all_pages(
     let out = future::join_all(tasks)
         .await
         .into_iter()
-        .map(|x| x.unwrap())
+        .flatten()
         .flatten()
         .collect_vec();
 
@@ -142,7 +142,7 @@ fn parse_category_list(list_node: ego_tree::NodeRef<'_, scraper::Node>) -> Vec<C
             let a_tag_element = a_tag.value().as_element()?;
 
             let name = a_tag.first_child()?.value().as_text()?.to_string();
-            let url = extract_tag_attr(&a_tag_element, &HtmlTag::A, "href")?;
+            let url = extract_tag_attr(a_tag_element, &HtmlTag::A, "href")?;
 
             Some(CategoryListItem { name, url })
         })

@@ -110,7 +110,7 @@ Page names are stored locally to prevent having to scrape the entire table of co
 the ArchWiki with every command.
 
 Use this command to fetch all page name. 
-Be warned, since this scrapes multiple thousand links, this is very slow (-, - )…zzzZZ
+Be warned, since this scrapes multiple thousand links, this can be quite  slow (-, - )…zzzZZ
 
 ```sh
 archwiki-rs sync-wiki
