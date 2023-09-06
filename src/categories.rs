@@ -1,7 +1,8 @@
-use indicatif::ProgressBar;
+use ::futures::future;
+use indicatif::{MultiProgress, ProgressBar};
 use itertools::Itertools;
 use scraper::{Html, Node, Selector};
-use std::collections::HashMap;
+use std::{collections::HashMap, thread, time::Duration};
 use url::Url;
 
 #[derive(Debug, Clone)]
@@ -60,6 +61,7 @@ pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> S
 /// Caution this function will most likely take several minutes to finish (-, – )…zzzZZ
 pub async fn fetch_all_pages(
     hide_progress: bool,
+    thread_count: usize,
 ) -> Result<HashMap<String, Vec<String>>, WikiError> {
     let url = "https://wiki.archlinux.org/index.php?title=Special:Categories&offset=&limit=10000";
     let document = fetch_page_by_url(
@@ -78,26 +80,57 @@ pub async fn fetch_all_pages(
         .next()
         .unwrap();
 
-    let items = parse_category_list(category_list_element)
-        .into_iter()
+    let items = parse_category_list(category_list_element);
+    let multi_bar = MultiProgress::new();
+
+    let chunk_count = items.len() / thread_count;
+    let tasks = items
+        .chunks(chunk_count)
+        .map(|chunk| {
+            let chunk = chunk.to_vec();
+            let bar = ProgressBar::new(chunk.len().try_into().unwrap_or(0));
+            let bar = multi_bar.add(bar);
+            if hide_progress {
+                bar.finish_and_clear();
+            }
+
+            tokio::spawn(async move {
+                let mut res = Vec::with_capacity(chunk.len());
+                for item in chunk {
+                    let pages = match fetch_page_names_from_categoriy(&item.url).await {
+                        Ok(pages) => pages,
+
+                        Err(_) => {
+                            thread::sleep(Duration::from_secs(1));
+                            fetch_page_names_from_categoriy(&item.url)
+                                .await
+                                .unwrap_or_else(|err| {
+                                    eprintln!(
+                                        "failed to fetch pages in category {}\n ERROR {err}",
+                                        item.name
+                                    );
+                                    vec![]
+                                })
+                        }
+                    };
+
+                    res.push((item.name.clone(), pages));
+                    bar.inc(1);
+                }
+
+                res
+            })
+        })
         .collect_vec();
 
-    let mut wiki_map = HashMap::new();
+    let out = future::join_all(tasks)
+        .await
+        .into_iter()
+        .map(|x| x.unwrap())
+        .flatten()
+        .collect_vec();
 
-    let bar = ProgressBar::new(items.len().try_into().unwrap_or(0));
-
-    if hide_progress {
-        bar.finish_and_clear();
-    }
-
-    for item in items {
-        let pages = fetch_page_names_from_categoriy(&item.url).await?;
-        wiki_map.insert(item.name, pages);
-
-        bar.inc(1);
-    }
-
-    Ok(wiki_map)
+    Ok(HashMap::from_iter(out))
 }
 
 fn parse_category_list(list_node: ego_tree::NodeRef<'_, scraper::Node>) -> Vec<CategoryListItem> {

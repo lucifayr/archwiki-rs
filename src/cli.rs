@@ -82,6 +82,9 @@ pub enum Commands {
         #[arg(short = 'H', long)]
         /// Hide progress indicators
         hide_progress: bool,
+        #[arg(short, long)]
+        /// Number of threads to use for fetching data from the ArchWiki
+        thread_count: Option<usize>,
     },
     #[command(
         about = "Retrive information related to this tool",

@@ -39,7 +39,7 @@ async fn main() -> Result<(), WikiError> {
         Some(base_dir) => base_dir,
         None => {
             return Err(WikiError::Path(
-                "Failed to get valid home directory".to_owned(),
+                "failed to get valid home directory".to_owned(),
             ))
         }
     };
@@ -130,8 +130,18 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::SyncWiki { hide_progress } => {
-            fetch_all_pages(hide_progress).await?;
+        Commands::SyncWiki {
+            hide_progress,
+            thread_count,
+        } => {
+            let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
+            let out = fetch_all_pages(hide_progress, thread_count).await?;
+
+            fs::write(&pages_path, serde_yaml::to_string(&out)?)?;
+
+            if !hide_progress {
+                println!("data saved to {}", pages_path.to_string_lossy());
+            }
         }
         Commands::Info {
             show_cache_dir,
