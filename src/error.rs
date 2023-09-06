@@ -42,8 +42,6 @@ pub enum WikiError {
     SystemTime(#[from] SystemTimeError),
     #[error("A path error occurred.\nERROR: {}", .0)]
     Path(String),
-    #[error("A HTML error occurred.\nERROR: {}", .0)]
-    Html(String),
     #[error("An invalid api response was received.\nERROR: {}", .0)]
     InvalidApiResponse(InvalidApiResponseError),
     #[error("{}", .0)]

@@ -75,15 +75,17 @@ pub enum Commands {
     )]
     ListLanguages,
     #[command(
-        about = "Download all pages from a category",
-        long_about = "Download all pages from a category. Categories are stored in the pages.yml file."
-    )]
-    UpdateCategory { category: String },
-    #[command(
         about = "Download all pages from the ArchWiki",
-        long_about = "Download all pages from the archwiki. Only the English pages are stored."
+        long_about = "Download all pages from the ArchWiki."
     )]
-    UpdateAll,
+    SyncWiki {
+        #[arg(short = 'H', long)]
+        /// Hide progress indicators
+        hide_progress: bool,
+        #[arg(short, long)]
+        /// Number of threads to use for fetching data from the ArchWiki
+        thread_count: Option<usize>,
+    },
     #[command(
         about = "Retrive information related to this tool",
         long_about = "Retrive information related to this tool. All Info is shown by default."
