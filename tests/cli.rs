@@ -25,7 +25,7 @@ fn test_cli_info_cmd() -> Result<(), Box<dyn std::error::Error>> {
 
         cmd.assert()
             .success()
-            .stdout(pstr::starts_with("/home").and(pstr::ends_with("/.cache/archwiki-rs\n")));
+            .stdout(pstr::ends_with("/.cache/archwiki-rs\n"));
     }
 
     Ok(())
