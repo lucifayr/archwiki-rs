@@ -30,3 +30,42 @@ fn test_cli_info_cmd() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test]
+fn test_cli_read_page_cmd() -> Result<(), Box<dyn std::error::Error>> {
+    use predicate::str as pstr;
+
+    {
+        let mut cmd = Command::cargo_bin("archwiki-rs")?;
+        cmd.args(["read-page", "-i", "Neovim"]);
+
+        cmd.assert()
+            .success()
+            .stdout(pstr::contains("Installation"));
+    }
+
+    {
+        let mut cmd = Command::cargo_bin("archwiki-rs")?;
+        cmd.args(["read-page", "-i", "Neovi"]);
+
+        cmd.assert().failure().stderr(pstr::starts_with("Neovim"));
+    }
+
+    {
+        let mut cmd = Command::cargo_bin("archwiki-rs")?;
+        cmd.args(["read-page", "-i", "https://wiki.archlinux.org/title/Emacs"]);
+
+        cmd.assert()
+            .success()
+            .stdout(pstr::contains("Installation"));
+    }
+
+    {
+        let mut cmd = Command::cargo_bin("archwiki-rs")?;
+        cmd.args(["read-page", "-i", "https://google.com"]);
+
+        cmd.assert().failure();
+    }
+
+    Ok(())
+}
