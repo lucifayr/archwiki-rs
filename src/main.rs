@@ -133,14 +133,30 @@ async fn main() -> Result<(), WikiError> {
         Commands::SyncWiki {
             hide_progress,
             thread_count,
+            max_categories,
+            start_at,
+            print,
         } => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
-            let out = fetch_all_pages(hide_progress, thread_count).await?;
+            let res = fetch_all_pages(
+                hide_progress,
+                thread_count,
+                max_categories,
+                start_at.as_deref(),
+            )
+            .await?;
 
-            fs::write(&pages_path, serde_yaml::to_string(&out)?)?;
+            let sorted_res = res.into_iter().sorted().collect_vec();
+            let out = serde_yaml::to_string(&sorted_res)?;
 
-            if !hide_progress {
-                println!("data saved to {}", pages_path.to_string_lossy());
+            if !print {
+                fs::write(&pages_path, out)?;
+
+                if !hide_progress {
+                    println!("data saved to {}", pages_path.to_string_lossy());
+                }
+            } else {
+                println!("{out}");
             }
         }
         Commands::Info {

@@ -42,6 +42,8 @@ pub enum WikiError {
     SystemTime(#[from] SystemTimeError),
     #[error("A path error occurred.\nERROR: {}", .0)]
     Path(String),
+    #[error("A URL parse error occured.\nERROR: {}", .0)]
+    UrlParseError(#[from] url::ParseError),
     #[error("An invalid api response was received.\nERROR: {}", .0)]
     InvalidApiResponse(InvalidApiResponseError),
     #[error("{}", .0)]
