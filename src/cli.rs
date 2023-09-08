@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 use crate::formats::PageFormat;
@@ -63,12 +65,19 @@ pub enum Commands {
         #[arg(short, long)]
         /// Flatten all pages and don't show their category names
         flatten: bool,
+        #[arg(short, long)]
+        /// Use different file to read pages from
+        page_file: Option<PathBuf>,
     },
     #[command(
         about = "List all categories from the ArchWiki that have been downloaded",
         long_about = "List categories  from the ArchWiki that have been downloaded. See 'update-all' or 'update-category' for information on downloading."
     )]
-    ListCategories,
+    ListCategories {
+        #[arg(short, long)]
+        /// Use different file to read pages from
+        page_file: Option<PathBuf>,
+    },
     #[command(
         about = "List all languages that the ArchWiki supports",
         long_about = "List all languages that the ArchWiki supports."
@@ -85,6 +94,16 @@ pub enum Commands {
         #[arg(short, long)]
         /// Number of threads to use for fetching data from the ArchWiki
         thread_count: Option<usize>,
+        #[arg(short, long)]
+        /// Maximum amount of categories to fetch. If no value if provided all categories are
+        /// fetched.
+        max_categories: Option<u32>,
+        #[arg(short, long)]
+        /// First category that will be fetched. See 'https://wiki.archlinux.org/index.php?title=Special:Categories' for more information.
+        start_at: Option<String>,
+        #[arg(short, long)]
+        /// Print result to stdout instead of writing to a file. Output is formatted as YAML.
+        print: bool,
     },
     #[command(
         about = "Retrive information related to this tool",

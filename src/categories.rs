@@ -62,12 +62,20 @@ pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> S
 pub async fn fetch_all_pages(
     hide_progress: bool,
     thread_count: usize,
+    max_categories: Option<u32>,
+    start_at: Option<&str>,
 ) -> Result<HashMap<String, Vec<String>>, WikiError> {
-    let url = "https://wiki.archlinux.org/index.php?title=Special:Categories&offset=&limit=10000";
-    let document = fetch_page_by_url(
-        Url::parse(url).unwrap_or_else(|_| panic!("{url} should be a valid url")),
-    )
-    .await?;
+    let from = start_at.unwrap_or("");
+    let limit = max_categories.unwrap_or(10000);
+
+    let base_url = "https://wiki.archlinux.org/index.php?title=Special:Categories";
+
+    let url = Url::parse_with_params(
+        base_url,
+        &[("from", from), ("limit", limit.to_string().as_str())],
+    )?;
+
+    let document = fetch_page_by_url(url).await?;
 
     let body_class = ".mw-spcontent";
     let selector = Selector::parse(body_class)

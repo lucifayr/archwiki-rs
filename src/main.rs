@@ -49,11 +49,7 @@ async fn main() -> Result<(), WikiError> {
     fs::create_dir_all(&cache_dir)?;
     fs::create_dir_all(&data_dir)?;
 
-    let pages_path = data_dir.join(PAGE_FILE_NAME);
-    let pages_map: HashMap<String, Vec<String>> = match fs::read_to_string(&pages_path) {
-        Ok(file) => serde_yaml::from_str(&file)?,
-        Err(_) => HashMap::default(),
-    };
+    let default_page_file_path = data_dir.join(PAGE_FILE_NAME);
 
     match args.command {
         Commands::ReadPage {
@@ -116,11 +112,17 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::ListPages { flatten } => {
+        Commands::ListPages { flatten, page_file } => {
+            let file = fs::read_to_string(page_file.unwrap_or(default_page_file_path))?;
+            let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
+
             let out = list_pages(&pages_map, flatten);
             println!("{out}");
         }
-        Commands::ListCategories => {
+        Commands::ListCategories { page_file } => {
+            let file = fs::read_to_string(page_file.unwrap_or(default_page_file_path))?;
+            let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
+
             let out = pages_map.keys().unique().sorted().join("\n");
             println!("{out}");
         }
@@ -133,14 +135,29 @@ async fn main() -> Result<(), WikiError> {
         Commands::SyncWiki {
             hide_progress,
             thread_count,
+            max_categories,
+            start_at,
+            print,
         } => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
-            let out = fetch_all_pages(hide_progress, thread_count).await?;
+            let res = fetch_all_pages(
+                hide_progress,
+                thread_count,
+                max_categories,
+                start_at.as_deref(),
+            )
+            .await?;
 
-            fs::write(&pages_path, serde_yaml::to_string(&out)?)?;
+            let out = serde_yaml::to_string(&res)?;
 
-            if !hide_progress {
-                println!("data saved to {}", pages_path.to_string_lossy());
+            if !print {
+                fs::write(&default_page_file_path, out)?;
+
+                if !hide_progress {
+                    println!("data saved to {}", default_page_file_path.to_string_lossy());
+                }
+            } else {
+                println!("{out}");
             }
         }
         Commands::Info {
