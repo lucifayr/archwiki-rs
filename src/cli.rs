@@ -66,6 +66,9 @@ pub enum Commands {
         /// Flatten all pages and don't show their category names
         flatten: bool,
         #[arg(short, long)]
+        /// Only show pages in this category
+        category: Option<String>,
+        #[arg(short, long)]
         /// Use different file to read pages from
         page_file: Option<PathBuf>,
     },

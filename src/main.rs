@@ -112,11 +112,25 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::ListPages { flatten, page_file } => {
+        Commands::ListPages {
+            flatten,
+            category,
+            page_file,
+        } => {
             let file = fs::read_to_string(page_file.unwrap_or(default_page_file_path))?;
             let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
 
-            let out = list_pages(&pages_map, flatten);
+            let out = if let Some(category) = category {
+                pages_map
+                    .get(&category)
+                    .ok_or(WikiError::NoCategoryFound(category))?
+                    .into_iter()
+                    .sorted()
+                    .join("\n")
+            } else {
+                list_pages(&pages_map, flatten)
+            };
+
             println!("{out}");
         }
         Commands::ListCategories { page_file } => {
