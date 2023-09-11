@@ -1,5 +1,6 @@
 use std::{
     fs,
+    io::{self, ErrorKind},
     path::{Path, PathBuf},
 };
 
@@ -103,6 +104,15 @@ pub fn update_relative_urls(html: &str, base_url: &str) -> String {
         .replace("manifest=\"/", &format!("manifest=\"{base_url}/"))
         .replace("ping=\"/", &format!("ping=\"{base_url}/"))
         .replace("poster=\"/", &format!("poster=\"{base_url}/"))
+}
+
+pub fn read_pages_file_as_str(path: PathBuf) -> Result<String, WikiError> {
+    fs::read_to_string(&path).map_err(|err| {
+        match err.kind() {
+            ErrorKind::NotFound => WikiError::IO(io::Error::new(ErrorKind::NotFound,  format!("Could not find pages file at '{}'. Try running 'archwiki-rs sync-wiki' to create the missing file.", path.to_string_lossy()))),
+            _ => err.into()
+        }
+    })
 }
 
 fn to_save_file_name(page: &str) -> String {
