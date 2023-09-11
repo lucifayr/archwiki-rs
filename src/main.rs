@@ -89,11 +89,19 @@ async fn main() -> Result<(), WikiError> {
                 }
             };
 
+            let mut caching_failed_warning = String::new();
+
             if !no_cache_write {
-                fs::write(&page_cache_path, out.as_bytes())?;
+                match fs::write(&page_cache_path, out.as_bytes()) {
+                    Ok(_) => {}
+                    Err(_) => {
+                        caching_failed_warning =
+                            format!("\n\n! failed to cache page with name {page}");
+                    }
+                }
             }
 
-            println!("{out}");
+            println!("{out}{caching_failed_warning}");
         }
         Commands::Search {
             search,
