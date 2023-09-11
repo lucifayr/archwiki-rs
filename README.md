@@ -141,6 +141,12 @@ newline separated list that only contains the names of all pages
 archwiki-rs list-pages -f
 ```
 
+You can also limit the list to only include pages that belong to a specific category
+
+```sh
+archwiki-rs list-pages -c "Xorg commands"
+```
+
 #### Listing categories
 
 To do the same for categories you can run
