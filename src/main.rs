@@ -14,7 +14,7 @@ use crate::{
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
-    utils::{create_cache_page_path, get_page_content, page_cache_exists},
+    utils::{create_cache_page_path, get_page_content, page_cache_exists, read_pages_file_as_str},
     wiki_api::{fetch_open_search, fetch_page, fetch_text_search},
 };
 
@@ -117,7 +117,9 @@ async fn main() -> Result<(), WikiError> {
             category,
             page_file,
         } => {
-            let file = fs::read_to_string(page_file.unwrap_or(default_page_file_path))?;
+            let path = page_file.unwrap_or(default_page_file_path);
+            let file = read_pages_file_as_str(path)?;
+
             let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
 
             let out = if let Some(category) = category {
@@ -134,7 +136,9 @@ async fn main() -> Result<(), WikiError> {
             println!("{out}");
         }
         Commands::ListCategories { page_file } => {
-            let file = fs::read_to_string(page_file.unwrap_or(default_page_file_path))?;
+            let path = page_file.unwrap_or(default_page_file_path);
+            let file = read_pages_file_as_str(path)?;
+
             let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
 
             let out = pages_map.keys().unique().sorted().join("\n");
