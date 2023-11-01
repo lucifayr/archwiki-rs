@@ -50,7 +50,7 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
-          git switch $BRANCH_NAME
+          git checkout $BRANCH_NAME
           git add .
 
           if [[ -n "$(git status --porcelain)" ]]; then
