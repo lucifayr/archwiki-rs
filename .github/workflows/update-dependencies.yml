@@ -16,22 +16,22 @@ jobs:
       - name: get latest tag
         id: get_latest_tag
         shell: bash
-        run: echo "##[set-output name=tag;]"$(git describe --tags `git rev-list --tags --max-count=1`)
+        run: echo "##[set-output name=tag;]$(git describe --tags `git rev-list --tags --max-count=1`)"
 
       - name: get new tag
         id: get_new_tag
         shell: bash
-        run: echo "##[set-output name=tag;]"$(echo ${{ steps.get_latest_tag.outputs.tag }} | awk -F '.' '{ print $1"."$2"."++$3 }')
+        run: echo "##[set-output name=tag;]$(echo ${{ steps.get_latest_tag.outputs.tag }} | awk -F '.' '{ print $1"."$2"."++$3 }')"
 
       - name: get latest version
         id: get_latest_version
         shell: bash
-        run: echo "##[set-output name=version;]"$(echo ${{ steps.get_latest_tag.outputs.release }} | awk -F 'v' '{ print $2 }')
+        run: echo "##[set-output name=version;]$(echo ${{ steps.get_latest_tag.outputs.release }} | awk -F 'v' '{ print $2 }')"
 
       - name: get new version
         id: get_new_version
         shell: bash
-        run: echo "##[set-output name=version;]"$(echo ${{ steps.get_latest_version.outputs.release }} | awk -F '.' '{ print $1"."$2"."++$3 }')
+        run: echo "##[set-output name=version;]$(echo ${{ steps.get_latest_version.outputs.release }} | awk -F '.' '{ print $1"."$2"."++$3 }')"
 
       - name: update cargo version
         shell: bash
@@ -39,7 +39,7 @@ jobs:
 
       - name: extract branch name
         shell: bash
-        run: echo "##[set-output name=branch;]"$(echo ${GITHUB_REF#refs/heads/})"
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
 
       - name: commit changes and create tag
