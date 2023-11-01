@@ -57,7 +57,7 @@ jobs:
           git add .
 
           if [[ -n "$(git status --porcelain)" ]]; then
-            git commit -m "bump version to patch ${{ steps.get_new_version.outputs.version }}"
+            git commit -m "update cargo version ${{ steps.get_new_version.outputs.version }}"
             git tag ${{ steps.get_new_tag.outputs.tag }}
 
             git push
