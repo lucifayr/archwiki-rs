@@ -15,8 +15,7 @@ jobs:
 
       - name: get latest tag
         id: get_latest_tag
-        shell: bash
-        run: echo "tag=$(${GITHUB_REF#refs/tags/})" >> $GITHUB_OUTPUT
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: get new tag
         id: get_new_tag
