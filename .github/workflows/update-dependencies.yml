@@ -45,7 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          BRANCH=$(echo ${GITHUB_REF#refs/heads/})
 
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
@@ -55,8 +55,8 @@ jobs:
             git commit -m "bump version to ${{ steps.get_new_version.outputs.version }}"
             git tag ${{ steps.get_new_tag.outputs.tag }}
 
-            git push --follow-tags origin $BRANCH
-            gh pr merge --auto --delete-branch --squash $BRANCH
+            git push --follow-tags origin/$BRANCH
+            gh pr merge --auto --delete-branch --squash origin/$BRANCH
           else
             echo "looks like there was nothing to update."
           fi
