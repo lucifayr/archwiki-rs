@@ -1,0 +1,19 @@
+# TODO
+# - [x] check if 'version bump'
+# - get current version
+# - increment to new patch version
+# - [x] update Cargo.toml to new version & commit on PR
+# - merge PR if checks have passed
+# - create tag with new version and release
+# - 'cargo publish' new version
+
+name: Release Version Bump
+on: pull_request
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-20.04
+    if: ${{ github.actor == 'dependabot[bot]' &&  contains(github.event.pull_request.title, 'Bump') }}
+  steps:
+    - name: update cargo version
+      run: sed -i '/name = "archwiki-rs"/{n;s/version = "${{ current_version }}"/version = "${{ new_version }}/;}' Cargo.toml Cargo.lock
