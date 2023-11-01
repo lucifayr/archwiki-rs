@@ -47,11 +47,7 @@ jobs:
       - name: commit changes and create tag
         id: commit_and_tag
         shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         run: |
-          PR_URL=${{ github.event.pull_request.html_url }}
-
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
@@ -63,7 +59,15 @@ jobs:
 
             git push
             git push --tags
-            gh pr merge --auto --delete-branch --squash $PR_URL
           else
             echo "looks like there was nothing to update."
           fi
+
+      - name: set pr to auto merge 
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+        run: |
+          PR_URL=${{ github.event.pull_request.html_url }}
+
+          gh pr merge --auto --delete-branch --squash $PR_URL
