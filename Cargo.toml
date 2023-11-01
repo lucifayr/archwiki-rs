@@ -13,7 +13,7 @@ categories = ["command-line-interface"]
 
 [dependencies]
 assert_fs = "1.0.13"
-clap = { version = "4.2.5", features = ["derive"] }
+clap = { version = "4.4.7", features = ["derive"] }
 colored = "2.0.0"
 directories = "5.0.1"
 ego-tree = "0.6.2"
