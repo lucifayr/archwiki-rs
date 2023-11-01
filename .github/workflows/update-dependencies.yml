@@ -16,22 +16,22 @@ jobs:
       - name: get latest tag
         id: get_latest_tag
         shell: bash
-        run: echo "tag=$(git describe --tags `git rev-list --tags --max-count=1`)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_OUTPUT
 
       - name: get new tag
         id: get_new_tag
         shell: bash
-        run: echo "tag=$(echo ${{ steps.get_latest_tag.outputs.tag }} | awk -F '.' '{ print $1"."$2"."++$3 }')" >> "$GITHUB_OUTPUT"
+        run: echo "tag=$(echo ${{ steps.get_latest_tag.outputs.tag }} | awk -F '.' '{ print $1"."$2"."++$3 }')" >> $GITHUB_OUTPUT
 
       - name: get latest version
         id: get_latest_version
         shell: bash
-        run: echo "version=$(echo ${{ steps.get_latest_tag.outputs.tag  }} | awk -F 'v' '{ print $2 }')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(echo ${{ steps.get_latest_tag.outputs.tag  }} | awk -F 'v' '{ print $2 }')" >> $GITHUB_OUTPUT
 
       - name: get new version
         id: get_new_version
         shell: bash
-        run: echo "version=$(echo ${{ steps.get_latest_version.outputs.version }} | awk -F '.' '{ print $1"."$2"."++$3 }')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(echo ${{ steps.get_latest_version.outputs.version }} | awk -F '.' '{ print $1"."$2"."++$3 }')" >> $GITHUB_OUTPUT
 
       - name: update cargo version
         shell: bash
@@ -53,8 +53,12 @@ jobs:
             git commit -m "bump version to ${{ steps.get_new_version.outputs.version }}"
             git tag ${{ steps.get_new_tag.outputs.tag }}
 
-            git push --follow-tags
-            gh pr merge --auto --delete-branch --squash "$BRANCH"
+            git push --follow-tags origin $BRANCH
+            gh pr merge --auto --delete-branch --squash $BRANCH
           else
             echo "looks like there was nothing to update."
           fi
+
+      - name: Echo output
+        if: always()
+        run: echo $GITHUB_OUTPUT
