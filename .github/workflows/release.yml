@@ -6,9 +6,9 @@ on:
       - main
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
