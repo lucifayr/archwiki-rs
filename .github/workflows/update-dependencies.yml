@@ -40,7 +40,7 @@ jobs:
 
       - name: update cargo version
         shell: bash
-        run: sed -i '/name = "archwiki-rs"/{n;s/version = "${{ steps.get_latest_version.outputs.version }}"/version = "${{ steps.get_new_version.outputs.version  }}/;}' Cargo.toml Cargo.lock
+        run: sed -i '/name = "archwiki-rs"/{n;s/version = "${{ steps.get_latest_version.outputs.version }}"/version = "${{ steps.get_new_version.outputs.version  }}"/;}' Cargo.toml Cargo.lock
 
       - name: checkout PR
         env:
