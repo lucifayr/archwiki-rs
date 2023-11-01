@@ -1,14 +1,4 @@
-# TODO
-# - [x] check if 'version bump'
-# - get current version
-# - increment to new patch version
-# - [x] update Cargo.toml to new version & commit on PR
-# - merge PR if checks have passed
-# - create tag with new version 
-# - [x] release new version on github
-# - 'cargo publish' new version
-
-name: Release Version Bump
+name: Update Dependencies
 on: pull_request
 
 jobs:
@@ -16,24 +6,55 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.actor == 'dependabot[bot]' && contains(github.event.pull_request.title, 'Bump') }}
   steps:
+    - name: checkout
+      uses: actions/checkout@v3
+
     - name: get latest tag
       id: get_latest_tag
-      uses: pozetroninc/github-action-get-latest-release@master
-      with:
-        repository: ${{ github.repository }}
+      shell: bash
+      run: echo "##[set-output name=tag;]$(git describe --tags `git rev-list --tags --max-count=1`)
 
     - name: get new tag
       id: get_new_tag
-      run: echo ${{ steps.get_latest_tag.outputs.release }} | awk -F '.' '{ print $1"."$2"."++$3 }'
+      shell: bash
+      run: echo "##[set-output name=tag;]$(echo ${{ steps.get_latest_tag.outputs.tag }} | awk -F '.' '{ print $1"."$2"."++$3 }')
 
     - name: get latest version
       id: get_latest_version
-      run: echo ${{ steps.get_latest_tag.outputs.release }} | awk -F 'v' '{ print $2 }'
+      shell: bash
+      run: echo "##[set-output name=version;]$(echo ${{ steps.get_latest_tag.outputs.release }} | awk -F 'v' '{ print $2 }')
 
     - name: get new version
       id: get_new_version
-      run: echo ${{ steps.get_latest_version.outputs.release }} | awk -F '.' '{ print $1"."$2"."++$3 }'
-
+      shell: bash
+      run: echo "##[set-output name=version;]$(echo ${{ steps.get_latest_version.outputs.release }} | awk -F '.' '{ print $1"."$2"."++$3 }')
 
     - name: update cargo version
-      run: sed -i '/name = "archwiki-rs"/{n;s/version = "${{ current_version }}"/version = "${{ new_version }}/;}' Cargo.toml Cargo.lock
+      shell: bash
+      run: sed -i '/name = "archwiki-rs"/{n;s/version = "${{ steps.get_latest_version.outputs.version }}"/version = "${{ steps.get_new_version.outputs.version  }}/;}' Cargo.toml Cargo.lock
+
+    - name: extract branch name
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      id: extract_branch
+
+    - name: commit changes and create tag
+      id: commit_and_tag
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git config user.name "GitHub Actions Bot"
+        git config user.email "<>"
+
+        git checkout ${{ steps.extract_branch.outputs.branch }}
+        git add .
+        if [[ -n "$(git status --porcelain)" ]]; then
+          git commit -m "bump version to ${{ steps.get_new_version.outputs.version }}"
+          git tag ${{ steps.get_new_tag.outputs.tag }}
+
+          git push --follow-tags
+          gh pr merge --auto --delete-branch --squash "${{ steps.extract_branch.outputs.branch }}"
+        else
+          echo "looks like there was nothing to update."
+        fi

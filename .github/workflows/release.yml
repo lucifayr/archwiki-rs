@@ -11,8 +11,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v3
 
-      - name: Release
+      - name: github release
         uses: softprops/action-gh-release@v1
+
+      - name: crates.io release
+        shell: bash
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
