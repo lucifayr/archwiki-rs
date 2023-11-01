@@ -8,11 +8,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: startsWith(github.event.head_commit.message, 'bump version to patch')
     steps:
       - name: checkout
         uses: actions/checkout@v3
 
+        if: startsWith(github.event.head_commit.message, 'bump version to patch')
       - name: github release
         uses: softprops/action-gh-release@v1
 
