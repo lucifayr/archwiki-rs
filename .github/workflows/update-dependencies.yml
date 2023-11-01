@@ -4,7 +4,8 @@
 # - increment to new patch version
 # - [x] update Cargo.toml to new version & commit on PR
 # - merge PR if checks have passed
-# - create tag with new version and release
+# - create tag with new version 
+# - [x] release new version on github
 # - 'cargo publish' new version
 
 name: Release Version Bump
@@ -13,7 +14,26 @@ on: pull_request
 jobs:
   dependabot:
     runs-on: ubuntu-20.04
-    if: ${{ github.actor == 'dependabot[bot]' &&  contains(github.event.pull_request.title, 'Bump') }}
+    if: ${{ github.actor == 'dependabot[bot]' && contains(github.event.pull_request.title, 'Bump') }}
   steps:
+    - name: get latest tag
+      id: get_latest_tag
+      uses: pozetroninc/github-action-get-latest-release@master
+      with:
+        repository: ${{ github.repository }}
+
+    - name: get new tag
+      id: get_new_tag
+      run: echo ${{ steps.get_latest_tag.outputs.release }} | awk -F '.' '{ print $1"."$2"."++$3 }'
+
+    - name: get latest version
+      id: get_latest_version
+      run: echo ${{ steps.get_latest_tag.outputs.release }} | awk -F 'v' '{ print $2 }'
+
+    - name: get new version
+      id: get_new_version
+      run: echo ${{ steps.get_latest_version.outputs.release }} | awk -F '.' '{ print $1"."$2"."++$3 }'
+
+
     - name: update cargo version
       run: sed -i '/name = "archwiki-rs"/{n;s/version = "${{ current_version }}"/version = "${{ new_version }}/;}' Cargo.toml Cargo.lock
