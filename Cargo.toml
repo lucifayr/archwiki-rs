@@ -23,7 +23,7 @@ human-panic = "1.1.5"
 indicatif = "0.17.6"
 itertools = "0.10.5"
 num_cpus = "1.16.0"
-regex = "1.9.3"
+regex = "1.10.2"
 reqwest = "0.11.17"
 scraper = "0.16.0"
 serde = { version = "1.0.188", features = ["derive"] }
