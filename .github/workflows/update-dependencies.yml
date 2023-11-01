@@ -41,14 +41,14 @@ jobs:
 
       - name: checkout PR
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
 
       - name: commit changes and create tag
         id: commit_and_tag
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         run: |
           PR_URL=${{ github.event.pull_request.html_url }}
 
