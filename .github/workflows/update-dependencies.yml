@@ -45,19 +45,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH=remotes/origin/${{ github.head_ref }}
+          BRANCH=${{ github.head_ref }}
 
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
-          git checkout $BRANCH_NAME
+          git checkout $BRANCH
           git add .
 
           if [[ -n "$(git status --porcelain)" ]]; then
             git commit -m "bump version to ${{ steps.get_new_version.outputs.version }}"
             git tag ${{ steps.get_new_tag.outputs.tag }}
 
-            git push --follow-tags $BRANCH
+            git push --follow-tags origin HEAD:remotes/origin/$BRANCH
             gh pr merge --auto --delete-branch --squash $BRANCH
           else
             echo "looks like there was nothing to update."
