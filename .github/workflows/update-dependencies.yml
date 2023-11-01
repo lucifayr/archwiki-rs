@@ -45,7 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH=${{ github.ref_name }}
+          BRANCH=${{ github.head_ref }}
 
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
