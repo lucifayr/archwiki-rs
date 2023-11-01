@@ -73,4 +73,4 @@ jobs:
         run: |
           PR_URL=${{ github.event.pull_request.html_url }}
 
-          gh pr merge --auto --delete-branch --squash $PR_URL
+          gh pr merge --auto --delete-branch --squash $PR_URL || (sleep 10 && gh pr merge --auto --delete-branch --squash $PR_URL)
