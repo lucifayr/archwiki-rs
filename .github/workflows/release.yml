@@ -15,15 +15,16 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
 
-      - name: get latest tag
-        id: get_latest_tag
+      - name: get tag
+        id: get_tag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - if: startsWith(github.event.head_commit.message, 'Bump the cli-dependencies group')
         name: github release
-        uses: docker://antonyurchenko/git-release:v5
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+        run: gh release create ${{ steps.get_tag.outputs.tag }} --generate-notes
 
       - if: startsWith(github.event.head_commit.message, 'Bump the cli-dependencies group')
         name: crates.io release
