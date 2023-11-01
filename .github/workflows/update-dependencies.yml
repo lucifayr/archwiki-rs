@@ -16,7 +16,7 @@ jobs:
       - name: get latest tag
         id: get_latest_tag
         shell: bash
-        run: echo "tag=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_OUTPUT
+        run: echo "tag=$(${GITHUB_REF#refs/tags/})" >> $GITHUB_OUTPUT
 
       - name: get new tag
         id: get_new_tag
@@ -58,7 +58,3 @@ jobs:
           else
             echo "looks like there was nothing to update."
           fi
-
-      - name: Echo output
-        if: always()
-        run: echo $GITHUB_OUTPUT
