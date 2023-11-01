@@ -13,28 +13,28 @@ categories = ["command-line-interface"]
 
 [dependencies]
 assert_fs = "1.0.13"
-clap = { version = "4.2.5", features = ["derive"] }
+clap = { version = "4.4.7", features = ["derive"] }
 colored = "2.0.0"
 directories = "5.0.1"
 ego-tree = "0.6.2"
 futures = "0.3.28"
 html2md = "0.2.14"
-human-panic = "1.1.5"
-indicatif = "0.17.6"
-itertools = "0.10.5"
+human-panic = "1.2.1"
+indicatif = "0.17.7"
+itertools = "0.11.0"
 num_cpus = "1.16.0"
-regex = "1.9.3"
-reqwest = "0.11.17"
-scraper = "0.16.0"
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.105"
-serde_yaml = "0.9.21"
+regex = "1.10.2"
+reqwest = "0.11.22"
+scraper = "0.18.1"
+serde = { version = "1.0.190", features = ["derive"] }
+serde_json = "1.0.108"
+serde_yaml = "0.9.27"
 termination = "0.1.2"
-thiserror = "1.0.40"
-tokio = { version = "1.28.0", features = ["full"] }
+thiserror = "1.0.50"
+tokio = { version = "1.33.0", features = ["full"] }
 url = "2.4.1"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
-predicates = "3.0.3"
+predicates = "3.0.4"
 pretty_assertions = "1.4.0"
