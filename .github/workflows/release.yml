@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,9 +15,15 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
 
+      - name: get latest tag
+        id: get_latest_tag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
       - if: startsWith(github.event.head_commit.message, 'Bump the cli-dependencies group')
         name: github release
         uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_latest_tag.outputs.tag }}
 
       - if: startsWith(github.event.head_commit.message, 'Bump the cli-dependencies group')
         name: crates.io release
