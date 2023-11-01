@@ -6,9 +6,9 @@ on:
       - main
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: startsWith(github.event.head_commit.message, 'bump version to patch')
     steps:
       - name: checkout
         uses: actions/checkout@v3
