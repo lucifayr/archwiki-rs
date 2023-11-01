@@ -1,4 +1,5 @@
 name: Update Dependencies
+
 on: pull_request
 
 permissions:
@@ -44,7 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH=$GITHUB_REF
+          BRANCH=$(echo $GITHUB_REF | sed 's/merge/head/g')
 
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
