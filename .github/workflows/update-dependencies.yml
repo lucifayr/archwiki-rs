@@ -1,0 +1,76 @@
+name: Update Dependencies
+
+on: 
+  pull_request:
+    types:
+      - opened
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-20.04
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: get latest tag
+        id: get_latest_tag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: get new tag
+        id: get_new_tag
+        shell: bash
+        run: echo "tag=$(echo ${{ steps.get_latest_tag.outputs.tag }} | awk -F '.' '{ print $1"."$2"."++$3 }')" >> $GITHUB_OUTPUT
+
+      - name: get latest version
+        id: get_latest_version
+        shell: bash
+        run: echo "version=$(echo ${{ steps.get_latest_tag.outputs.tag  }} | awk -F 'v' '{ print $2 }')" >> $GITHUB_OUTPUT
+
+      - name: get new version
+        id: get_new_version
+        shell: bash
+        run: echo "version=$(echo ${{ steps.get_latest_version.outputs.version }} | awk -F '.' '{ print $1"."$2"."++$3 }')" >> $GITHUB_OUTPUT
+
+      - name: update cargo version
+        shell: bash
+        run: sed -i '/name = "archwiki-rs"/{n;s/version = "${{ steps.get_latest_version.outputs.version }}"/version = "${{ steps.get_new_version.outputs.version  }}"/;}' Cargo.toml Cargo.lock
+
+      - name: checkout PR
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+        run: gh pr checkout ${{ github.event.pull_request.number }}
+
+      - name: commit changes and create tag
+        id: commit_and_tag
+        shell: bash
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+
+          git add .
+
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git commit -m "update cargo version ${{ steps.get_new_version.outputs.version }}"
+            git tag ${{ steps.get_new_tag.outputs.tag }}
+
+            git push
+            git push --tags
+          else
+            echo "looks like there was nothing to update."
+          fi
+
+      - name: set pr to auto merge 
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+        run: |
+          PR_URL=${{ github.event.pull_request.html_url }}
+
+          gh pr merge --auto --delete-branch --squash $PR_URL || (sleep 10 && gh pr merge --auto --delete-branch --squash $PR_URL)
