@@ -45,12 +45,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH=$(echo ${GITHUB_REF#refs/heads/})
+          BRANCH=${{ github.ref_name }}
 
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
+          git switch $BRANCH_NAME
           git add .
+
           if [[ -n "$(git status --porcelain)" ]]; then
             git commit -m "bump version to ${{ steps.get_new_version.outputs.version }}"
             git tag ${{ steps.get_new_tag.outputs.tag }}
