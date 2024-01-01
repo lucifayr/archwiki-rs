@@ -12,27 +12,27 @@ keywords = ["ArchWiki", "cli"]
 categories = ["command-line-interface"]
 
 [dependencies]
-assert_fs = "1.0.13"
-clap = { version = "4.4.7", features = ["derive"] }
-colored = "2.0.0"
+assert_fs = "1.1.0"
+clap = { version = "4.4.12", features = ["derive"] }
+colored = "2.1.0"
 directories = "5.0.1"
 ego-tree = "0.6.2"
-futures = "0.3.29"
+futures = "0.3.30"
 html2md = "0.2.14"
-human-panic = "1.2.1"
+human-panic = "1.2.2"
 indicatif = "0.17.7"
-itertools = "0.11.0"
+itertools = "0.12.0"
 num_cpus = "1.16.0"
 regex = "1.10.2"
-reqwest = "0.11.22"
+reqwest = "0.11.23"
 scraper = "0.18.1"
-serde = { version = "1.0.190", features = ["derive"] }
-serde_json = "1.0.108"
-serde_yaml = "0.9.27"
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.109"
+serde_yaml = "0.9.29"
 termination = "0.1.2"
-thiserror = "1.0.50"
-tokio = { version = "1.33.0", features = ["full"] }
-url = "2.4.1"
+thiserror = "1.0.53"
+tokio = { version = "1.35.1", features = ["full"] }
+url = "2.5.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
