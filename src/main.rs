@@ -6,6 +6,7 @@ use directories::BaseDirs;
 use error::WikiError;
 use formats::plain_text::convert_page_to_plain_text;
 use itertools::Itertools;
+use scraper::Html;
 use url::Url;
 use wiki_api::fetch_page_by_url;
 
@@ -68,24 +69,20 @@ async fn main() -> Result<(), WikiError> {
             let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
-                let document = match Url::parse(&page) {
-                    Ok(url) => {
-                        let document = fetch_page_by_url(url).await?;
-                        if get_page_content(&document).is_none() {
-                            return Err(WikiError::NoPageFound(
-                                "page is not a valid ArchWiki page".to_owned(),
-                            ));
-                        }
-
-                        document
+                match fetch_document(&page, lang.as_deref()).await {
+                    Ok(document) => match format {
+                        PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),
+                        PageFormat::Markdown => convert_page_to_markdown(&document, &page),
+                        PageFormat::Html => convert_page_to_html(&document, &page),
+                    },
+                    Err(err)
+                        if !ignore_cache
+                            && page_cache_exists(&page_cache_path, true).unwrap_or(false) =>
+                    {
+                        eprintln!("failed to fetch fresh page content, using possibly outdated cache instead\nERROR: {err}");
+                        fs::read_to_string(&page_cache_path)?
                     }
-                    Err(_) => fetch_page(&page, lang.as_deref()).await?,
-                };
-
-                match format {
-                    PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),
-                    PageFormat::Markdown => convert_page_to_markdown(&document, &page),
-                    PageFormat::Html => convert_page_to_html(&document, &page),
+                    Err(err) => return Err(err),
                 }
             };
 
@@ -234,4 +231,20 @@ async fn main() -> Result<(), WikiError> {
     }
 
     Ok(())
+}
+
+async fn fetch_document(page: &str, lang: Option<&str>) -> Result<Html, WikiError> {
+    match Url::parse(page) {
+        Ok(url) => {
+            let document = fetch_page_by_url(url).await?;
+            if get_page_content(&document).is_none() {
+                return Err(WikiError::NoPageFound(
+                    "page is not a valid ArchWiki page".to_owned(),
+                ));
+            }
+
+            Ok(document)
+        }
+        Err(_) => fetch_page(&page, lang).await,
+    }
 }
