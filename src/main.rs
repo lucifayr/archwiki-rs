@@ -245,6 +245,6 @@ async fn fetch_document(page: &str, lang: Option<&str>) -> Result<Html, WikiErro
 
             Ok(document)
         }
-        Err(_) => fetch_page(&page, lang).await,
+        Err(_) => fetch_page(page, lang).await,
     }
 }
