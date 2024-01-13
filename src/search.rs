@@ -159,9 +159,9 @@ pub fn open_search_get_exact_match_url(
         ))
     };
 
-    if let Some(name) = names.get(0) {
+    if let Some(name) = names.first() {
         if name == page {
-            Ok(urls.get(0).cloned())
+            Ok(urls.first().cloned())
         } else {
             Ok(None)
         }

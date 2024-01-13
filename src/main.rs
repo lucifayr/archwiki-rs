@@ -134,7 +134,7 @@ async fn main() -> Result<(), WikiError> {
                 pages_map
                     .get(&category)
                     .ok_or(WikiError::NoCategoryFound(category))?
-                    .into_iter()
+                    .iter()
                     .sorted()
                     .join("\n")
             } else {

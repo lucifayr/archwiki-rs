@@ -25,7 +25,7 @@ pub async fn fetch_open_search(
     let res: Vec<OpenSearchItem> = serde_json::from_str(&body)?;
 
     // the first item in the response should be the search term
-    debug_assert_eq!(res.get(0), Some(&OpenSearchItem::Single(search.to_owned())));
+    debug_assert_eq!(res.first(), Some(&OpenSearchItem::Single(search.to_owned())));
 
     Ok(res)
 }
