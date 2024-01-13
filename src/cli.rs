@@ -15,7 +15,7 @@ pub struct CliArgs {
 pub enum Commands {
     #[command(
         about = "Read a page from the ArchWiki",
-        long_about = "Read a page from the ArchWiki, if the page is not found similar page names are recommended. A list of page names is in the pages.yml file which can be updated with the 'update-all' and 'update-category' commands."
+        long_about = "Read a page from the ArchWiki, if the page is not found similar page names are recommended. A list of page names is in the pages.yml file which can be updated with the 'sync-wiki' command."
     )]
     ReadPage {
         #[arg(short, long)]
@@ -59,7 +59,7 @@ pub enum Commands {
     },
     #[command(
         about = "List all pages from the ArchWiki that have been downloaded",
-        long_about = "List all pages from the ArchWiki that have been downloaded. See 'update-all' or 'update-category' for information on downloading."
+        long_about = "List all pages from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading."
     )]
     ListPages {
         #[arg(short, long)]
@@ -74,7 +74,7 @@ pub enum Commands {
     },
     #[command(
         about = "List all categories from the ArchWiki that have been downloaded",
-        long_about = "List categories  from the ArchWiki that have been downloaded. See 'update-all' or 'update-category' for information on downloading."
+        long_about = "List categories  from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading."
     )]
     ListCategories {
         #[arg(short, long)]
@@ -87,8 +87,8 @@ pub enum Commands {
     )]
     ListLanguages,
     #[command(
-        about = "Download all pages from the ArchWiki",
-        long_about = "Download all pages from the ArchWiki."
+        about = "Download the names of all pages on the ArchWiki",
+        long_about = "Download the names of all pages on the ArchWiki. Page names are used for the 'list-pages' and 'list-categories' commands"
     )]
     SyncWiki {
         #[arg(short = 'H', long)]
