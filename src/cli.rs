@@ -98,12 +98,8 @@ pub enum Commands {
         /// Number of threads to use for fetching data from the ArchWiki
         thread_count: Option<usize>,
         #[arg(short, long)]
-        /// Maximum amount of categories to fetch. If no value if provided all categories are
-        /// fetched.
-        max_categories: Option<u32>,
-        #[arg(short, long)]
-        /// First category that will be fetched. See 'https://wiki.archlinux.org/index.php?title=Special:Categories' for more information.
-        start_at: Option<String>,
+        /// Delay (in milliseconds) between requests. Note that this applies on a per thread basis.
+        delay: Option<u64>,
         #[arg(short, long)]
         /// Print result to stdout instead of writing to a file. Output is formatted as YAML.
         print: bool,

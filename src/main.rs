@@ -11,12 +11,12 @@ use url::Url;
 use wiki_api::fetch_page_by_url;
 
 use crate::{
-    categories::{fetch_all_pages, list_pages},
+    categories::list_pages,
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
     utils::{create_cache_page_path, page_cache_exists, read_pages_file_as_str},
-    wiki_api::{fetch_open_search, fetch_page, fetch_text_search},
+    wiki_api::{fetch_all_pages, fetch_open_search, fetch_page, fetch_text_search},
 };
 
 mod categories;
@@ -158,18 +158,13 @@ async fn main() -> Result<(), WikiError> {
         Commands::SyncWiki {
             hide_progress,
             thread_count,
-            max_categories,
-            start_at,
+            delay,
             print,
         } => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
-            let res = fetch_all_pages(
-                hide_progress,
-                thread_count,
-                max_categories,
-                start_at.as_deref(),
-            )
-            .await?;
+            let res = fetch_all_pages().await?;
+            println!("{}", res.join("\n"));
+            panic!("oops");
 
             let out = serde_yaml::to_string(&res)?;
 

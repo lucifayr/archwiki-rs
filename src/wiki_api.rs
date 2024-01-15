@@ -1,4 +1,5 @@
 use scraper::Html;
+use serde::Deserialize;
 use url::Url;
 
 use crate::{
@@ -11,8 +12,9 @@ use crate::{
 };
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct ApiResponse<T> {
+pub struct ApiResponse<T, V> {
     pub query: T,
+    pub r#continue: Option<V>,
 }
 
 pub async fn fetch_open_search(
@@ -40,7 +42,7 @@ pub async fn fetch_text_search(
 ) -> Result<Vec<TextSearchItem>, WikiError> {
     let url = format!("https://wiki.archlinux.org/api.php?action=query&list=search&format=json&srwhat=text&uselang={lang}&srlimit={limit}&srsearch={search}");
     let body = reqwest::get(url).await?.text().await?;
-    let mut res: ApiResponse<TextSearchApiResponse> = serde_json::from_str(&body)?;
+    let mut res: ApiResponse<TextSearchApiResponse, ()> = serde_json::from_str(&body)?;
 
     for item in res.query.search.as_mut_slice() {
         item.prettify_snippet(search);
@@ -64,7 +66,7 @@ pub async fn fetch_page(page: &str, lang: Option<&str>) -> Result<Html, WikiErro
 
     let raw_url = format!(
         "https://wiki.archlinux.org/rest.php/v1/page/{title}/html",
-        title = urlencoding::encode(&page_title)
+        title = urlencoding::encode(page_title)
     );
     let url = Url::parse(&raw_url)?;
 
@@ -88,4 +90,64 @@ pub async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
     let body_with_abs_urls = update_relative_urls(&body, &base_url);
 
     Ok(Html::parse_document(&body_with_abs_urls))
+}
+
+pub async fn fetch_all_pages() -> Result<Vec<String>, WikiError> {
+    #[derive(Debug, Deserialize)]
+    struct ApiAllPagesQuery {
+        allpages: Vec<Page>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct Page {
+        title: String,
+    }
+
+    impl From<Page> for String {
+        fn from(value: Page) -> Self {
+            value.title
+        }
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct ApiAllPageContinueParams {
+        apcontinue: String,
+    }
+
+    let api_url = format!(
+        "https://wiki.archlinux.org/api.php?action=query&list=allpages&format=json&aplimit=500"
+    );
+
+    let mut pages: Vec<String> = vec![];
+
+    let body = reqwest::get(&api_url).await?.text().await?;
+    let mut api_resp: ApiResponse<ApiAllPagesQuery, ApiAllPageContinueParams> =
+        serde_json::from_str(&body)?;
+
+    pages.append(
+        &mut api_resp
+            .query
+            .allpages
+            .into_iter()
+            .map(Into::into)
+            .collect(),
+    );
+
+    while let Some(continue_params) = api_resp.r#continue {
+        let next_api_url = format!("{api_url}&apcontinue={}", continue_params.apcontinue);
+
+        let body = reqwest::get(&next_api_url).await?.text().await?;
+        api_resp = serde_json::from_str(&body)?;
+
+        pages.append(
+            &mut api_resp
+                .query
+                .allpages
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        );
+    }
+
+    Ok(pages)
 }

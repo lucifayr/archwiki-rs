@@ -2,7 +2,7 @@ use colored::Colorize;
 use ego_tree::NodeRef;
 use scraper::{Html, Node};
 
-use crate::utils::{extract_tag_attr, HtmlTag};
+use crate::utils::extract_tag_attr;
 
 /// Converts the body of the ArchWiki page to a plain text string, removing all tags and
 /// only leaving the text node content. URLs can be shown in a markdown like syntax.
@@ -29,7 +29,7 @@ pub fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
                 if show_urls {
                     wrap_text_in_url(
                         &child_text,
-                        &extract_tag_attr(e, &HtmlTag::A, "href").unwrap_or("".to_string()),
+                        &extract_tag_attr(e, "a", "href").unwrap_or("".to_string()),
                     )
                 } else {
                     child_text

@@ -1,11 +1,7 @@
+#![allow(unused)]
+
 use itertools::Itertools;
 use std::collections::HashMap;
-
-#[derive(Debug, Clone)]
-struct CategoryListItem {
-    name: String,
-    url: String,
-}
 
 use crate::error::WikiError;
 
@@ -47,17 +43,6 @@ pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> S
         .join("\n\n")
 }
 
-/// TODO replace with api call
-/// Scrapes the ArchWiki for all page names and their immediate parent category. Category nesting
-/// is ignored as a category can be a sub category of multiple other categories.
-///
-/// Caution this function will most likely take several minutes to finish (-, – )…zzzZZ
-#[allow(unused)]
-pub async fn fetch_all_pages(
-    hide_progress: bool,
-    thread_count: usize,
-    max_categories: Option<u32>,
-    start_at: Option<&str>,
-) -> Result<HashMap<String, Vec<String>>, WikiError> {
+pub async fn fetch_page_categories(page: &str) -> Result<Vec<String>, WikiError> {
     todo!()
 }

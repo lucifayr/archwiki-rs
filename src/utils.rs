@@ -9,22 +9,6 @@ use scraper::node::Element;
 
 use crate::{error::WikiError, formats::PageFormat};
 
-pub enum HtmlTag {
-    A,
-    Ul,
-    Li,
-}
-
-impl HtmlTag {
-    pub fn name(&self) -> String {
-        match *self {
-            HtmlTag::A => "a".to_owned(),
-            HtmlTag::Ul => "ul".to_owned(),
-            HtmlTag::Li => "li".to_owned(),
-        }
-    }
-}
-
 /// Construct a path to cache a page. Different page formats are cached separately.
 /// All none word characters are escaped with an '_'
 pub fn create_cache_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
@@ -60,8 +44,8 @@ pub fn page_cache_exists(
     Ok(secs_since_modified < fourteen_days)
 }
 
-pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<String> {
-    if element.name() == tag.name() {
+pub fn extract_tag_attr(element: &Element, tag: &str, attr: &str) -> Option<String> {
+    if element.name() == tag {
         element.attr(attr).map(|attr| attr.to_owned())
     } else {
         None
