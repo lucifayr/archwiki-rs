@@ -20,7 +20,7 @@ pub struct Language {
 
 pub async fn fetch_all_langs() -> Result<Vec<Language>, WikiError> {
     let body = reqwest::get(LANGUAGE_API_URL).await?.text().await?;
-    let json: ApiResponse<LanguageApiResponse, ()> = serde_json::from_str(&body)?;
+    let json: ApiResponse<LanguageApiResponse> = serde_json::from_str(&body)?;
 
     Ok(json.query.languages)
 }

@@ -163,7 +163,7 @@ async fn main() -> Result<(), WikiError> {
         } => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
             let res = fetch_all_pages().await?;
-            println!("{}", res.join("\n"));
+            dbg!(res);
             panic!("oops");
 
             let out = serde_yaml::to_string(&res)?;
