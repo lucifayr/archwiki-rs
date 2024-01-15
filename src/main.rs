@@ -125,7 +125,7 @@ async fn main() -> Result<(), WikiError> {
             page_file,
         } => {
             let path = page_file.unwrap_or(default_page_file_path);
-            let file = read_pages_file_as_str(path)?;
+            let file = read_pages_file_as_str(&path)?;
 
             let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
 
@@ -144,7 +144,7 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::ListCategories { page_file } => {
             let path = page_file.unwrap_or(default_page_file_path);
-            let file = read_pages_file_as_str(path)?;
+            let file = read_pages_file_as_str(&path)?;
 
             let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
 
@@ -183,6 +183,24 @@ async fn main() -> Result<(), WikiError> {
             } else {
                 println!("{out}");
             }
+        }
+        Commands::LocalWiki {
+            location,
+            page_file,
+        } => {
+            let path = page_file.unwrap_or(default_page_file_path);
+            let Ok(file) = read_pages_file_as_str(&path) else {
+                return Err(WikiError::Path("page file does not exist".to_owned()));
+            };
+
+            let Ok(pages_map) = serde_yaml::from_str::<HashMap<String, Vec<String>>>(&file) else {
+                return Err(WikiError::Other(format!(
+                    "page file is malformed\nfile: {}",
+                    path.to_string_lossy()
+                )));
+            };
+
+            todo!("oh boy");
         }
         Commands::Info {
             show_cache_dir,

@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use html2md::common;
 
 use crate::formats::PageFormat;
 
@@ -69,7 +70,7 @@ pub enum Commands {
         /// Only show pages in this category
         category: Option<String>,
         #[arg(short, long)]
-        /// Use different file to read pages from
+        /// Use a different file to read pages from
         page_file: Option<PathBuf>,
     },
     #[command(
@@ -78,7 +79,7 @@ pub enum Commands {
     )]
     ListCategories {
         #[arg(short, long)]
-        /// Use different file to read pages from
+        /// Use a different file to read pages from
         page_file: Option<PathBuf>,
     },
     #[command(
@@ -87,7 +88,7 @@ pub enum Commands {
     )]
     ListLanguages,
     #[command(
-        about = "Download information about the pages and categories on the ArchWiki",
+        about = "Download information about the pages and categories on the ArchWiki (takes a while)",
         long_about = "Download information about the pages and categories on the ArchWiki. Page and category names are used for the 'list-pages' and 'list-categories' commands"
     )]
     SyncWiki {
@@ -106,6 +107,17 @@ pub enum Commands {
         #[arg(short, long)]
         /// Print result to stdout instead of writing to a file. Output is formatted as YAML.
         print: bool,
+    },
+    #[command(
+        about = "Download a copy of the ArchWiki. Will take a long time :)",
+        long_about = "Download a copy of the ArchWiki. Will take a long time :). The exact hierarchy of the wiki is not mainted, sub categories are put at the top level of the directory."
+    )]
+    LocalWiki {
+        /// Location to store the local copy of the wiki at.
+        location: PathBuf,
+        #[arg(short, long)]
+        /// Use a different file to read pages from
+        page_file: Option<PathBuf>,
     },
     #[command(
         about = "Retrive information related to this tool",

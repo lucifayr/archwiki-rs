@@ -63,8 +63,8 @@ pub fn update_relative_urls(html: &str, base_url: &str) -> String {
         .replace("poster=\"/", &format!("poster=\"{base_url}/"))
 }
 
-pub fn read_pages_file_as_str(path: PathBuf) -> Result<String, WikiError> {
-    fs::read_to_string(&path).map_err(|err| {
+pub fn read_pages_file_as_str(path: &Path) -> Result<String, WikiError> {
+    fs::read_to_string(path).map_err(|err| {
         match err.kind() {
             ErrorKind::NotFound => WikiError::IO(io::Error::new(ErrorKind::NotFound,  format!("Could not find pages file at '{}'. Try running 'archwiki-rs sync-wiki' to create the missing file.", path.to_string_lossy()))),
             _ => err.into()
@@ -73,8 +73,7 @@ pub fn read_pages_file_as_str(path: PathBuf) -> Result<String, WikiError> {
 }
 
 fn to_save_file_name(page: &str) -> String {
-    let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
-    regex.replace_all(page, "_").to_string()
+    urlencoding::encode(page).to_string()
 }
 
 #[cfg(test)]

@@ -50,4 +50,6 @@ pub enum WikiError {
     NoPageFound(String),
     #[error("The category '{}' could not be found", .0)]
     NoCategoryFound(String),
+    #[error("{}", .0)]
+    Other(String),
 }
