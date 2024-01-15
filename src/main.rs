@@ -15,7 +15,7 @@ use crate::{
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
-    utils::{create_cache_page_path, get_page_content, page_cache_exists, read_pages_file_as_str},
+    utils::{create_cache_page_path, page_cache_exists, read_pages_file_as_str},
     wiki_api::{fetch_open_search, fetch_page, fetch_text_search},
 };
 
@@ -235,16 +235,7 @@ async fn main() -> Result<(), WikiError> {
 
 async fn fetch_document(page: &str, lang: Option<&str>) -> Result<Html, WikiError> {
     match Url::parse(page) {
-        Ok(url) => {
-            let document = fetch_page_by_url(url).await?;
-            if get_page_content(&document).is_none() {
-                return Err(WikiError::NoPageFound(
-                    "page is not a valid ArchWiki page".to_owned(),
-                ));
-            }
-
-            Ok(document)
-        }
+        Ok(url) => fetch_page_by_url(url).await,
         Err(_) => fetch_page(page, lang).await,
     }
 }

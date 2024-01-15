@@ -4,7 +4,7 @@ use url::Url;
 use crate::{
     error::WikiError,
     search::{
-        open_search_get_exact_match_url, open_search_to_page_names, OpenSearchItem,
+        open_search_is_page_exact_match, open_search_to_page_names, OpenSearchItem,
         TextSearchApiResponse, TextSearchItem,
     },
     utils::update_relative_urls,
@@ -25,7 +25,10 @@ pub async fn fetch_open_search(
     let res: Vec<OpenSearchItem> = serde_json::from_str(&body)?;
 
     // the first item in the response should be the search term
-    debug_assert_eq!(res.first(), Some(&OpenSearchItem::Single(search.to_owned())));
+    debug_assert_eq!(
+        res.first(),
+        Some(&OpenSearchItem::Single(search.to_owned()))
+    );
 
     Ok(res)
 }
@@ -46,37 +49,32 @@ pub async fn fetch_text_search(
     Ok(res.query.search)
 }
 
-/// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.
-/// `/title/Neovim` -> `https://wiki.archlinux.org/title/Neovim`
+/// Gets the HTML content of an ArchWiki page.
 ///
-/// If the ArchWiki page doesn't have exists the top 5 pages that are most
+/// If the ArchWiki page doesn't exists the top 5 pages that are most
 /// like the page that was given as an argument are returned as a `NoPageFound` error.
 pub async fn fetch_page(page: &str, lang: Option<&str>) -> Result<Html, WikiError> {
     let lang = lang.unwrap_or("en");
-
     let search_res = fetch_open_search(page, lang, 5).await?;
 
-    let Some(url) = open_search_get_exact_match_url(page, &search_res)? else {
+    let Some(page_title) = open_search_is_page_exact_match(page, &search_res)? else {
         let similar_pages = open_search_to_page_names(&search_res)?;
         return Err(WikiError::NoPageFound(similar_pages.join("\n")));
     };
 
-    let parsed_url = Url::parse(&url)
-        .unwrap_or(Url::parse("https://wiki.archlinux.org").expect("should be a valid URL"));
-    let base_url = format!(
-        "{schema}://{host}",
-        schema = parsed_url.scheme(),
-        host = parsed_url.host_str().unwrap_or("")
+    let raw_url = format!(
+        "https://wiki.archlinux.org/rest.php/v1/page/{title}/html",
+        title = urlencoding::encode(&page_title)
     );
+    let url = Url::parse(&raw_url)?;
 
-    let body = reqwest::get(&url).await?.text().await?;
-    let body_with_abs_urls = update_relative_urls(&body, &base_url);
-
-    Ok(Html::parse_document(&body_with_abs_urls))
+    let document = fetch_page_by_url(url).await?;
+    Ok(document)
 }
 
 /// Gets an ArchWiki pages entire content. Also updates all relative URLs to absolute URLs.
-/// `/title/Neovim` -> `https://wiki.archlinux.org/title/Neovim`
+/// `/title/Neovim` -> `https://wiki.archlinux.org/title/Neovim`.
+/// A different base URL is used for pages that aren't hosted directly on `wiki.archlinux.org`
 ///
 /// If the page has no content a `NoPageFound` Error is returned.
 pub async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {

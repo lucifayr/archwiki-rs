@@ -4,13 +4,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use ego_tree::NodeRef;
 use regex::Regex;
-use scraper::{node::Element, ElementRef, Html, Node, Selector};
+use scraper::node::Element;
 
 use crate::{error::WikiError, formats::PageFormat};
-
-pub const PAGE_CONTENT_CLASS: &str = "mw-parser-output";
 
 pub enum HtmlTag {
     A,
@@ -61,30 +58,6 @@ pub fn page_cache_exists(
         .as_secs();
 
     Ok(secs_since_modified < fourteen_days)
-}
-
-/// Selects the body of an ArchWiki page
-pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
-    let class = format!(".{PAGE_CONTENT_CLASS}");
-    let selector =
-        Selector::parse(&class).unwrap_or_else(|_| panic!("{class} should be valid selector"));
-    document.select(&selector).next()
-}
-
-pub fn get_elements_by_tag<'a>(root: NodeRef<'a, Node>, tag: &HtmlTag) -> Vec<NodeRef<'a, Node>> {
-    root.children()
-        .flat_map(|n| {
-            if let Node::Element(e) = n.value() {
-                if e.name() == tag.name() {
-                    Some(n)
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect()
 }
 
 pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<String> {
