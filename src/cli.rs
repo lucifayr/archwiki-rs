@@ -87,8 +87,8 @@ pub enum Commands {
     )]
     ListLanguages,
     #[command(
-        about = "Download the names of all pages on the ArchWiki",
-        long_about = "Download the names of all pages on the ArchWiki. Page names are used for the 'list-pages' and 'list-categories' commands"
+        about = "Download information about the pages and categories on the ArchWiki",
+        long_about = "Download information about the pages and categories on the ArchWiki. Page and category names are used for the 'list-pages' and 'list-categories' commands"
     )]
     SyncWiki {
         #[arg(short = 'H', long)]
@@ -100,6 +100,9 @@ pub enum Commands {
         #[arg(short, long)]
         /// Delay (in milliseconds) between requests. Note that this applies on a per thread basis.
         delay: Option<u64>,
+        #[arg(short, long)]
+        /// Only fetch page names without parent category information.
+        fast: bool,
         #[arg(short, long)]
         /// Print result to stdout instead of writing to a file. Output is formatted as YAML.
         print: bool,

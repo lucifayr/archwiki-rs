@@ -16,7 +16,9 @@ use crate::{
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
     utils::{create_cache_page_path, page_cache_exists, read_pages_file_as_str},
-    wiki_api::{fetch_all_pages, fetch_open_search, fetch_page, fetch_text_search},
+    wiki_api::{
+        fetch_all_pages, fetch_open_search, fetch_page, fetch_text_search, fetch_wiki_tree,
+    },
 };
 
 mod categories;
@@ -159,12 +161,16 @@ async fn main() -> Result<(), WikiError> {
             hide_progress,
             thread_count,
             delay,
+            fast,
             print,
         } => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
-            let res = fetch_all_pages().await?;
-            dbg!(res);
-            panic!("oops");
+            let res = if !fast {
+                fetch_wiki_tree(thread_count, delay.unwrap_or(0), hide_progress).await?
+            } else {
+                let all_pages = fetch_all_pages().await?;
+                HashMap::from([("*".to_owned(), all_pages)])
+            };
 
             let out = serde_yaml::to_string(&res)?;
 

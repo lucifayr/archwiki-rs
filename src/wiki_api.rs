@@ -1,5 +1,9 @@
+use core::panic;
 use std::collections::HashMap;
 
+use futures::future;
+use indicatif::{MultiProgress, ProgressBar};
+use itertools::Itertools;
 use scraper::Html;
 use serde::Deserialize;
 use url::Url;
@@ -99,18 +103,134 @@ pub async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
     Ok(Html::parse_document(&body_with_abs_urls))
 }
 
-pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError> {
+/// Gets a list of all ArchWiki categories and the pages inside them.
+/// All categories are treated as top-level and sub categories are ignored.
+pub async fn fetch_wiki_tree(
+    thread_count: usize,
+    delay: u64,
+    hide_progress: bool,
+) -> Result<HashMap<String, Vec<String>>, WikiError> {
     let categories = fetch_all_categories().await?;
-    let mut wiki = HashMap::new();
 
-    for category in categories {
-        let pages = fetch_pages_in_category(&category).await?;
-        if !pages.is_empty() {
-            wiki.insert(category, pages);
+    let multi_bar = MultiProgress::new();
+    let chunk_count = categories.len() / thread_count;
+
+    let tasks = categories
+        .chunks(chunk_count)
+        .map(|chunk| {
+            let chunk = chunk.to_vec();
+
+            let bar = ProgressBar::new(chunk.len().try_into().unwrap_or(0));
+            let bar = multi_bar.add(bar);
+            if hide_progress {
+                bar.finish_and_clear();
+            }
+
+            tokio::spawn(async move {
+                let mut wiki_sectoin = HashMap::new();
+                for category in chunk {
+                    tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
+
+                    let pages = match fetch_pages_in_category(&category).await {
+                        Ok(pages) => pages,
+                        Err(_) => {
+                            // wait if rate limited
+                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                            fetch_pages_in_category(&category)
+                                .await
+                                .unwrap_or_else(|err| {
+                                    eprintln!(
+                                        "failed to fetch pages in category {}\n ERROR {err}",
+                                        category
+                                    );
+                                    vec![]
+                                })
+                        }
+                    };
+
+                    if !pages.is_empty() {
+                        wiki_sectoin.insert(category.to_owned(), pages);
+                    }
+                    bar.inc(1);
+                }
+
+                wiki_sectoin
+            })
+        })
+        .collect_vec();
+
+    let mut wiki = HashMap::new();
+    let sections = future::join_all(tasks).await;
+
+    for section in sections {
+        match section {
+            Ok(data) => {
+                wiki.extend(data);
+            }
+            Err(err) => panic!("failed to sync wiki\nERROR: {err}"),
         }
     }
 
     Ok(wiki)
+}
+
+pub async fn fetch_all_pages() -> Result<Vec<String>, WikiError> {
+    #[derive(Debug, Deserialize)]
+    struct ApiAllPagesQuery {
+        allpages: Vec<Page>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct Page {
+        title: String,
+    }
+
+    impl From<Page> for String {
+        fn from(value: Page) -> Self {
+            value.title
+        }
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct ApiAllPageContinueParams {
+        apcontinue: String,
+    }
+
+    let api_url =
+        "https://wiki.archlinux.org/api.php?action=query&list=allpages&format=json&aplimit=500";
+
+    let mut pages: Vec<String> = vec![];
+
+    let body = reqwest::get(api_url).await?.text().await?;
+    let mut api_resp: ApiResponseWithContinue<ApiAllPagesQuery, ApiAllPageContinueParams> =
+        serde_json::from_str(&body)?;
+
+    pages.append(
+        &mut api_resp
+            .query
+            .allpages
+            .into_iter()
+            .map(Into::into)
+            .collect(),
+    );
+
+    while let Some(continue_params) = api_resp.r#continue {
+        let next_api_url = format!("{api_url}&apcontinue={}", continue_params.apcontinue);
+
+        let body = reqwest::get(&next_api_url).await?.text().await?;
+        api_resp = serde_json::from_str(&body)?;
+
+        pages.append(
+            &mut api_resp
+                .query
+                .allpages
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        );
+    }
+
+    Ok(pages)
 }
 
 async fn fetch_all_categories() -> Result<Vec<String>, WikiError> {
@@ -191,8 +311,8 @@ async fn fetch_pages_in_category(category: &str) -> Result<Vec<String>, WikiErro
 
     let api_url = format!("https://wiki.archlinux.org/api.php?action=query&list=categorymembers&format=json&cmtype=page&cmlimit=500&cmtitle=Category:{title}", title = urlencoding::encode(category));
 
-    let body = reqwest::get(dbg!(api_url)).await?.text().await?;
-    let api_resp: ApiResponse<ApiCategoryMembersQuery> = serde_json::from_str(&dbg!(body))?;
+    let body = reqwest::get(api_url).await?.text().await?;
+    let api_resp: ApiResponse<ApiCategoryMembersQuery> = serde_json::from_str(&body)?;
 
     Ok(api_resp
         .query

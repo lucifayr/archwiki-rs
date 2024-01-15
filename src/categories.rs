@@ -42,7 +42,3 @@ pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> S
         })
         .join("\n\n")
 }
-
-pub async fn fetch_page_categories(page: &str) -> Result<Vec<String>, WikiError> {
-    todo!()
-}
