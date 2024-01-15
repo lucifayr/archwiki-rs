@@ -14,11 +14,9 @@ mod tests {
     #[tokio::test]
     async fn test_convert_page_to_markdown() {
         let page = "test page";
-        let input = format!(
-            r#"<div>
-    <h3>Hello, world!</h3>
-</div>"#
-        );
+        let input = r#"<div>
+            <h3>Hello, world!</h3>
+            </div>"#;
 
         let expected_output = format!(
             r#"# {page}
@@ -26,7 +24,7 @@ mod tests {
 ### Hello, world! ###"#
         );
 
-        let document = Html::parse_document(&input);
+        let document = Html::parse_document(input);
         let output = convert_page_to_markdown(&document, page);
 
         assert_eq!(output, expected_output);

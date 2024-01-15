@@ -90,7 +90,7 @@ pub async fn fetch_page(page: &str, lang: Option<&str>) -> Result<Html, WikiErro
 /// A different base URL is used for pages that aren't hosted directly on `wiki.archlinux.org`
 ///
 /// If the page has no content a `NoPageFound` Error is returned.
-pub async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
+async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
     let base_url = format!(
         "{schema}://{host}",
         schema = url.scheme(),

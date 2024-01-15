@@ -90,35 +90,29 @@ mod tests {
     #[tokio::test]
     async fn test_convert_page_to_plain_text() {
         {
-            let input = format!(
-                r#"<div">
-    <h3>Hello, world!</h3>
-    <div>how <span><bold>are</bold></span> you</div>
-    I'm great
-</div>"#
-            );
+            let input = r#"<div">
+                <h3>Hello, world!</h3>
+                <div>how <span><bold>are</bold></span> you</div>
+                I'm great
+                </div>"#;
 
-            let expected_output = format!(
-                r#"
-    Hello, world!
-    how are you
-    I'm great
-"#
-            );
+            let expected_output = r#"
+                Hello, world!
+                how are you
+                I'm great
+                "#;
 
-            let document = Html::parse_document(&input);
+            let document = Html::parse_document(input);
             let output = convert_page_to_plain_text(&document, false);
 
             assert_eq!(output, expected_output);
         }
 
         {
-            let input = format!(
-                r#"<div>
+            let input = r#"<div>
     <h3>Hello, world!</h3>
     <a href="example.com">example</a>
-</div>"#
-            );
+</div>"#;
 
             let expected_output = format!(
                 r#"

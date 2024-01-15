@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use html2md::common;
 
 use crate::formats::PageFormat;
 

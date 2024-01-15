@@ -6,9 +6,6 @@ use directories::BaseDirs;
 use error::WikiError;
 use formats::plain_text::convert_page_to_plain_text;
 use itertools::Itertools;
-use scraper::Html;
-use url::Url;
-use wiki_api::fetch_page_by_url;
 
 use crate::{
     categories::list_pages,
@@ -71,7 +68,7 @@ async fn main() -> Result<(), WikiError> {
             let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
-                match fetch_document(&page, lang.as_deref()).await {
+                match fetch_page(&page, lang.as_deref()).await {
                     Ok(document) => match format {
                         PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),
                         PageFormat::Markdown => convert_page_to_markdown(&document, &page),
@@ -250,11 +247,4 @@ async fn main() -> Result<(), WikiError> {
     }
 
     Ok(())
-}
-
-async fn fetch_document(page: &str, lang: Option<&str>) -> Result<Html, WikiError> {
-    match Url::parse(page) {
-        Ok(url) => fetch_page_by_url(url).await,
-        Err(_) => fetch_page(page, lang).await,
-    }
 }

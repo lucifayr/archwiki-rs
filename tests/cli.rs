@@ -1,9 +1,5 @@
 use assert_cmd::Command;
-use assert_fs::prelude::{FileWriteStr, PathChild};
-use predicates::{
-    prelude::{predicate, PredicateBooleanExt},
-    Predicate,
-};
+use predicates::prelude::{predicate, PredicateBooleanExt};
 
 #[test]
 fn test_cli_info_cmd() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,22 +51,6 @@ fn test_cli_read_page_cmd() -> Result<(), Box<dyn std::error::Error>> {
         cmd.assert().failure().stderr(pstr::starts_with("Neovim"));
     }
 
-    {
-        let mut cmd = Command::cargo_bin("archwiki-rs")?;
-        cmd.args(["read-page", "-i", "https://wiki.archlinux.org/title/Emacs"]);
-
-        cmd.assert()
-            .success()
-            .stdout(pstr::contains("Installation"));
-    }
-
-    {
-        let mut cmd = Command::cargo_bin("archwiki-rs")?;
-        cmd.args(["read-page", "-i", "https://google.com"]);
-
-        cmd.assert().failure();
-    }
-
     Ok(())
 }
 
@@ -118,48 +98,6 @@ fn test_cli_list_languages_cmd() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(pstr::contains("en                   | English"));
-
-    Ok(())
-}
-
-#[test]
-fn test_cli_local_wiki_info() -> Result<(), Box<dyn std::error::Error>> {
-    use predicate::str as pstr;
-
-    let stdout = {
-        let mut cmd = Command::cargo_bin("archwiki-rs")?;
-        cmd.args(["sync-wiki", "-p", "-m", "10"]);
-
-        let stdout = String::from_utf8(cmd.assert().success().get_output().stdout.clone()).unwrap();
-        pstr::contains("About Arch").eval(&stdout);
-
-        stdout
-    };
-
-    let tmp_dir = assert_fs::TempDir::new().unwrap();
-    tmp_dir.child("pages.yml").write_str(&stdout).unwrap();
-
-    let tmp_file_path = tmp_dir.path().join("pages.yml");
-
-    {
-        let mut cmd = Command::cargo_bin("archwiki-rs")?;
-        cmd.args(["list-pages", "-p", tmp_file_path.to_str().unwrap()]);
-
-        cmd.assert().success().stdout(pstr::contains(
-            "About Arch:
-───┤Arch boot process
-───┤Arch build system",
-        ));
-    }
-
-    {
-        let mut cmd = Command::cargo_bin("archwiki-rs")?;
-        cmd.args(["list-categories", "-p", tmp_file_path.to_str().unwrap()]);
-
-        cmd.assert()
-            .success()
-            .stdout(pstr::contains("\n").count(10));
-    }
 
     Ok(())
 }

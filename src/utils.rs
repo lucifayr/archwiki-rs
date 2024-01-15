@@ -4,7 +4,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use regex::Regex;
 use scraper::node::Element;
 
 use crate::{error::WikiError, formats::PageFormat};
@@ -73,7 +72,10 @@ pub fn read_pages_file_as_str(path: &Path) -> Result<String, WikiError> {
 }
 
 fn to_save_file_name(page: &str) -> String {
-    urlencoding::encode(page).to_string()
+    urlencoding::encode(page)
+        .to_string()
+        .replace('.', "\\.")
+        .replace('~', "\\~")
 }
 
 #[cfg(test)]
@@ -85,10 +87,13 @@ mod tests {
     fn test_to_save_file_name() {
         let cases = [
             ("Neovim", "Neovim"),
-            ("3D Mouse", "3D_Mouse"),
-            ("/etc/fstab", "_etc_fstab"),
-            (".NET", "_NET"),
-            ("ASUS MeMO Pad 7 (ME176C(X))", "ASUS_MeMO_Pad_7__ME176C_X__"),
+            ("3D Mouse", "3D%20Mouse"),
+            ("/etc/fstab", "%2Fetc%2Ffstab"),
+            (".NET", "\\.NET"),
+            (
+                "ASUS MeMO Pad 7 (ME176C(X))",
+                "ASUS%20MeMO%20Pad%207%20%28ME176C%28X%29%29",
+            ),
         ];
 
         for (input, output) in cases {
