@@ -1,9 +1,5 @@
-use core::panic;
 use std::collections::HashMap;
 
-use futures::future;
-use indicatif::{MultiProgress, ProgressBar};
-use itertools::Itertools;
 use scraper::Html;
 use serde::Deserialize;
 use url::Url;
@@ -16,6 +12,18 @@ use crate::{
     },
     utils::update_relative_urls,
 };
+
+const BLOCK_LISTED_CATEGORY_PREFIXES: &[&str] = &[
+    "Pages flagged with",
+    "Sections flagged with",
+    "Pages or sections flagged with",
+    "Pages where template include size is exceeded",
+    "Pages with broken package links",
+    "Pages with broken section links",
+    "Pages with missing package links",
+    "Pages with missing section links",
+    "Pages with dead links",
+];
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct ApiResponse<T> {
@@ -103,221 +111,85 @@ async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
     Ok(Html::parse_document(&body_with_abs_urls))
 }
 
-/// Gets a list of all ArchWiki categories and the pages inside them.
-/// All categories are treated as top-level and sub categories are ignored.
-pub async fn fetch_wiki_tree(
-    thread_count: usize,
-    delay: u64,
-    hide_progress: bool,
-) -> Result<HashMap<String, Vec<String>>, WikiError> {
-    let categories = fetch_all_categories().await?;
-
-    let multi_bar = MultiProgress::new();
-    let chunk_count = categories.len() / thread_count;
-
-    let tasks = categories
-        .chunks(chunk_count)
-        .map(|chunk| {
-            let chunk = chunk.to_vec();
-
-            let bar = ProgressBar::new(chunk.len().try_into().unwrap_or(0));
-            let bar = multi_bar.add(bar);
-            if hide_progress {
-                bar.finish_and_clear();
-            }
-
-            tokio::spawn(async move {
-                let mut wiki_sectoin = HashMap::new();
-                for category in chunk {
-                    tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
-
-                    let pages = match fetch_pages_in_category(&category).await {
-                        Ok(pages) => pages,
-                        Err(_) => {
-                            // wait if rate limited
-                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                            fetch_pages_in_category(&category)
-                                .await
-                                .unwrap_or_else(|err| {
-                                    eprintln!(
-                                        "failed to fetch pages in category {}\n ERROR {err}",
-                                        category
-                                    );
-                                    vec![]
-                                })
-                        }
-                    };
-
-                    if !pages.is_empty() {
-                        wiki_sectoin.insert(category.to_owned(), pages);
-                    }
-                    bar.inc(1);
-                }
-
-                wiki_sectoin
-            })
-        })
-        .collect_vec();
-
-    let mut wiki = HashMap::new();
-    let sections = future::join_all(tasks).await;
-
-    for section in sections {
-        match section {
-            Ok(data) => {
-                wiki.extend(data);
-            }
-            Err(err) => panic!("failed to sync wiki\nERROR: {err}"),
-        }
-    }
-
-    Ok(wiki)
-}
-
-pub async fn fetch_all_pages() -> Result<Vec<String>, WikiError> {
+/// TODO
+pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError> {
     #[derive(Debug, Deserialize)]
     struct ApiAllPagesQuery {
-        allpages: Vec<Page>,
+        pages: HashMap<String, Page>,
     }
 
     #[derive(Debug, Deserialize)]
     struct Page {
         title: String,
+        categories: Option<Vec<Category>>,
     }
 
-    impl From<Page> for String {
-        fn from(value: Page) -> Self {
-            value.title
+    #[derive(Debug, Deserialize)]
+    struct Category {
+        title: String,
+    }
+
+    impl From<Category> for String {
+        fn from(value: Category) -> Self {
+            value
+                .title
+                .split_once("Category:")
+                .map(|(_, title)| title.to_owned())
+                .unwrap_or(value.title)
         }
     }
 
     #[derive(Debug, Deserialize)]
     struct ApiAllPageContinueParams {
-        apcontinue: String,
+        gapcontinue: Option<String>,
+        clcontinue: Option<String>,
     }
 
     let api_url =
-        "https://wiki.archlinux.org/api.php?action=query&list=allpages&format=json&aplimit=500";
+        "https://wiki.archlinux.org/api.php?action=query&generator=allpages&prop=categories&format=json&gaplimit=max&cllimit=max";
 
-    let mut pages: Vec<String> = vec![];
+    let mut pages: Vec<Page> = vec![];
 
     let body = reqwest::get(api_url).await?.text().await?;
     let mut api_resp: ApiResponseWithContinue<ApiAllPagesQuery, ApiAllPageContinueParams> =
         serde_json::from_str(&body)?;
 
-    pages.append(
-        &mut api_resp
-            .query
-            .allpages
-            .into_iter()
-            .map(Into::into)
-            .collect(),
-    );
+    pages.append(&mut api_resp.query.pages.into_values().collect());
 
     while let Some(continue_params) = api_resp.r#continue {
-        let next_api_url = format!("{api_url}&apcontinue={}", continue_params.apcontinue);
+        let next_api_url = if let Some(gapcontinue) = continue_params.gapcontinue {
+            format!("{api_url}&gapcontinue={}", gapcontinue)
+        } else if let Some(clcontinue) = continue_params.clcontinue {
+            format!("{api_url}&clcontinue={}", clcontinue)
+        } else {
+            break;
+        };
 
         let body = reqwest::get(&next_api_url).await?.text().await?;
         api_resp = serde_json::from_str(&body)?;
 
-        pages.append(
-            &mut api_resp
-                .query
-                .allpages
-                .into_iter()
-                .map(Into::into)
-                .collect(),
-        );
+        pages.append(&mut api_resp.query.pages.into_values().collect());
     }
 
-    Ok(pages)
+    let page_category_tree = pages.into_iter().map(|page| {
+        (
+            page.title,
+            page.categories
+                .map(|cats| {
+                    cats.into_iter()
+                        .map::<String, _>(Into::into)
+                        .filter(|cat| !is_blocked_category(cat))
+                        .collect()
+                })
+                .unwrap_or_default(),
+        )
+    });
+
+    Ok(HashMap::from_iter(page_category_tree))
 }
 
-async fn fetch_all_categories() -> Result<Vec<String>, WikiError> {
-    #[derive(Debug, Deserialize)]
-    struct ApiAllCategoriesQuery {
-        allcategories: Vec<Category>,
-    }
-
-    #[derive(Debug, Deserialize)]
-    struct Category {
-        #[serde[rename = "*"]]
-        name: String,
-    }
-
-    impl From<Category> for String {
-        fn from(value: Category) -> Self {
-            value.name
-        }
-    }
-
-    #[derive(Debug, Deserialize)]
-    struct ApiAllCategoryContinueParams {
-        accontinue: String,
-    }
-
-    let api_url = "https://wiki.archlinux.org/api.php?action=query&list=allcategories&format=json&aclimit=500";
-
-    let mut categories: Vec<String> = vec![];
-
-    let body = reqwest::get(api_url).await?.text().await?;
-    let mut api_resp: ApiResponseWithContinue<ApiAllCategoriesQuery, ApiAllCategoryContinueParams> =
-        serde_json::from_str(&body)?;
-
-    categories.append(
-        &mut api_resp
-            .query
-            .allcategories
-            .into_iter()
-            .map(Into::into)
-            .collect(),
-    );
-
-    while let Some(continue_params) = api_resp.r#continue {
-        let next_api_url = format!("{api_url}&accontinue={}", continue_params.accontinue);
-
-        let body = reqwest::get(&next_api_url).await?.text().await?;
-        api_resp = serde_json::from_str(&body)?;
-
-        categories.append(
-            &mut api_resp
-                .query
-                .allcategories
-                .into_iter()
-                .map(Into::into)
-                .collect(),
-        );
-    }
-
-    Ok(categories)
-}
-
-async fn fetch_pages_in_category(category: &str) -> Result<Vec<String>, WikiError> {
-    #[derive(Debug, Deserialize)]
-    struct ApiCategoryMembersQuery {
-        categorymembers: Vec<Page>,
-    }
-
-    #[derive(Debug, Deserialize)]
-    struct Page {
-        title: String,
-    }
-
-    impl From<Page> for String {
-        fn from(value: Page) -> Self {
-            value.title
-        }
-    }
-
-    let api_url = format!("https://wiki.archlinux.org/api.php?action=query&list=categorymembers&format=json&cmtype=page&cmlimit=500&cmtitle=Category:{title}", title = urlencoding::encode(category));
-
-    let body = reqwest::get(api_url).await?.text().await?;
-    let api_resp: ApiResponse<ApiCategoryMembersQuery> = serde_json::from_str(&body)?;
-
-    Ok(api_resp
-        .query
-        .categorymembers
-        .into_iter()
-        .map(Into::into)
-        .collect())
+fn is_blocked_category(category: &str) -> bool {
+    BLOCK_LISTED_CATEGORY_PREFIXES
+        .iter()
+        .any(|blocked_prefix| category.starts_with(blocked_prefix))
 }

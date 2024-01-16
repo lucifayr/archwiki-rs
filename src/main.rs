@@ -1,10 +1,11 @@
-use std::{collections::HashMap, fs};
+use std::fs;
 
 use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
 use formats::plain_text::convert_page_to_plain_text;
+use indicatif::ProgressBar;
 use itertools::Itertools;
 
 use crate::{
@@ -12,10 +13,11 @@ use crate::{
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
-    utils::{create_cache_page_path, page_cache_exists, read_pages_file_as_str},
-    wiki_api::{
-        fetch_all_pages, fetch_open_search, fetch_page, fetch_text_search, fetch_wiki_tree,
+    utils::{
+        create_cache_page_path, page_cache_exists, read_pages_file_as_category_tree,
+        UNCATEGORIZED_KEY,
     },
+    wiki_api::{fetch_all_pages, fetch_open_search, fetch_page, fetch_text_search},
 };
 
 mod categories;
@@ -125,19 +127,16 @@ async fn main() -> Result<(), WikiError> {
                 .map(|path| (path, false))
                 .unwrap_or((default_page_file_path, true));
 
-            let file = read_pages_file_as_str(&path, is_default)?;
-
-            let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
-
+            let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
             let out = if let Some(category) = category {
-                pages_map
+                wiki_tree
                     .get(&category)
                     .ok_or(WikiError::NoCategoryFound(category))?
                     .iter()
                     .sorted()
                     .join("\n")
             } else {
-                list_pages(&pages_map, flatten)
+                list_pages(&wiki_tree, flatten)
             };
 
             println!("{out}");
@@ -147,11 +146,14 @@ async fn main() -> Result<(), WikiError> {
                 .map(|path| (path, false))
                 .unwrap_or((default_page_file_path, true));
 
-            let file = read_pages_file_as_str(&path, is_default)?;
+            let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
+            let out = wiki_tree
+                .keys()
+                .unique()
+                .sorted()
+                .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
+                .join("\n");
 
-            let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
-
-            let out = pages_map.keys().unique().sorted().join("\n");
             println!("{out}");
         }
         Commands::ListLanguages => {
@@ -162,21 +164,22 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::SyncWiki {
             hide_progress,
-            thread_count,
-            delay,
-            fast,
             print,
             out_file,
         } => {
-            let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
-            let res = if !fast {
-                fetch_wiki_tree(thread_count, delay.unwrap_or(0), hide_progress).await?
-            } else {
-                let all_pages = fetch_all_pages().await?;
-                HashMap::from([("*".to_owned(), all_pages)])
-            };
+            let spinner = ProgressBar::new_spinner();
+            if hide_progress {
+                spinner.finish_and_clear();
+            }
 
-            let out = serde_yaml::to_string(&res)?;
+            let _spin_task = std::thread::spawn(move || loop {
+                spinner.tick();
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            });
+
+            let wiki_tree = fetch_all_pages().await?;
+
+            let out = serde_yaml::to_string(&wiki_tree)?;
 
             if !print {
                 let path = out_file.unwrap_or(default_page_file_path);
@@ -196,17 +199,6 @@ async fn main() -> Result<(), WikiError> {
             let (path, is_default) = page_file
                 .map(|path| (path, false))
                 .unwrap_or((default_page_file_path, true));
-
-            let Ok(file) = read_pages_file_as_str(&path, is_default) else {
-                return Err(WikiError::Path("page file does not exist".to_owned()));
-            };
-
-            let Ok(pages_map) = serde_yaml::from_str::<HashMap<String, Vec<String>>>(&file) else {
-                return Err(WikiError::Other(format!(
-                    "page file is malformed\nfile: {}",
-                    path.to_string_lossy()
-                )));
-            };
 
             todo!("oh boy");
         }
