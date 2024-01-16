@@ -62,10 +62,19 @@ pub fn update_relative_urls(html: &str, base_url: &str) -> String {
         .replace("poster=\"/", &format!("poster=\"{base_url}/"))
 }
 
-pub fn read_pages_file_as_str(path: &Path) -> Result<String, WikiError> {
+pub fn read_pages_file_as_str(path: &Path, is_default_path: bool) -> Result<String, WikiError> {
     fs::read_to_string(path).map_err(|err| {
         match err.kind() {
-            ErrorKind::NotFound => WikiError::IO(io::Error::new(ErrorKind::NotFound,  format!("Could not find pages file at '{}'. Try running 'archwiki-rs sync-wiki' to create the missing file.", path.to_string_lossy()))),
+            ErrorKind::NotFound =>  {
+                let path_str =path.to_string_lossy();
+                let extra_path_arg = if is_default_path {
+                    String::new()
+                } else {
+                    format!(" --out-file {path_str}")
+                };
+
+                WikiError::IO(io::Error::new(ErrorKind::NotFound,  format!("Could not find pages file at '{path_str}'. Try running 'archwiki-rs sync-wiki{extra_path_arg}' to create the missing file." )))
+            }
             _ => err.into()
         }
     })

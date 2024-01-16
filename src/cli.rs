@@ -106,6 +106,9 @@ pub enum Commands {
         #[arg(short, long)]
         /// Print result to stdout instead of writing to a file. Output is formatted as YAML.
         print: bool,
+        #[arg(short, long)]
+        /// Use custom output file location
+        out_file: Option<PathBuf>,
     },
     #[command(
         about = "Download a copy of the ArchWiki. Will take a long time :)",

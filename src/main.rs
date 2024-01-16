@@ -121,8 +121,11 @@ async fn main() -> Result<(), WikiError> {
             category,
             page_file,
         } => {
-            let path = page_file.unwrap_or(default_page_file_path);
-            let file = read_pages_file_as_str(&path)?;
+            let (path, is_default) = page_file
+                .map(|path| (path, false))
+                .unwrap_or((default_page_file_path, true));
+
+            let file = read_pages_file_as_str(&path, is_default)?;
 
             let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
 
@@ -140,8 +143,11 @@ async fn main() -> Result<(), WikiError> {
             println!("{out}");
         }
         Commands::ListCategories { page_file } => {
-            let path = page_file.unwrap_or(default_page_file_path);
-            let file = read_pages_file_as_str(&path)?;
+            let (path, is_default) = page_file
+                .map(|path| (path, false))
+                .unwrap_or((default_page_file_path, true));
+
+            let file = read_pages_file_as_str(&path, is_default)?;
 
             let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
 
@@ -160,6 +166,7 @@ async fn main() -> Result<(), WikiError> {
             delay,
             fast,
             print,
+            out_file,
         } => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
             let res = if !fast {
@@ -172,10 +179,11 @@ async fn main() -> Result<(), WikiError> {
             let out = serde_yaml::to_string(&res)?;
 
             if !print {
-                fs::write(&default_page_file_path, out)?;
+                let path = out_file.unwrap_or(default_page_file_path);
+                fs::write(&path, out)?;
 
                 if !hide_progress {
-                    println!("data saved to {}", default_page_file_path.to_string_lossy());
+                    println!("data saved to {}", path.to_string_lossy());
                 }
             } else {
                 println!("{out}");
@@ -185,8 +193,11 @@ async fn main() -> Result<(), WikiError> {
             location,
             page_file,
         } => {
-            let path = page_file.unwrap_or(default_page_file_path);
-            let Ok(file) = read_pages_file_as_str(&path) else {
+            let (path, is_default) = page_file
+                .map(|path| (path, false))
+                .unwrap_or((default_page_file_path, true));
+
+            let Ok(file) = read_pages_file_as_str(&path, is_default) else {
                 return Err(WikiError::Path("page file does not exist".to_owned()));
             };
 
