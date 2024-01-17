@@ -316,7 +316,7 @@ async fn download_wiki(
         .filter(|(_, p)| !p.is_empty())
         .collect_vec();
 
-    let chunk_count = wiki_tree_without_empty_cats.len() / thread_count;
+    let chunk_size = wiki_tree_without_empty_cats.len() / thread_count;
 
     let format = Arc::new(format);
     let location = Arc::new(location);
@@ -324,7 +324,7 @@ async fn download_wiki(
     let catbar = Arc::new(category_bar);
 
     let wiki_tree_chunks = wiki_tree_without_empty_cats
-        .chunks(chunk_count)
+        .chunks(chunk_size)
         .map(ToOwned::to_owned)
         .map(Arc::new)
         .collect_vec();
