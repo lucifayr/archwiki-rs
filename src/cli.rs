@@ -107,6 +107,10 @@ pub enum Commands {
     )]
     LocalWiki {
         #[arg(short, long)]
+        /// Amount of threads to use for fetching pages from the ArchWiki. If not provided the
+        /// number of physical cores is used.
+        thread_count: Option<usize>,
+        #[arg(short, long)]
         /// Use a different file to read pages from.
         page_file: Option<PathBuf>,
         #[arg(short = 'H', long)]

@@ -32,6 +32,7 @@ serde_yaml = "0.9.27"
 termination = "0.1.2"
 thiserror = "1.0.50"
 tokio = { version = "1.33.0", features = ["full"] }
+unicode-width = "0.1.11"
 url = "2.4.1"
 urlencoding = "2.1.3"
 

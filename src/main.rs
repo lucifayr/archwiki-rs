@@ -1,10 +1,16 @@
-use std::{fs, io, path::Path};
+use std::{
+    collections::HashMap,
+    fs, io,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use clap::{builder::PossibleValue, Parser, ValueEnum};
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
 use formats::plain_text::convert_page_to_plain_text;
+use futures::future;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use wiki_api::fetch_page_without_recommendations;
@@ -196,87 +202,27 @@ async fn main() -> Result<(), WikiError> {
             location,
             format,
             page_file,
+            thread_count,
             override_wiki_directory,
             hide_progress,
         } => {
+            let thread_count = thread_count.unwrap_or(num_cpus::get_physical()).max(1);
+
             let (path, is_default) = page_file
                 .map(|path| (path, false))
                 .unwrap_or((default_page_file_path, true));
 
             let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
 
-            create_dir_if_not_exists(&location, !override_wiki_directory)?;
-
-            if !hide_progress {
-                if let Some(format) = format
-                    .to_possible_value()
-                    .as_ref()
-                    .map(PossibleValue::get_name)
-                {
-                    println!("downloading pages as {format}\n",)
-                }
-            }
-
-            let all_bars = MultiProgress::new();
-
-            let category_count = wiki_tree.values().filter(|v| !v.is_empty()).count();
-            let category_bar = all_bars.add(
-                ProgressBar::new(category_count.try_into().unwrap_or(0))
-                    .with_prefix("fetching categories")
-                    .with_style(
-                        ProgressStyle::with_template("[{prefix:^22}]\t {pos:>4}/{len:4}")
-                            .unwrap()
-                            .progress_chars("##-"),
-                    ),
-            );
-
-            if hide_progress {
-                category_bar.finish_and_clear();
-            }
-
-            for (cat, pages) in wiki_tree {
-                if pages.is_empty() {
-                    continue;
-                }
-
-                let cat_dir = location.join(to_save_file_name(&cat));
-                create_dir_if_not_exists(&cat_dir, !override_wiki_directory)?;
-
-                let bar = all_bars.add(
-                    ProgressBar::new(pages.len().try_into().unwrap_or(0))
-                        .with_prefix("fetching sub-pages")
-                        .with_style(
-                            ProgressStyle::with_template(
-                                "[{prefix:^22}]\t {bar:40.cyan/blue} {pos:>4}/{len:4}",
-                            )
-                            .unwrap()
-                            .progress_chars("##-"),
-                        ),
-                );
-
-                if hide_progress {
-                    bar.finish_and_clear();
-                }
-
-                category_bar.inc(1);
-                for page in pages {
-                    bar.inc(1);
-
-                    match write_page_to_local_wiki(&page, &cat_dir, &format).await {
-                        Ok(()) => {}
-                        Err(err) => {
-                            eprintln!("[WARNING] FAILED TO FETCH PAGE '{page}'\nERROR: {err}")
-                        }
-                    }
-                }
-            }
-
-            if !hide_progress {
-                println!(
-                    "saved local copy of the ArchWiki to '{}'",
-                    location.to_string_lossy()
-                )
-            }
+            download_wiki(
+                wiki_tree,
+                format,
+                location,
+                thread_count,
+                override_wiki_directory,
+                hide_progress,
+            )
+            .await?;
         }
         Commands::Info {
             show_cache_dir,
@@ -328,6 +274,156 @@ async fn main() -> Result<(), WikiError> {
     Ok(())
 }
 
+async fn download_wiki(
+    wiki_tree: HashMap<String, Vec<String>>,
+    format: PageFormat,
+    location: PathBuf,
+    thread_count: usize,
+    override_wiki_directory: bool,
+    hide_progress: bool,
+) -> Result<(), WikiError> {
+    create_dir_if_not_exists(&location, !override_wiki_directory)?;
+
+    if !hide_progress {
+        if let Some(format) = format
+            .to_possible_value()
+            .as_ref()
+            .map(PossibleValue::get_name)
+        {
+            println!("downloading pages as {format}\n",)
+        }
+    }
+
+    let multibar = MultiProgress::new();
+
+    let category_count = wiki_tree.values().filter(|v| !v.is_empty()).count();
+    let category_bar = multibar.add(
+        ProgressBar::new(category_count.try_into().unwrap_or(0))
+            .with_prefix("---FETCHING CATEGORIES---")
+            .with_style(
+                ProgressStyle::with_template("[{prefix:^40}]\t {pos:>4}/{len:4}")
+                    .unwrap()
+                    .progress_chars("##-"),
+            ),
+    );
+
+    if hide_progress {
+        category_bar.finish_and_clear();
+    }
+
+    let wiki_tree_without_empty_cats = wiki_tree
+        .into_iter()
+        .filter(|(_, p)| !p.is_empty())
+        .collect_vec();
+
+    let chunk_count = wiki_tree_without_empty_cats.len() / thread_count;
+
+    let format = Arc::new(format);
+    let location = Arc::new(location);
+    let multibar = Arc::new(multibar);
+    let catbar = Arc::new(category_bar);
+
+    let wiki_tree_chunks = wiki_tree_without_empty_cats
+        .chunks(chunk_count)
+        .map(ToOwned::to_owned)
+        .map(Arc::new)
+        .collect_vec();
+
+    let tasks = wiki_tree_chunks
+        .into_iter()
+        .map(|chunk| {
+            let chunk = Arc::clone(&chunk);
+
+            let format_ref = Arc::clone(&format);
+            let location_ref = Arc::clone(&location);
+            let multibar_ref = Arc::clone(&multibar);
+            let catbar_ref = Arc::clone(&catbar);
+
+            tokio::spawn(async move {
+                download_wiki_chunk(
+                    &chunk,
+                    &format_ref,
+                    &location_ref,
+                    hide_progress,
+                    &multibar_ref,
+                    &catbar_ref,
+                )
+                .await
+                .unwrap();
+            })
+        })
+        .collect_vec();
+
+    future::join_all(tasks).await;
+
+    if !hide_progress {
+        println!(
+            "saved local copy of the ArchWiki to '{}'",
+            location.to_string_lossy()
+        )
+    }
+
+    Ok(())
+}
+
+async fn download_wiki_chunk(
+    chunk: &[(String, Vec<String>)],
+    format: &PageFormat,
+    location: &Path,
+    hide_progress: bool,
+    multibar: &MultiProgress,
+    catbar: &ProgressBar,
+) -> Result<(), WikiError> {
+    for (cat, pages) in chunk {
+        let cat_dir = location.join(to_save_file_name(cat));
+        create_dir_if_not_exists(&cat_dir, false)?;
+
+        let width = unicode_width::UnicodeWidthStr::width(cat.as_str());
+
+        let leak_str: &'static str = Box::leak(
+            format!(
+                " fetching pages in \"{}\"",
+                if width <= 18 {
+                    truncate_unicode_str(18, cat)
+                } else {
+                    truncate_unicode_str(15, cat) + "..."
+                }
+            )
+            .into_boxed_str(),
+        );
+
+        let bar = multibar.add(
+            ProgressBar::new(pages.len().try_into().unwrap_or(0))
+                .with_prefix(leak_str)
+                .with_style(
+                    ProgressStyle::with_template(
+                        "[{prefix:<40}]\t {bar:40.cyan/blue} {pos:>4}/{len:4}",
+                    )
+                    .unwrap()
+                    .progress_chars("##-"),
+                ),
+        );
+
+        if hide_progress {
+            bar.finish_and_clear();
+        }
+
+        catbar.inc(1);
+        for page in pages {
+            bar.inc(1);
+
+            match write_page_to_local_wiki(page, &cat_dir, format).await {
+                Ok(()) => {}
+                Err(err) => {
+                    eprintln!("[WARNING] FAILED TO FETCH PAGE '{page}'\nERROR: {err}")
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 async fn write_page_to_local_wiki(
     page: &str,
     parent_dir: &Path,
@@ -363,4 +459,21 @@ fn create_dir_if_not_exists(dir: &Path, err_when_exists: bool) -> Result<(), Wik
     }
 
     Ok(())
+}
+
+fn truncate_unicode_str(n: usize, text: &str) -> String {
+    let mut count = 0;
+    let mut res = vec![];
+    let mut chars = text.chars();
+
+    while count < n {
+        if let Some(char) = chars.next() {
+            count += unicode_width::UnicodeWidthChar::width(char).unwrap_or(0);
+            res.push(char);
+        } else {
+            break;
+        }
+    }
+
+    res.into_iter().collect::<String>()
 }

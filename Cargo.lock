@@ -114,6 +114,7 @@ dependencies = [
  "termination",
  "thiserror",
  "tokio",
+ "unicode-width",
  "url",
  "urlencoding",
 ]
