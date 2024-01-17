@@ -122,10 +122,7 @@ pub fn read_pages_file_as_category_tree(
 }
 
 pub fn to_save_file_name(page: &str) -> String {
-    urlencoding::encode(page)
-        .to_string()
-        .replace('.', "\\.")
-        .replace('~', "\\~")
+    sanitize_filename::sanitize(page)
 }
 
 #[cfg(test)]
@@ -137,13 +134,10 @@ mod tests {
     fn test_to_save_file_name() {
         let cases = [
             ("Neovim", "Neovim"),
-            ("3D Mouse", "3D%20Mouse"),
-            ("/etc/fstab", "%2Fetc%2Ffstab"),
-            (".NET", "\\.NET"),
-            (
-                "ASUS MeMO Pad 7 (ME176C(X))",
-                "ASUS%20MeMO%20Pad%207%20%28ME176C%28X%29%29",
-            ),
+            ("3D Mouse", "3D Mouse"),
+            ("/etc/fstab", "etcfstab"),
+            (".NET", ".NET"),
+            ("ASUS MeMO Pad 7 (ME176C(X))", "ASUS MeMO Pad 7 (ME176C(X))"),
         ];
 
         for (input, output) in cases {
