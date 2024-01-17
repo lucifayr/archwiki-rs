@@ -106,7 +106,16 @@ pub fn read_pages_file_as_category_tree(
     }
 
     if !uncategorized_pages.is_empty() {
-        category_to_page_map.insert(UNCATEGORIZED_KEY.to_owned(), uncategorized_pages);
+        for (i, uncategoriesed_chunk) in uncategorized_pages
+            .into_iter()
+            .sorted()
+            .chunks(500)
+            .into_iter()
+            .enumerate()
+        {
+            let key = format!("{UNCATEGORIZED_KEY} #{n}", n = i + 1);
+            category_to_page_map.insert(key, uncategoriesed_chunk.collect_vec());
+        }
     }
 
     Ok(category_to_page_map)
