@@ -316,24 +316,17 @@ async fn download_wiki(
         .filter(|(_, p)| !p.is_empty())
         .collect_vec();
 
-    let chunk_size = wiki_tree_without_empty_cats.len() / thread_count;
-
     let format = Arc::new(format);
     let location = Arc::new(location);
     let multibar = Arc::new(multibar);
     let catbar = Arc::new(category_bar);
 
-    let wiki_tree_chunks = wiki_tree_without_empty_cats
-        .chunks(chunk_size)
-        .map(ToOwned::to_owned)
-        .map(Arc::new)
-        .collect_vec();
+    let wiki_tree_chunks =
+        chunk_wiki_with_even_page_distribution(wiki_tree_without_empty_cats, thread_count);
 
     let tasks = wiki_tree_chunks
         .into_iter()
         .map(|chunk| {
-            let chunk = Arc::clone(&chunk);
-
             let format_ref = Arc::clone(&format);
             let location_ref = Arc::clone(&location);
             let multibar_ref = Arc::clone(&multibar);
@@ -497,4 +490,24 @@ fn truncate_unicode_str(n: usize, text: &str) -> String {
     }
 
     res.into_iter().collect::<String>()
+}
+
+fn chunk_wiki_with_even_page_distribution(
+    wiki_tree: Vec<(String, Vec<String>)>,
+    chunk_count: usize,
+) -> Vec<Vec<(String, Vec<String>)>> {
+    let mut chunks: Vec<Vec<(String, Vec<String>)>> = (0..chunk_count).map(|_| vec![]).collect();
+
+    for entry in wiki_tree {
+        if let Some(chunk) = chunks.iter_mut().min_by(|a, b| {
+            let count_a = a.iter().map(|(_, pages)| pages.len()).sum::<usize>();
+            let count_b = b.iter().map(|(_, pages)| pages.len()).sum::<usize>();
+
+            count_a.cmp(&count_b)
+        }) {
+            chunk.push(entry);
+        }
+    }
+
+    chunks
 }
