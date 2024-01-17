@@ -349,12 +349,31 @@ async fn download_wiki(
                     &catbar_ref,
                 )
                 .await
-                .unwrap();
             })
         })
         .collect_vec();
 
-    future::join_all(tasks).await;
+    let results = future::join_all(tasks).await;
+
+    for result in results {
+        match result {
+            Ok(Ok(failed_fetchs)) => {
+                if !failed_fetchs.is_empty() {
+                    for (page, err) in failed_fetchs {
+                        eprintln!("WARNING: failed to page '{page}'\nREASON: {err}");
+                    }
+                }
+            }
+            Ok(Err(thread_err)) => {
+                eprintln!(
+                    "ERROR: a thread paniced, some pages might be missing\nREASON: {thread_err}"
+                );
+            }
+            Err(_) => {
+                eprintln!("ERROR: failed to join threads, some pages might be missing");
+            }
+        }
+    }
 
     if !hide_progress {
         println!(
@@ -366,6 +385,8 @@ async fn download_wiki(
     Ok(())
 }
 
+type FailedPageFetches = Vec<(String, WikiError)>;
+
 async fn download_wiki_chunk(
     chunk: &[(String, Vec<String>)],
     format: &PageFormat,
@@ -373,7 +394,9 @@ async fn download_wiki_chunk(
     hide_progress: bool,
     multibar: &MultiProgress,
     catbar: &ProgressBar,
-) -> Result<(), WikiError> {
+) -> Result<FailedPageFetches, WikiError> {
+    let mut failed_fetches = vec![];
+
     for (cat, pages) in chunk {
         let cat_dir = location.join(to_save_file_name(cat));
         create_dir_if_not_exists(&cat_dir, false)?;
@@ -414,14 +437,12 @@ async fn download_wiki_chunk(
 
             match write_page_to_local_wiki(page, &cat_dir, format).await {
                 Ok(()) => {}
-                Err(err) => {
-                    eprintln!("[WARNING] FAILED TO FETCH PAGE '{page}'\nERROR: {err}")
-                }
+                Err(err) => failed_fetches.push((page.to_owned(), err)),
             }
         }
     }
 
-    Ok(())
+    Ok(failed_fetches)
 }
 
 async fn write_page_to_local_wiki(
