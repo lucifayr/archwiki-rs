@@ -19,25 +19,25 @@ pub enum Commands {
     )]
     ReadPage {
         #[arg(short, long)]
-        /// Don't cache the read page locally
+        /// Don't cache the read page locally.
         no_cache_write: bool,
         #[arg(short, long)]
-        /// Don't read the page from cache even if an entry for it is cached
+        /// Don't read the page from cache even if an entry for it is cached.
         ignore_cache: bool,
         #[arg(short, long)]
         /// Don't invalidate the cache even if it is considered stale. A cache is considered stale
         /// after it hasn't been updated in more then 14 days.
         disable_cache_invalidation: bool,
         #[arg(short, long)]
-        /// Show URLs for plain-text output
+        /// Show URLs for plain-text output.
         show_urls: bool,
         #[arg(short, long)]
         /// Preferred page language
         lang: Option<String>,
         #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]
-        /// The format that the page should be displayed in
+        /// The format that the page should be displayed in.
         format: PageFormat,
-        /// The name of the page to read or an absolute URL to the page
+        /// The name of the page to read or an absolute URL to the page.
         page: String,
     },
     #[command(
@@ -47,10 +47,10 @@ pub enum Commands {
     Search {
         search: String,
         #[arg(short, long, default_value_t = String::from("en"))]
-        /// Preferred language of the content to search for
+        /// Preferred language of the content to search for.
         lang: String,
         #[arg(short = 'L', long, default_value_t = 5)]
-        /// Maximum number of results
+        /// Maximum number of results.
         limit: u16,
         #[arg(short, long)]
         /// Search for pages by text content instead of title. Uses the 'query' API action instead
@@ -63,13 +63,13 @@ pub enum Commands {
     )]
     ListPages {
         #[arg(short, long)]
-        /// Flatten all pages and don't show their category names
+        /// Flatten all pages and don't show their category names.
         flatten: bool,
         #[arg(short, long)]
-        /// Only show pages in this category
+        /// Only show pages in this category.
         category: Option<String>,
         #[arg(short, long)]
-        /// Use a different file to read pages from
+        /// Use a different file to read pages from.
         page_file: Option<PathBuf>,
     },
     #[command(
@@ -78,7 +78,7 @@ pub enum Commands {
     )]
     ListCategories {
         #[arg(short, long)]
-        /// Use a different file to read pages from
+        /// Use a different file to read pages from.
         page_file: Option<PathBuf>,
     },
     #[command(
@@ -92,13 +92,13 @@ pub enum Commands {
     )]
     SyncWiki {
         #[arg(short = 'H', long)]
-        /// Hide progress indicators
+        /// Hide progress indicators.
         hide_progress: bool,
         #[arg(short, long)]
         /// Print result to stdout instead of writing to a file. Output is formatted as YAML.
         print: bool,
         #[arg(short, long)]
-        /// Use custom output file location
+        /// Use custom output file location.
         out_file: Option<PathBuf>,
     },
     #[command(
@@ -106,11 +106,20 @@ pub enum Commands {
         long_about = "Download a copy of the ArchWiki. Will take a long time :). The exact hierarchy of the wiki is not mainted, sub categories are put at the top level of the directory."
     )]
     LocalWiki {
+        #[arg(short, long)]
+        /// Use a different file to read pages from.
+        page_file: Option<PathBuf>,
+        #[arg(short = 'H', long)]
+        /// Hide progress indicators.
+        hide_progress: bool,
+        #[arg(short, long)]
+        /// Override directory at 'location' if it already exists.
+        override_wiki_directory: bool,
+        #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]
+        /// The format that the page should be displayed in.
+        format: PageFormat,
         /// Location to store the local copy of the wiki at.
         location: PathBuf,
-        #[arg(short, long)]
-        /// Use a different file to read pages from
-        page_file: Option<PathBuf>,
     },
     #[command(
         about = "Retrive information related to this tool",
@@ -118,13 +127,13 @@ pub enum Commands {
     )]
     Info {
         #[arg(short = 'c', long)]
-        /// Location of the cache directory
+        /// Location of the cache directory.
         show_cache_dir: bool,
         #[arg(short = 'd', long)]
-        /// Location of the data directory
+        /// Location of the data directory.
         show_data_dir: bool,
         #[arg(short, long)]
-        /// Only show values and not the properties they belong to or their descriptions
+        /// Only show values and not the properties they belong to or their descriptions.
         only_values: bool,
     },
 }

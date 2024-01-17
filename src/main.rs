@@ -1,12 +1,13 @@
-use std::fs;
+use std::{fs, io, path::Path};
 
-use clap::Parser;
+use clap::{builder::PossibleValue, Parser, ValueEnum};
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
 use formats::plain_text::convert_page_to_plain_text;
-use indicatif::ProgressBar;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use itertools::Itertools;
+use wiki_api::fetch_page_without_recommendations;
 
 use crate::{
     categories::list_pages,
@@ -15,7 +16,7 @@ use crate::{
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
     utils::{
         create_cache_page_path, page_cache_exists, read_pages_file_as_category_tree,
-        UNCATEGORIZED_KEY,
+        to_save_file_name, UNCATEGORIZED_KEY,
     },
     wiki_api::{fetch_all_pages, fetch_open_search, fetch_page, fetch_text_search},
 };
@@ -178,7 +179,6 @@ async fn main() -> Result<(), WikiError> {
             });
 
             let wiki_tree = fetch_all_pages().await?;
-
             let out = serde_yaml::to_string(&wiki_tree)?;
 
             if !print {
@@ -194,13 +194,89 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::LocalWiki {
             location,
+            format,
             page_file,
+            override_wiki_directory,
+            hide_progress,
         } => {
             let (path, is_default) = page_file
                 .map(|path| (path, false))
                 .unwrap_or((default_page_file_path, true));
 
-            todo!("oh boy");
+            let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
+
+            create_dir_if_not_exists(&location, !override_wiki_directory)?;
+
+            if !hide_progress {
+                if let Some(format) = format
+                    .to_possible_value()
+                    .as_ref()
+                    .map(PossibleValue::get_name)
+                {
+                    println!("downloading pages as {format}\n",)
+                }
+            }
+
+            let all_bars = MultiProgress::new();
+
+            let category_count = wiki_tree.values().filter(|v| !v.is_empty()).count();
+            let category_bar = all_bars.add(
+                ProgressBar::new(category_count.try_into().unwrap_or(0))
+                    .with_prefix("fetching categories")
+                    .with_style(
+                        ProgressStyle::with_template("[{prefix:^22}]\t {pos:>4}/{len:4}")
+                            .unwrap()
+                            .progress_chars("##-"),
+                    ),
+            );
+
+            if hide_progress {
+                category_bar.finish_and_clear();
+            }
+
+            for (cat, pages) in wiki_tree {
+                if pages.is_empty() {
+                    continue;
+                }
+
+                let cat_dir = location.join(to_save_file_name(&cat));
+                create_dir_if_not_exists(&cat_dir, !override_wiki_directory)?;
+
+                let bar = all_bars.add(
+                    ProgressBar::new(pages.len().try_into().unwrap_or(0))
+                        .with_prefix("fetching sub-pages")
+                        .with_style(
+                            ProgressStyle::with_template(
+                                "[{prefix:^22}]\t {bar:40.cyan/blue} {pos:>4}/{len:4}",
+                            )
+                            .unwrap()
+                            .progress_chars("##-"),
+                        ),
+                );
+
+                if hide_progress {
+                    bar.finish_and_clear();
+                }
+
+                category_bar.inc(1);
+                for page in pages {
+                    bar.inc(1);
+
+                    match write_page_to_local_wiki(&page, &cat_dir, &format).await {
+                        Ok(()) => {}
+                        Err(err) => {
+                            eprintln!("[WARNING] FAILED TO FETCH PAGE '{page}'\nERROR: {err}")
+                        }
+                    }
+                }
+            }
+
+            if !hide_progress {
+                println!(
+                    "saved local copy of the ArchWiki to '{}'",
+                    location.to_string_lossy()
+                )
+            }
         }
         Commands::Info {
             show_cache_dir,
@@ -246,6 +322,43 @@ async fn main() -> Result<(), WikiError> {
                 .join("\n");
 
             println!("{out}");
+        }
+    }
+
+    Ok(())
+}
+
+async fn write_page_to_local_wiki(
+    page: &str,
+    parent_dir: &Path,
+    format: &PageFormat,
+) -> Result<(), WikiError> {
+    let document = fetch_page_without_recommendations(page).await?;
+
+    let (content, ext) = match format {
+        PageFormat::PlainText => (convert_page_to_plain_text(&document, false), ""),
+        PageFormat::Markdown => (convert_page_to_markdown(&document, page), "md"),
+        PageFormat::Html => (convert_page_to_html(&document, page), "html"),
+    };
+
+    let file_path = parent_dir.join(to_save_file_name(page)).with_extension(ext);
+
+    fs::write(file_path, content)?;
+    Ok(())
+}
+
+fn create_dir_if_not_exists(dir: &Path, err_when_exists: bool) -> Result<(), WikiError> {
+    match fs::create_dir(dir) {
+        Ok(_) => {}
+        Err(err) => {
+            if err.kind() != io::ErrorKind::AlreadyExists {
+                return Err(err.into());
+            } else if err_when_exists {
+                return Err(WikiError::Path(format!(
+                    "ERROR: directory '{}' already exists",
+                    dir.to_string_lossy()
+                )));
+            }
         }
     }
 

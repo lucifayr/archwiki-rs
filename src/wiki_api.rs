@@ -83,12 +83,17 @@ pub async fn fetch_page(page: &str, lang: Option<&str>) -> Result<Html, WikiErro
         return Err(WikiError::NoPageFound(similar_pages.join("\n")));
     };
 
+    fetch_page_without_recommendations(page_title).await
+}
+
+/// TODO
+pub async fn fetch_page_without_recommendations(page: &str) -> Result<Html, WikiError> {
     let raw_url = format!(
         "https://wiki.archlinux.org/rest.php/v1/page/{title}/html",
-        title = urlencoding::encode(page_title)
+        title = urlencoding::encode(page)
     );
-    let url = Url::parse(&raw_url)?;
 
+    let url = Url::parse(&raw_url)?;
     let document = fetch_page_by_url(url).await?;
     Ok(document)
 }

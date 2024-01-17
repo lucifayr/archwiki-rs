@@ -10,7 +10,7 @@ use scraper::node::Element;
 
 use crate::{error::WikiError, formats::PageFormat};
 
-pub const UNCATEGORIZED_KEY: &str = "UNCATEGORIZED";
+pub const UNCATEGORIZED_KEY: &str = "Uncategorized";
 
 /// Construct a path to cache a page. Different page formats are cached separately.
 /// All none word characters are escaped with an '_'
@@ -112,7 +112,7 @@ pub fn read_pages_file_as_category_tree(
     Ok(category_to_page_map)
 }
 
-fn to_save_file_name(page: &str) -> String {
+pub fn to_save_file_name(page: &str) -> String {
     urlencoding::encode(page)
         .to_string()
         .replace('.', "\\.")
