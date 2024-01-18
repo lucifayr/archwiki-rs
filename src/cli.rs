@@ -118,7 +118,7 @@ pub enum Commands {
         hide_progress: bool,
         #[arg(short, long)]
         /// Override directory at 'location' if it already exists.
-        override_wiki_directory: bool,
+        override_existing_files: bool,
         #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]
         /// The format that the page should be displayed in.
         format: PageFormat,

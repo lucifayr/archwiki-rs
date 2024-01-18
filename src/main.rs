@@ -203,7 +203,7 @@ async fn main() -> Result<(), WikiError> {
             format,
             page_file,
             thread_count,
-            override_wiki_directory,
+            override_existing_files,
             hide_progress,
         } => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical()).max(1);
@@ -219,7 +219,7 @@ async fn main() -> Result<(), WikiError> {
                 format,
                 location,
                 thread_count,
-                override_wiki_directory,
+                override_existing_files,
                 hide_progress,
             )
             .await?;
@@ -279,10 +279,10 @@ async fn download_wiki(
     format: PageFormat,
     location: PathBuf,
     thread_count: usize,
-    override_wiki_directory: bool,
+    override_exisiting_files: bool,
     hide_progress: bool,
 ) -> Result<(), WikiError> {
-    create_dir_if_not_exists(&location, !override_wiki_directory)?;
+    create_dir_if_not_exists(&location)?;
 
     if !hide_progress {
         if let Some(format) = format
@@ -338,6 +338,7 @@ async fn download_wiki(
                     &format_ref,
                     &location_ref,
                     hide_progress,
+                    override_exisiting_files,
                     &multibar_ref,
                     &catbar_ref,
                 )
@@ -385,6 +386,7 @@ async fn download_wiki_chunk(
     format: &PageFormat,
     location: &Path,
     hide_progress: bool,
+    override_exisiting_files: bool,
     multibar: &MultiProgress,
     catbar: &ProgressBar,
 ) -> Result<FailedPageFetches, WikiError> {
@@ -392,7 +394,7 @@ async fn download_wiki_chunk(
 
     for (cat, pages) in chunk {
         let cat_dir = location.join(to_save_file_name(cat));
-        create_dir_if_not_exists(&cat_dir, false)?;
+        create_dir_if_not_exists(&cat_dir)?;
 
         let width = unicode_width::UnicodeWidthStr::width(cat.as_str());
 
@@ -428,9 +430,12 @@ async fn download_wiki_chunk(
         for page in pages {
             bar.inc(1);
 
-            match write_page_to_local_wiki(page, &cat_dir, format).await {
-                Ok(()) => {}
-                Err(err) => failed_fetches.push((page.to_owned(), err)),
+            let path = page_path(page, format, &cat_dir);
+            if override_exisiting_files || !path.exists() {
+                match write_page_to_local_wiki(page, &path, format).await {
+                    Ok(()) => {}
+                    Err(err) => failed_fetches.push((page.to_owned(), err)),
+                }
             }
         }
     }
@@ -440,34 +445,36 @@ async fn download_wiki_chunk(
 
 async fn write_page_to_local_wiki(
     page: &str,
-    parent_dir: &Path,
+    page_path: &Path,
     format: &PageFormat,
 ) -> Result<(), WikiError> {
     let document = fetch_page_without_recommendations(page).await?;
-
-    let (content, ext) = match format {
-        PageFormat::PlainText => (convert_page_to_plain_text(&document, false), ""),
-        PageFormat::Markdown => (convert_page_to_markdown(&document, page), "md"),
-        PageFormat::Html => (convert_page_to_html(&document, page), "html"),
+    let content = match format {
+        PageFormat::PlainText => convert_page_to_plain_text(&document, false),
+        PageFormat::Markdown => convert_page_to_markdown(&document, page),
+        PageFormat::Html => convert_page_to_html(&document, page),
     };
 
-    let file_path = parent_dir.join(to_save_file_name(page)).with_extension(ext);
-
-    fs::write(file_path, content)?;
+    fs::write(page_path, content)?;
     Ok(())
 }
 
-fn create_dir_if_not_exists(dir: &Path, err_when_exists: bool) -> Result<(), WikiError> {
+fn page_path(page: &str, format: &PageFormat, parent_dir: &Path) -> PathBuf {
+    let ext = match format {
+        PageFormat::PlainText => "",
+        PageFormat::Markdown => "md",
+        PageFormat::Html => "html",
+    };
+
+    parent_dir.join(to_save_file_name(page)).with_extension(ext)
+}
+
+fn create_dir_if_not_exists(dir: &Path) -> Result<(), WikiError> {
     match fs::create_dir(dir) {
         Ok(_) => {}
         Err(err) => {
             if err.kind() != io::ErrorKind::AlreadyExists {
                 return Err(err.into());
-            } else if err_when_exists {
-                return Err(WikiError::Path(format!(
-                    "ERROR: directory '{}' already exists",
-                    dir.to_string_lossy()
-                )));
             }
         }
     }
