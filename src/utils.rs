@@ -125,6 +125,46 @@ pub fn to_save_file_name(page: &str) -> String {
     sanitize_filename::sanitize(page)
 }
 
+pub fn truncate_unicode_str(n: usize, text: &str) -> String {
+    let mut count = 0;
+    let mut res = vec![];
+    let mut chars = text.chars();
+
+    while count < n {
+        if let Some(char) = chars.next() {
+            count += unicode_width::UnicodeWidthChar::width(char).unwrap_or(0);
+            res.push(char);
+        } else {
+            break;
+        }
+    }
+
+    res.into_iter().collect::<String>()
+}
+
+pub fn page_path(page: &str, format: &PageFormat, parent_dir: &Path) -> PathBuf {
+    let ext = match format {
+        PageFormat::PlainText => "",
+        PageFormat::Markdown => "md",
+        PageFormat::Html => "html",
+    };
+
+    parent_dir.join(to_save_file_name(page)).with_extension(ext)
+}
+
+pub fn create_dir_if_not_exists(dir: &Path) -> Result<(), WikiError> {
+    match fs::create_dir(dir) {
+        Ok(_) => {}
+        Err(err) => {
+            if err.kind() != io::ErrorKind::AlreadyExists {
+                return Err(err.into());
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

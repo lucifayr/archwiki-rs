@@ -86,7 +86,7 @@ pub async fn fetch_page(page: &str, lang: Option<&str>) -> Result<Html, WikiErro
     fetch_page_without_recommendations(page_title).await
 }
 
-/// TODO
+/// Gets the HTML content of an ArchWiki page.
 pub async fn fetch_page_without_recommendations(page: &str) -> Result<Html, WikiError> {
     let raw_url = format!(
         "https://wiki.archlinux.org/rest.php/v1/page/{title}/html",
@@ -116,7 +116,15 @@ async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
     Ok(Html::parse_document(&body_with_abs_urls))
 }
 
-/// TODO
+/// Gets the names of all pages on the ArchWiki and the categories that they belong to.
+///
+/// ### Example
+///                                                                                                                                                                                                                                      
+/// ```sh
+/// Wine        # page name
+/// - Emulation # category
+/// - Gaming    # category
+/// ```
 pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError> {
     #[derive(Debug, Deserialize)]
     struct ApiAllPagesQuery {
