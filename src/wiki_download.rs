@@ -52,10 +52,12 @@ pub async fn sync_wiki_info(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn download_wiki(
     wiki_tree: HashMap<String, Vec<String>>,
     format: PageFormat,
     location: PathBuf,
+    log_dir: &Path,
     thread_count: usize,
     override_exisiting_files: bool,
     hide_progress: bool,
@@ -63,13 +65,15 @@ pub async fn download_wiki(
 ) -> Result<(), WikiError> {
     create_dir_if_not_exists(&location)?;
 
+    let total_page_count = wiki_tree.values().map(|pages| pages.len()).sum::<usize>();
+
     if !hide_progress {
         if let Some(format) = format
             .to_possible_value()
             .as_ref()
             .map(PossibleValue::get_name)
         {
-            println!("downloading pages as {format}\n",)
+            println!("downloading {total_page_count} pages as {format}\n",)
         }
     }
 
@@ -128,16 +132,11 @@ pub async fn download_wiki(
         .collect_vec();
 
     let results = future::join_all(tasks).await;
+    let mut all_failed_fetches = vec![];
 
     for result in results {
         match result {
-            Ok(Ok(failed_fetchs)) => {
-                if !failed_fetchs.is_empty() {
-                    for (page, err) in failed_fetchs {
-                        eprintln!("WARNING: failed to page '{page}'\nREASON: {err}");
-                    }
-                }
-            }
+            Ok(Ok(mut failed_fetchs)) => all_failed_fetches.append(&mut failed_fetchs),
             Ok(Err(thread_err)) => {
                 eprintln!(
                     "ERROR: a thread paniced, some pages might be missing\nREASON: {thread_err}"
@@ -146,6 +145,28 @@ pub async fn download_wiki(
             Err(_) => {
                 eprintln!("ERROR: failed to join threads, some pages might be missing");
             }
+        }
+    }
+
+    if !hide_progress {
+        let successfuly_fetched_pages = total_page_count - all_failed_fetches.len();
+
+        println!("downloaded {successfuly_fetched_pages} pages successfully");
+        println!("failed to download {} pages", all_failed_fetches.len());
+    }
+
+    if !all_failed_fetches.is_empty() {
+        let failed_fetches_str = all_failed_fetches
+            .into_iter()
+            .map(|(page, err)| format!("failed to page '{page}'\nREASON: {err}"))
+            .collect_vec()
+            .join("\n\n");
+
+        let path = log_dir.join("local-wiki-download-err.log");
+        let write = fs::write(&path, failed_fetches_str);
+
+        if write.is_ok() && !hide_progress {
+            println!("error log written to '{}'", path.to_string_lossy());
         }
     }
 

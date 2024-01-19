@@ -50,8 +50,10 @@ async fn main() -> Result<(), WikiError> {
 
     let cache_dir = base_dir.cache_dir().join("archwiki-rs");
     let data_dir = base_dir.data_local_dir().join("archwiki-rs");
+    let log_dir = data_dir.join("logs");
     fs::create_dir_all(&cache_dir)?;
     fs::create_dir_all(&data_dir)?;
+    fs::create_dir_all(&log_dir)?;
 
     let default_page_file_path = data_dir.join(PAGE_FILE_NAME);
 
@@ -193,6 +195,7 @@ async fn main() -> Result<(), WikiError> {
                 wiki_tree,
                 format,
                 location,
+                &log_dir,
                 thread_count,
                 override_existing_files,
                 hide_progress,
