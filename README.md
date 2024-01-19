@@ -158,8 +158,8 @@ archwiki-rs list-languages
 
 ### Downloading a local copy of the ArchWiki
 
-Use this command to download a local copy of the ArchWiki. Be warned, that this makes over
-10,000 requests for page content to the ArchWiki so it takes a while to finish (-, -)…zzzZZ
+Use this command to download a local copy of the ArchWiki. Be warned, this command makes over
+10,000 requests to the ArchWiki so it takes a while to finish (-, -)…zzzZZ
 
 ```sh
 archwiki-rs local-wiki ~/local-archwiki --format markdown
