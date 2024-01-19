@@ -116,6 +116,9 @@ pub enum Commands {
         /// Hide progress indicators
         hide_progress: bool,
         #[arg(short, long)]
+        /// Show URLs in plain-text files
+        show_urls: bool,
+        #[arg(short, long)]
         /// Override already downloaded files
         override_existing_files: bool,
         #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]

@@ -177,6 +177,7 @@ async fn main() -> Result<(), WikiError> {
             format,
             page_file,
             thread_count,
+            show_urls,
             override_existing_files,
             hide_progress,
         } => {
@@ -195,6 +196,7 @@ async fn main() -> Result<(), WikiError> {
                 thread_count,
                 override_existing_files,
                 hide_progress,
+                show_urls,
             )
             .await?;
         }

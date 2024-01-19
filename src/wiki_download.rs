@@ -59,6 +59,7 @@ pub async fn download_wiki(
     thread_count: usize,
     override_exisiting_files: bool,
     hide_progress: bool,
+    show_urls: bool,
 ) -> Result<(), WikiError> {
     create_dir_if_not_exists(&location)?;
 
@@ -116,6 +117,7 @@ pub async fn download_wiki(
                     &format_ref,
                     &location_ref,
                     hide_progress,
+                    show_urls,
                     override_exisiting_files,
                     &multibar_ref,
                     &catbar_ref,
@@ -159,11 +161,13 @@ pub async fn download_wiki(
 
 type FailedPageFetches = Vec<(String, WikiError)>;
 
+#[allow(clippy::too_many_arguments)]
 async fn download_wiki_chunk(
     chunk: &[(String, Vec<String>)],
     format: &PageFormat,
     location: &Path,
     hide_progress: bool,
+    show_urls: bool,
     override_exisiting_files: bool,
     multibar: &MultiProgress,
     catbar: &ProgressBar,
@@ -210,7 +214,7 @@ async fn download_wiki_chunk(
 
             let path = page_path(page, format, &cat_dir);
             if override_exisiting_files || !path.exists() {
-                match write_page_to_local_wiki(page, &path, format).await {
+                match write_page_to_local_wiki(page, &path, format, show_urls).await {
                     Ok(()) => {}
                     Err(err) => failed_fetches.push((page.to_owned(), err)),
                 }
@@ -225,10 +229,11 @@ async fn write_page_to_local_wiki(
     page: &str,
     page_path: &Path,
     format: &PageFormat,
+    show_urls: bool,
 ) -> Result<(), WikiError> {
     let document = fetch_page_without_recommendations(page).await?;
     let content = match format {
-        PageFormat::PlainText => convert_page_to_plain_text(&document, false),
+        PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),
         PageFormat::Markdown => convert_page_to_markdown(&document, page),
         PageFormat::Html => convert_page_to_html(&document, page),
     };
