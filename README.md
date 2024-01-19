@@ -23,6 +23,7 @@ A CLI tool to read pages from the ArchWiki
   * [Downloading a local copy of the ArchWiki](#downloading-a-local-copy-of-the-archwiki)
     + [Possible speed-ups](#possible-speed-ups)
   * [Other Information](#other-information)
+  * [Setup shell completion](#setup-shell-completion)
 - [Plugins](#plugins)
 - [Alternatives](#alternatives)
 
@@ -191,6 +192,18 @@ can use the `-o` flag
 
 ```sh
 archwiki-rs info -o
+```
+
+### Setup shell completion
+
+You can generate a completion file to allow tab completion for most popular shells 
+([list of supported shells](https://docs.rs/clap_complete/latest/clap_complete/shells/enum.Shell.html)).
+
+
+The following example shows how to setup completion for ZSH (with the [oh my zsh](https://github.com/ohmyzsh/ohmyzsh)).
+
+```sh
+archwiki-rs generate-completion > /home/lucifer/.oh-my-zsh/completions/_archwiki-rs
 ```
 
 ## Plugins
