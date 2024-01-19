@@ -124,7 +124,7 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::ListPages {
             flatten,
-            category,
+            categories,
             page_file,
         } => {
             let (path, is_default) = page_file
@@ -132,16 +132,11 @@ async fn main() -> Result<(), WikiError> {
                 .unwrap_or((default_page_file_path, true));
 
             let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
-            let out = if let Some(category) = category {
-                wiki_tree
-                    .get(&category)
-                    .ok_or(WikiError::NoCategoryFound(category))?
-                    .iter()
-                    .sorted()
-                    .join("\n")
-            } else {
-                list_pages(&wiki_tree, flatten)
-            };
+            let out = list_pages(
+                &wiki_tree,
+                (!categories.is_empty()).then_some(&categories),
+                flatten,
+            );
 
             println!("{out}");
         }

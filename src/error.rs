@@ -48,6 +48,4 @@ pub enum WikiError {
     InvalidApiResponse(InvalidApiResponseError),
     #[error("{}", .0)]
     NoPageFound(String),
-    #[error("The category '{}' could not be found", .0)]
-    NoCategoryFound(String),
 }

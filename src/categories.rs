@@ -27,13 +27,32 @@ use crate::error::WikiError;
 /// If it is not flattened the list is first ordered by category names and then by page names withing those
 /// categories.
 /// If it is flattened then it will by sorted by page names.
-pub fn list_pages(categories: &HashMap<String, Vec<String>>, flatten: bool) -> String {
+pub fn list_pages(
+    wiki_tree: &HashMap<String, Vec<String>>,
+    categories_filter: Option<&[String]>,
+    flatten: bool,
+) -> String {
     if flatten {
-        return categories.values().flatten().unique().sorted().join("\n");
+        return wiki_tree
+            .iter()
+            .filter_map(|(cat, pages)| {
+                categories_filter
+                    .map(|filter| filter.iter().contains(cat).then_some(pages))
+                    .unwrap_or(Some(pages))
+            })
+            .flatten()
+            .unique()
+            .sorted()
+            .join("\n");
     }
 
-    categories
+    wiki_tree
         .iter()
+        .filter_map(|(cat, pages)| {
+            categories_filter
+                .map(|filter| filter.iter().contains(cat).then_some((cat, pages)))
+                .unwrap_or(Some((cat, pages)))
+        })
         .sorted()
         .map(|(cat, pages)| {
             let list = pages.iter().map(|p| format!("───┤{p}")).join("\n");

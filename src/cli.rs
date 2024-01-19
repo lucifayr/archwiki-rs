@@ -64,9 +64,9 @@ pub enum Commands {
         #[arg(short, long)]
         /// Flatten all pages and don't show their category names
         flatten: bool,
-        #[arg(short, long)]
-        /// Only show pages in this category
-        category: Option<String>,
+        #[arg(short, long, value_delimiter = ',')]
+        /// Only show pages in these categories
+        categories: Vec<String>,
         #[arg(short, long)]
         /// Use a different file to read pages from
         page_file: Option<PathBuf>,
