@@ -1,6 +1,7 @@
 use std::fs;
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::{generate, Shell};
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
@@ -243,7 +244,18 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
+        Commands::GenerateCompletion { shell } => generate_shell_completion(
+            shell
+                .unwrap_or(Shell::from_env().expect(
+                    "failed to determine shell, please provided it as an explict argument",
+                )),
+        ),
     }
 
     Ok(())
+}
+
+fn generate_shell_completion(shell: Shell) {
+    let mut command = CliArgs::command();
+    generate(shell, &mut command, "archwiki-rs", &mut std::io::stdout())
 }

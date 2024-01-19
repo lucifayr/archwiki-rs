@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use clap_complete::Shell;
 
 use crate::formats::PageFormat;
 
@@ -138,5 +139,13 @@ pub enum Commands {
         show_data_dir: bool,
         #[arg(short, long)]
         only_values: bool,
+    },
+    #[command(
+        about = "Generate scripts for shell autocompletion",
+        long_about = "Generate scripts for shell autocompletion"
+    )]
+    GenerateCompletion {
+        /// Shell type that completion scripts will be generated for
+        shell: Option<Shell>,
     },
 }
