@@ -15,7 +15,7 @@ pub struct CliArgs {
 pub enum Commands {
     #[command(
         about = "Read a page from the ArchWiki",
-        long_about = "Read a page from the ArchWiki, if the page is not found similar page names are recommended. A list of page names is in the pages.yml file which can be updated with the 'sync-wiki' command."
+        long_about = "Read a page from the ArchWiki, if the page is not found similar page names are recommended"
     )]
     ReadPage {
         #[arg(short, long)]
@@ -26,7 +26,7 @@ pub enum Commands {
         ignore_cache: bool,
         #[arg(short, long)]
         /// Don't invalidate the cache even if it is considered stale. A cache is considered stale
-        /// after it hasn't been updated in more then 14 days.
+        /// after it hasn't been updated in more then 14 days
         disable_cache_invalidation: bool,
         #[arg(short, long)]
         /// Show URLs for plain-text output
@@ -42,7 +42,7 @@ pub enum Commands {
     },
     #[command(
         about = "Search the ArchWiki for pages",
-        long_about = "Search the ArchWiki for pages by title. Uses the 'opensearch' API action to perform queries."
+        long_about = "Search the ArchWiki for pages"
     )]
     Search {
         search: String,
@@ -53,74 +53,90 @@ pub enum Commands {
         /// Maximum number of results
         limit: u16,
         #[arg(short, long)]
-        /// Search for pages by text content instead of title. Uses the 'query' API action instead
-        /// of 'opensearch'.
+        /// Search for pages by text content instead of title
         text_search: bool,
     },
     #[command(
         about = "List all pages from the ArchWiki that have been downloaded",
-        long_about = "List all pages from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading."
+        long_about = "List all pages from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading"
     )]
     ListPages {
         #[arg(short, long)]
         /// Flatten all pages and don't show their category names
         flatten: bool,
+        #[arg(short, long, value_delimiter = ',')]
+        /// Only show pages in these categories
+        categories: Vec<String>,
         #[arg(short, long)]
-        /// Only show pages in this category
-        category: Option<String>,
-        #[arg(short, long)]
-        /// Use different file to read pages from
+        /// Use a different file to read pages from
         page_file: Option<PathBuf>,
     },
     #[command(
         about = "List all categories from the ArchWiki that have been downloaded",
-        long_about = "List categories  from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading."
+        long_about = "List categories  from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading"
     )]
     ListCategories {
         #[arg(short, long)]
-        /// Use different file to read pages from
+        /// Use a different file to read pages from
         page_file: Option<PathBuf>,
     },
     #[command(
         about = "List all languages that the ArchWiki supports",
-        long_about = "List all languages that the ArchWiki supports."
+        long_about = "List all languages that the ArchWiki supports"
     )]
     ListLanguages,
     #[command(
-        about = "Download the names of all pages on the ArchWiki",
-        long_about = "Download the names of all pages on the ArchWiki. Page names are used for the 'list-pages' and 'list-categories' commands"
+        about = "Download information about the pages and categories on the ArchWiki",
+        long_about = "Download information about the pages and categories on the ArchWiki. Page and category names are used for the 'list-pages' and 'list-categories' sub-commands"
     )]
     SyncWiki {
         #[arg(short = 'H', long)]
         /// Hide progress indicators
         hide_progress: bool,
         #[arg(short, long)]
-        /// Number of threads to use for fetching data from the ArchWiki
+        /// Print result to stdout instead of writing to a file. Output is formatted as YAML
+        print: bool,
+        #[arg(short, long)]
+        /// Use custom output file location
+        out_file: Option<PathBuf>,
+    },
+    #[command(
+        about = "Download a copy of the ArchWiki. Will take a long time :)",
+        long_about = "Download a copy of the ArchWiki. Will take a long time :). The exact hierarchy of the wiki is not mainted, sub-categories are put at the top level of the wiki directory"
+    )]
+    LocalWiki {
+        #[arg(short, long)]
+        /// Amount of threads to use for fetching pages from the ArchWiki. If not provided the
+        /// number of physical cores is used
         thread_count: Option<usize>,
         #[arg(short, long)]
-        /// Maximum amount of categories to fetch. If no value if provided all categories are
-        /// fetched.
-        max_categories: Option<u32>,
+        /// Use a different file to read pages from
+        page_file: Option<PathBuf>,
+        #[arg(short = 'H', long)]
+        /// Hide progress indicators
+        hide_progress: bool,
         #[arg(short, long)]
-        /// First category that will be fetched. See 'https://wiki.archlinux.org/index.php?title=Special:Categories' for more information.
-        start_at: Option<String>,
+        /// Show URLs in plain-text files
+        show_urls: bool,
         #[arg(short, long)]
-        /// Print result to stdout instead of writing to a file. Output is formatted as YAML.
-        print: bool,
+        /// Override already downloaded files
+        override_existing_files: bool,
+        #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]
+        /// The format that the page should be displayed in
+        format: PageFormat,
+        /// Location to store the local copy of the wiki at
+        location: PathBuf,
     },
     #[command(
         about = "Retrive information related to this tool",
-        long_about = "Retrive information related to this tool. All Info is shown by default."
+        long_about = "Retrive information related to this tool"
     )]
     Info {
         #[arg(short = 'c', long)]
-        /// Location of the cache directory
         show_cache_dir: bool,
         #[arg(short = 'd', long)]
-        /// Location of the data directory
         show_data_dir: bool,
         #[arg(short, long)]
-        /// Only show values and not the properties they belong to or their descriptions
         only_values: bool,
     },
 }

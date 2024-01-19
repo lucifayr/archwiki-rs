@@ -2,14 +2,13 @@ use colored::Colorize;
 use ego_tree::NodeRef;
 use scraper::{Html, Node};
 
-use crate::utils::{extract_tag_attr, get_page_content, HtmlTag};
+use crate::utils::extract_tag_attr;
 
 /// Converts the body of the ArchWiki page to a plain text string, removing all tags and
 /// only leaving the text node content. URLs can be shown in a markdown like syntax.
 pub fn convert_page_to_plain_text(document: &Html, show_urls: bool) -> String {
-    let content = get_page_content(document).expect("page should have content");
-
-    content
+    document
+        .root_element()
         .children()
         .map(|node| format_children(node, show_urls))
         .collect::<Vec<String>>()
@@ -30,7 +29,7 @@ pub fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
                 if show_urls {
                     wrap_text_in_url(
                         &child_text,
-                        &extract_tag_attr(e, &HtmlTag::A, "href").unwrap_or("".to_string()),
+                        &extract_tag_attr(e, "a", "href").unwrap_or("".to_string()),
                     )
                 } else {
                     child_text
@@ -86,41 +85,34 @@ fn wrap_text_in_url(text: &str, url: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::PAGE_CONTENT_CLASS;
     use pretty_assertions::assert_eq;
 
     #[tokio::test]
     async fn test_convert_page_to_plain_text() {
         {
-            let input = format!(
-                r#"<div class="{PAGE_CONTENT_CLASS}">
-    <h3>Hello, world!</h3>
-    <div>how <span><bold>are</bold></span> you</div>
-    I'm great
-</div>"#
-            );
+            let input = r#"<div">
+                <h3>Hello, world!</h3>
+                <div>how <span><bold>are</bold></span> you</div>
+                I'm great
+                </div>"#;
 
-            let expected_output = format!(
-                r#"
-    Hello, world!
-    how are you
-    I'm great
-"#
-            );
+            let expected_output = r#"
+                Hello, world!
+                how are you
+                I'm great
+                "#;
 
-            let document = Html::parse_document(&input);
+            let document = Html::parse_document(input);
             let output = convert_page_to_plain_text(&document, false);
 
             assert_eq!(output, expected_output);
         }
 
         {
-            let input = format!(
-                r#"<div class="{PAGE_CONTENT_CLASS}">
+            let input = r#"<div>
     <h3>Hello, world!</h3>
     <a href="example.com">example</a>
-</div>"#
-            );
+</div>"#;
 
             let expected_output = format!(
                 r#"

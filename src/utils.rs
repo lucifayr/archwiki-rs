@@ -1,32 +1,16 @@
 use std::{
+    collections::HashMap,
     fs,
     io::{self, ErrorKind},
     path::{Path, PathBuf},
 };
 
-use ego_tree::NodeRef;
-use regex::Regex;
-use scraper::{node::Element, ElementRef, Html, Node, Selector};
+use itertools::Itertools;
+use scraper::node::Element;
 
 use crate::{error::WikiError, formats::PageFormat};
 
-pub const PAGE_CONTENT_CLASS: &str = "mw-parser-output";
-
-pub enum HtmlTag {
-    A,
-    Ul,
-    Li,
-}
-
-impl HtmlTag {
-    pub fn name(&self) -> String {
-        match *self {
-            HtmlTag::A => "a".to_owned(),
-            HtmlTag::Ul => "ul".to_owned(),
-            HtmlTag::Li => "li".to_owned(),
-        }
-    }
-}
+pub const UNCATEGORIZED_KEY: &str = "Uncategorized";
 
 /// Construct a path to cache a page. Different page formats are cached separately.
 /// All none word characters are escaped with an '_'
@@ -63,32 +47,8 @@ pub fn page_cache_exists(
     Ok(secs_since_modified < fourteen_days)
 }
 
-/// Selects the body of an ArchWiki page
-pub fn get_page_content(document: &Html) -> Option<ElementRef<'_>> {
-    let class = format!(".{PAGE_CONTENT_CLASS}");
-    let selector =
-        Selector::parse(&class).unwrap_or_else(|_| panic!("{class} should be valid selector"));
-    document.select(&selector).next()
-}
-
-pub fn get_elements_by_tag<'a>(root: NodeRef<'a, Node>, tag: &HtmlTag) -> Vec<NodeRef<'a, Node>> {
-    root.children()
-        .flat_map(|n| {
-            if let Node::Element(e) = n.value() {
-                if e.name() == tag.name() {
-                    Some(n)
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
-pub fn extract_tag_attr(element: &Element, tag: &HtmlTag, attr: &str) -> Option<String> {
-    if element.name() == tag.name() {
+pub fn extract_tag_attr(element: &Element, tag: &str, attr: &str) -> Option<String> {
+    if element.name() == tag {
         element.attr(attr).map(|attr| attr.to_owned())
     } else {
         None
@@ -106,18 +66,103 @@ pub fn update_relative_urls(html: &str, base_url: &str) -> String {
         .replace("poster=\"/", &format!("poster=\"{base_url}/"))
 }
 
-pub fn read_pages_file_as_str(path: PathBuf) -> Result<String, WikiError> {
-    fs::read_to_string(&path).map_err(|err| {
+pub fn read_pages_file_as_category_tree(
+    path: &Path,
+    is_default_path: bool,
+) -> Result<HashMap<String, Vec<String>>, WikiError> {
+    let content = fs::read_to_string(path).map_err(|err| {
         match err.kind() {
-            ErrorKind::NotFound => WikiError::IO(io::Error::new(ErrorKind::NotFound,  format!("Could not find pages file at '{}'. Try running 'archwiki-rs sync-wiki' to create the missing file.", path.to_string_lossy()))),
+            ErrorKind::NotFound =>  {
+                let path_str = path.to_string_lossy();
+                let extra_path_arg = if is_default_path {
+                    String::new()
+                } else {
+                    format!(" --out-file {path_str}")
+                };
+
+                WikiError::IO(io::Error::new(ErrorKind::NotFound,  format!("Could not find pages file at '{path_str}'. Try running 'archwiki-rs sync-wiki{extra_path_arg}' to create the missing file." )))
+            }
             _ => err.into()
         }
-    })
+    })?;
+
+    let page_to_category_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&content)?;
+
+    let mut category_to_page_map = HashMap::new();
+    let mut uncategorized_pages = vec![];
+
+    for (page, cats) in page_to_category_map.into_iter().collect_vec() {
+        if cats.is_empty() {
+            uncategorized_pages.push(page)
+        } else {
+            for cat in cats {
+                let mut pages: Vec<String> =
+                    category_to_page_map.get(&cat).cloned().unwrap_or_default();
+                pages.push(page.clone());
+
+                category_to_page_map.insert(cat, pages);
+            }
+        }
+    }
+
+    if !uncategorized_pages.is_empty() {
+        for (i, uncategoriesed_chunk) in uncategorized_pages
+            .into_iter()
+            .sorted()
+            .chunks(500)
+            .into_iter()
+            .enumerate()
+        {
+            let key = format!("{UNCATEGORIZED_KEY} #{n}", n = i + 1);
+            category_to_page_map.insert(key, uncategoriesed_chunk.collect_vec());
+        }
+    }
+
+    Ok(category_to_page_map)
 }
 
-fn to_save_file_name(page: &str) -> String {
-    let regex = Regex::new("[^-0-9A-Za-z_]").expect("'[^0-9A-Za-z_]' should be a valid regex");
-    regex.replace_all(page, "_").to_string()
+pub fn to_save_file_name(page: &str) -> String {
+    sanitize_filename::sanitize(page)
+}
+
+pub fn truncate_unicode_str(n: usize, text: &str) -> String {
+    let mut count = 0;
+    let mut res = vec![];
+    let mut chars = text.chars();
+
+    while count < n {
+        if let Some(char) = chars.next() {
+            count += unicode_width::UnicodeWidthChar::width(char).unwrap_or(0);
+            res.push(char);
+        } else {
+            break;
+        }
+    }
+
+    res.into_iter().collect::<String>()
+}
+
+pub fn page_path(page: &str, format: &PageFormat, parent_dir: &Path) -> PathBuf {
+    let ext = match format {
+        PageFormat::PlainText => "",
+        PageFormat::Markdown => "md",
+        PageFormat::Html => "html",
+    };
+
+    parent_dir.join(to_save_file_name(page)).with_extension(ext)
+}
+
+pub fn create_dir_if_not_exists(dir: &Path) -> Result<(), WikiError> {
+    match fs::create_dir(dir) {
+        Ok(_) => {}
+        Err(err) => {
+            if err.kind() != io::ErrorKind::AlreadyExists {
+                return Err(err.into());
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -129,10 +174,10 @@ mod tests {
     fn test_to_save_file_name() {
         let cases = [
             ("Neovim", "Neovim"),
-            ("3D Mouse", "3D_Mouse"),
-            ("/etc/fstab", "_etc_fstab"),
-            (".NET", "_NET"),
-            ("ASUS MeMO Pad 7 (ME176C(X))", "ASUS_MeMO_Pad_7__ME176C_X__"),
+            ("3D Mouse", "3D Mouse"),
+            ("/etc/fstab", "etcfstab"),
+            (".NET", ".NET"),
+            ("ASUS MeMO Pad 7 (ME176C(X))", "ASUS MeMO Pad 7 (ME176C(X))"),
         ];
 
         for (input, output) in cases {

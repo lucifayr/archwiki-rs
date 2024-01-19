@@ -131,43 +131,26 @@ pub fn open_search_to_page_names(
     }
 }
 
-/// Checks if the open search result contains a name that exactly matches the provided page name.
-/// If there is a match the corresponding page URL is returned.
-pub fn open_search_get_exact_match_url(
-    page: &str,
+/// Return provided page name if the top search result exactly matches it
+pub fn open_search_is_page_exact_match<'a>(
+    page: &'a str,
     search_result: &[OpenSearchItem],
-) -> Result<Option<String>, WikiError> {
+) -> Result<Option<&'a str>, WikiError> {
     use crate::error::InvalidApiResponseError as IAR;
 
     let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
         IAR::OpenSearchMissingNthElement(1),
     ))?;
 
-    let page_urls = search_result.get(3).ok_or(WikiError::InvalidApiResponse(
-        IAR::OpenSearchMissingNthElement(3),
-    ))?;
-
     let OpenSearchItem::Array(names) = page_names else {
         return Err(WikiError::InvalidApiResponse(
             IAR::OpenSearchNthElementShouldBeArray(1),
-        ))
+        ));
     };
 
-    let OpenSearchItem::Array(urls) = page_urls  else {
-        return Err(WikiError::InvalidApiResponse(
-            IAR::OpenSearchNthElementShouldBeArray(3),
-        ))
-    };
-
-    if let Some(name) = names.first() {
-        if name == page {
-            Ok(urls.first().cloned())
-        } else {
-            Ok(None)
-        }
-    } else {
-        Ok(None)
-    }
+    Ok(names
+        .first()
+        .and_then(|name| (name == page).then_some(page)))
 }
 
 #[cfg(test)]

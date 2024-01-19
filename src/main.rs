@@ -1,22 +1,24 @@
-use std::{collections::HashMap, fs};
+use std::fs;
 
 use clap::Parser;
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
 use formats::plain_text::convert_page_to_plain_text;
+
 use itertools::Itertools;
-use scraper::Html;
-use url::Url;
-use wiki_api::fetch_page_by_url;
 
 use crate::{
-    categories::{fetch_all_pages, list_pages},
+    categories::list_pages,
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
-    utils::{create_cache_page_path, get_page_content, page_cache_exists, read_pages_file_as_str},
+    utils::{
+        create_cache_page_path, page_cache_exists, read_pages_file_as_category_tree,
+        UNCATEGORIZED_KEY,
+    },
     wiki_api::{fetch_open_search, fetch_page, fetch_text_search},
+    wiki_download::{download_wiki, sync_wiki_info},
 };
 
 mod categories;
@@ -27,6 +29,7 @@ mod languages;
 mod search;
 mod utils;
 mod wiki_api;
+mod wiki_download;
 
 const PAGE_FILE_NAME: &str = "pages.yml";
 
@@ -47,8 +50,10 @@ async fn main() -> Result<(), WikiError> {
 
     let cache_dir = base_dir.cache_dir().join("archwiki-rs");
     let data_dir = base_dir.data_local_dir().join("archwiki-rs");
+    let log_dir = data_dir.join("logs");
     fs::create_dir_all(&cache_dir)?;
     fs::create_dir_all(&data_dir)?;
+    fs::create_dir_all(&log_dir)?;
 
     let default_page_file_path = data_dir.join(PAGE_FILE_NAME);
 
@@ -69,7 +74,7 @@ async fn main() -> Result<(), WikiError> {
             let out = if use_cached_page {
                 fs::read_to_string(&page_cache_path)?
             } else {
-                match fetch_document(&page, lang.as_deref()).await {
+                match fetch_page(&page, lang.as_deref()).await {
                     Ok(document) => match format {
                         PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),
                         PageFormat::Markdown => convert_page_to_markdown(&document, &page),
@@ -119,34 +124,35 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::ListPages {
             flatten,
-            category,
+            categories,
             page_file,
         } => {
-            let path = page_file.unwrap_or(default_page_file_path);
-            let file = read_pages_file_as_str(path)?;
+            let (path, is_default) = page_file
+                .map(|path| (path, false))
+                .unwrap_or((default_page_file_path, true));
 
-            let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
-
-            let out = if let Some(category) = category {
-                pages_map
-                    .get(&category)
-                    .ok_or(WikiError::NoCategoryFound(category))?
-                    .iter()
-                    .sorted()
-                    .join("\n")
-            } else {
-                list_pages(&pages_map, flatten)
-            };
+            let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
+            let out = list_pages(
+                &wiki_tree,
+                (!categories.is_empty()).then_some(&categories),
+                flatten,
+            );
 
             println!("{out}");
         }
         Commands::ListCategories { page_file } => {
-            let path = page_file.unwrap_or(default_page_file_path);
-            let file = read_pages_file_as_str(path)?;
+            let (path, is_default) = page_file
+                .map(|path| (path, false))
+                .unwrap_or((default_page_file_path, true));
 
-            let pages_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&file)?;
+            let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
+            let out = wiki_tree
+                .keys()
+                .unique()
+                .sorted()
+                .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
+                .join("\n");
 
-            let out = pages_map.keys().unique().sorted().join("\n");
             println!("{out}");
         }
         Commands::ListLanguages => {
@@ -157,31 +163,40 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::SyncWiki {
             hide_progress,
-            thread_count,
-            max_categories,
-            start_at,
             print,
+            out_file,
         } => {
-            let thread_count = thread_count.unwrap_or(num_cpus::get_physical());
-            let res = fetch_all_pages(
-                hide_progress,
+            let path = out_file.unwrap_or(default_page_file_path);
+            sync_wiki_info(&path, print, hide_progress).await?;
+        }
+        Commands::LocalWiki {
+            location,
+            format,
+            page_file,
+            thread_count,
+            show_urls,
+            override_existing_files,
+            hide_progress,
+        } => {
+            let thread_count = thread_count.unwrap_or(num_cpus::get_physical()).max(1);
+
+            let (path, is_default) = page_file
+                .map(|path| (path, false))
+                .unwrap_or((default_page_file_path, true));
+
+            let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
+
+            download_wiki(
+                wiki_tree,
+                format,
+                location,
+                &log_dir,
                 thread_count,
-                max_categories,
-                start_at.as_deref(),
+                override_existing_files,
+                hide_progress,
+                show_urls,
             )
             .await?;
-
-            let out = serde_yaml::to_string(&res)?;
-
-            if !print {
-                fs::write(&default_page_file_path, out)?;
-
-                if !hide_progress {
-                    println!("data saved to {}", default_page_file_path.to_string_lossy());
-                }
-            } else {
-                println!("{out}");
-            }
         }
         Commands::Info {
             show_cache_dir,
@@ -231,20 +246,4 @@ async fn main() -> Result<(), WikiError> {
     }
 
     Ok(())
-}
-
-async fn fetch_document(page: &str, lang: Option<&str>) -> Result<Html, WikiError> {
-    match Url::parse(page) {
-        Ok(url) => {
-            let document = fetch_page_by_url(url).await?;
-            if get_page_content(&document).is_none() {
-                return Err(WikiError::NoPageFound(
-                    "page is not a valid ArchWiki page".to_owned(),
-                ));
-            }
-
-            Ok(document)
-        }
-        Err(_) => fetch_page(page, lang).await,
-    }
 }
