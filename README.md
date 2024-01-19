@@ -1,7 +1,8 @@
 # archwiki-rs 📖
 A CLI tool to read pages from the ArchWiki
 
-## Table of contents
+<!-- toc -->
+
 - [Installation](#installation)
   * [crates.io](#cratesio)
   * [Source](#source)
@@ -10,18 +11,22 @@ A CLI tool to read pages from the ArchWiki
     + [Basic request](#basic-request)
     + [Using a different format](#using-a-different-format)
     + [Caching](#caching)
-    + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found--̥̥̥n-̥̥̥-)
+    + [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found--%CC%A5%CC%A5%CC%A5n-%CC%A5%CC%A5%CC%A5-)
   * [Searching the ArchWiki](#searching-the-archwiki)
     + [Search by title](#search-by-title)
     + [Search for text](#search-for-text)
   * [Downloading wiki info](#downloading-wiki-info)
-    + [Possible speed-ups](#possible-speed-ups)
   * [Listing ArchWiki information](#listing-archwiki-information)
     + [Listing pages](#listing-pages)
     + [Listing categories](#listing-categories)
     + [Listing languages](#listing-languages)
+  * [Downloading a local copy of the ArchWiki](#downloading-a-local-copy-of-the-archwiki)
+    + [Possible speed-ups](#possible-speed-ups)
   * [Other Information](#other-information)
 - [Plugins](#plugins)
+- [Alternatives](#alternatives)
+
+<!-- tocstop -->
 
 ## Installation
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs) 
@@ -83,7 +88,7 @@ uses stderr to give the user suggestions on what they might have wanted to type.
 
 
 An example shell script to do something like this is available in the [repository](https://github.com/jackboxx/archwiki-rs)
-under the name `example.sh`.
+under the name `example.sh` which can be used like this `sh example.sh <page-name>`.
 
 ### Searching the ArchWiki
 
@@ -106,23 +111,11 @@ that the search term is in
 
 ### Downloading wiki info
 
-Page names are stored locally to prevent having to scrape the entire table of contents of
-the ArchWiki with every command.
-
-Use this command to fetch all page names. 
-Be warned, since this scrapes multiple thousand links, this can be quite  slow (-, - )…zzzZZ
+Page and category names are stored locally for faster look-ups.
+Use this command to fetch all page and category names. 
 
 ```sh
 archwiki-rs sync-wiki
-```
-
-#### Possible speed-ups
-
-If you don't mind your CPU and network becoming a bit saturated you can increase the
-amount of threads used to fetch data from the wiki
-
-```sh
-archwiki-rs sync-wiki -t 8
 ```
 
 ### Listing ArchWiki information
@@ -163,6 +156,27 @@ And the same for available languages
 archwiki-rs list-languages
 ```
 
+### Downloading a local copy of the ArchWiki
+
+Use this command to download a local copy of the ArchWiki. Be warned, that this makes over
+10,000 requests for page content to the ArchWiki so it takes a while to finish (-, -)…zzzZZ
+
+```sh
+archwiki-rs local-wiki ~/local-archwiki --format markdown
+```
+
+#### Possible speed-ups
+
+If you don't mind your CPU and network becoming a bit saturated you can increase the
+amount of threads used to fetch data from the wiki. 
+
+Keep in mind that you might get rate limited by the ArchWiki if make too many requests at once.
+
+```sh
+archwiki-rs local-wiki -t 8
+```
+
+
 ### Other Information
 
 Other information such as the value/location of the `cache directory` can be obtained
@@ -185,3 +199,8 @@ Here's a list of programs that have plugins for `archwiki-rs` to make your life 
 
 - [Neovim](https://github.com/Jackboxx/archwiki-nvim)
 - [Obsidian](https://github.com/Jackboxx/archwiki-obsidian)
+
+## Alternatives
+
+If you are using Arch Linux a great alternative for this tool is the `wikiman` CLI tool
+in combination with the `arch-wiki-docs` package.
