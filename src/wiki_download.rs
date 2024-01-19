@@ -150,12 +150,14 @@ pub async fn download_wiki(
 
     if !hide_progress {
         let successfuly_fetched_pages = total_page_count - all_failed_fetches.len();
-
         println!("downloaded {successfuly_fetched_pages} pages successfully");
-        println!("failed to download {} pages", all_failed_fetches.len());
     }
 
     if !all_failed_fetches.is_empty() {
+        if !hide_progress {
+            println!("failed to download {} pages", all_failed_fetches.len());
+        }
+
         let failed_fetches_str = all_failed_fetches
             .into_iter()
             .map(|(page, err)| format!("failed to page '{page}'\nREASON: {err}"))
