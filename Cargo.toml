@@ -43,3 +43,8 @@ assert_cmd = "2.0.12"
 predicates = "3.0.4"
 pretty_assertions = "1.4.0"
 
+[profile.release]
+opt-level = 'z' # Optimize for size.
+lto = true # Enable Link Time Optimisation
+codegen-units = 1 # Reduced to increase optimisations.
+strip = "symbols" # Strip symbols from binar
