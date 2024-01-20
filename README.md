@@ -43,7 +43,8 @@ cargo install archwiki-rs
 ### Source
 
 ```sh
-git clone https://github.com/jackboxx/archwiki-rs
+
+git clone https://gitlab.com/Jackboxx/archwiki-rs
 cd archwiki-rs
 cargo install --path .
 ```
@@ -87,7 +88,7 @@ of stdout. If you want to, you can create a program that checks if no page was f
 uses stderr to give the user suggestions on what they might have wanted to type.
 
 
-An example shell script to do something like this is available in the [repository](https://github.com/jackboxx/archwiki-rs)
+An example shell script to do something like this is available in the [repository](https://gitlab.com/jackboxx/archwiki-rs)
 under the name `example.sh` which can be used like this `sh example.sh <page-name>`.
 
 ### Searching the ArchWiki
