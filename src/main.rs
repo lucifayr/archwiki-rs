@@ -251,25 +251,20 @@ fn show_info(
 ) {
     let no_flags_provided = !show_data_dir && !show_cache_dir;
     let info = [
-                (
-                    !only_values,
-                    "VALUE".into(),
-                    "NAME",
-                    "DESCRIPTION",
-                ),
-                (
-                    show_cache_dir || no_flags_provided,
-                    cache_dir,
-                    "cache directory",
-                    "stores caches of ArchWiki pages after download to speed up future requests",
-                ),
-                (
-                    show_data_dir || no_flags_provided,
-                    data_dir,
-                    "data directory",  
-                    "stores the 'pages.yml' file that is used for suggestions about what ArchWiki pages exist"
-                ),
-            ];
+        (!only_values, "VALUE".into(), "NAME", "DESCRIPTION"),
+        (
+            show_cache_dir || no_flags_provided,
+            cache_dir,
+            "cache directory",
+            "stores caches of ArchWiki pages after download to speed up future requests",
+        ),
+        (
+            show_data_dir || no_flags_provided,
+            data_dir,
+            "data directory",
+            "stores log files and ArchWiki metadata",
+        ),
+    ];
 
     let out = info
         .iter()
@@ -292,5 +287,10 @@ fn show_info(
 
 fn generate_shell_completion(shell: Shell) {
     let mut command = CliArgs::command();
-    generate(shell, &mut command, "archwiki-rs", &mut std::io::stdout());
+    generate(
+        shell,
+        &mut command,
+        std::env!("CARGO_BIN_NAME"),
+        &mut std::io::stdout(),
+    );
 }

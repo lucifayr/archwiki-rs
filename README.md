@@ -203,7 +203,7 @@ You can generate a completion file to allow tab completion for most popular shel
 The following example shows how to setup completion for ZSH (with the [oh my zsh](https://github.com/ohmyzsh/ohmyzsh)).
 
 ```sh
-archwiki-rs generate-completion > /home/lucifer/.oh-my-zsh/completions/_archwiki-rs
+archwiki-rs completions > /home/lucifer/.oh-my-zsh/completions/_archwiki-rs
 ```
 
 ## Plugins
