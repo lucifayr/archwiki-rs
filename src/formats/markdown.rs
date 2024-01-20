@@ -1,9 +1,11 @@
 use scraper::Html;
 
 /// Converts the body of the ArchWiki page to a Markdown string
+#[allow(clippy::module_name_repetitions)]
 pub fn convert_page_to_markdown(document: &Html, page: &str) -> String {
     let md = html2md::parse_html(&document.html());
-    format!("# {heading}\n\n{body}", heading = page, body = md)
+    let heading = page;
+    format!("# {heading}\n\n{md}")
 }
 
 #[cfg(test)]

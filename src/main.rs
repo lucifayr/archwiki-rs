@@ -1,3 +1,5 @@
+#![allow(clippy::doc_markdown)]
+
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -64,11 +66,15 @@ async fn main() -> Result<(), WikiError> {
         Commands::ReadPage(args) => {
             read_page(args, &cache_dir).await?;
         }
-        Commands::Search(args) => search_wiki(args).await?,
+        Commands::Search(args) => {
+            search_wiki(args).await?;
+        }
         Commands::ListPages(args) => {
             list_wiki_pages(args, default_page_file_path)?;
         }
-        Commands::ListCategories(args) => list_wiki_categories(args, default_page_file_path)?,
+        Commands::ListCategories(args) => {
+            list_wiki_categories(args, default_page_file_path)?;
+        }
         Commands::ListLanguages => {
             let langs = fetch_all_langs().await?;
             let out = format_lang_table(&langs);
@@ -111,11 +117,13 @@ async fn main() -> Result<(), WikiError> {
             )
             .await?;
         }
-        Commands::Info(args) => show_info(args, cache_dir, data_dir),
+        Commands::Info(args) => {
+            show_info(args, cache_dir, data_dir);
+        }
         Commands::Completions(CompletionsCliArgs { shell }) => {
             generate_shell_completion(shell.unwrap_or(Shell::from_env().expect(
                 "failed to automatically detect shell, please provided it as an explict argument",
-            )))
+            )));
         }
     };
 

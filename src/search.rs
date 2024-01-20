@@ -29,8 +29,7 @@ impl TextSearchItem {
             .root_element()
             .children()
             .map(|node| format_children_as_plain_text(node, false))
-            .collect::<Vec<String>>()
-            .join("")
+            .collect::<String>()
             .replace('\n', " ");
 
         if let Ok(rgx) = regex::RegexBuilder::new(&format!("({search})"))
@@ -78,7 +77,7 @@ pub fn format_open_search_table(name_url_pairs: &[(String, String)]) -> String {
 pub fn open_search_to_page_url_tupel(
     search_result: &[OpenSearchItem],
 ) -> Result<Vec<(String, String)>, WikiError> {
-    use crate::error::InvalidApiResponseError as IAR;
+    use crate::error::InvalidApiResponse as IAR;
 
     let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
         IAR::OpenSearchMissingNthElement(1),
@@ -116,7 +115,7 @@ pub fn open_search_to_page_url_tupel(
 pub fn open_search_to_page_names(
     search_result: &[OpenSearchItem],
 ) -> Result<Vec<String>, WikiError> {
-    use crate::error::InvalidApiResponseError as IAR;
+    use crate::error::InvalidApiResponse as IAR;
 
     let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
         IAR::OpenSearchMissingNthElement(1),
@@ -136,7 +135,7 @@ pub fn open_search_is_page_exact_match<'a>(
     page: &'a str,
     search_result: &[OpenSearchItem],
 ) -> Result<Option<&'a str>, WikiError> {
-    use crate::error::InvalidApiResponseError as IAR;
+    use crate::error::InvalidApiResponse as IAR;
 
     let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
         IAR::OpenSearchMissingNthElement(1),
@@ -156,7 +155,7 @@ pub fn open_search_is_page_exact_match<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::InvalidApiResponseError as IAR;
+    use crate::error::InvalidApiResponse as IAR;
     use pretty_assertions::assert_eq;
 
     #[test]

@@ -28,7 +28,7 @@ pub fn page_cache_exists(
         return Ok(true);
     }
 
-    let fourteen_days = 1209600;
+    let fourteen_days = 1_209_600;
     let secs_since_modified = fs::File::open(cache_location)?
         .metadata()?
         .modified()?
@@ -40,7 +40,7 @@ pub fn page_cache_exists(
 
 pub fn create_dir_if_not_exists(dir: &Path) -> Result<(), WikiError> {
     match fs::create_dir(dir) {
-        Ok(_) => {}
+        Ok(()) => {}
         Err(err) => {
             if err.kind() != io::ErrorKind::AlreadyExists {
                 return Err(err.into());

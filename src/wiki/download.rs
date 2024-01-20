@@ -39,20 +39,20 @@ pub async fn sync_wiki_info(
     let wiki_tree = fetch_all_pages().await?;
     let out = serde_yaml::to_string(&wiki_tree)?;
 
-    if !print {
+    if print {
+        println!("{out}");
+    } else {
         fs::write(page_path, out)?;
 
         if !hide_progress {
             println!("data saved to {}", page_path.to_string_lossy());
         }
-    } else {
-        println!("{out}");
     }
 
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::module_name_repetitions)]
 pub async fn download_wiki(
     wiki_tree: HashMap<String, Vec<String>>,
     format: PageFormat,
@@ -65,7 +65,7 @@ pub async fn download_wiki(
 ) -> Result<(), WikiError> {
     create_dir_if_not_exists(&location)?;
 
-    let total_page_count = wiki_tree.values().map(|pages| pages.len()).sum::<usize>();
+    let total_page_count = wiki_tree.values().map(Vec::len).sum::<usize>();
 
     if !hide_progress {
         if let Some(format) = format
@@ -73,7 +73,7 @@ pub async fn download_wiki(
             .as_ref()
             .map(PossibleValue::get_name)
         {
-            println!("downloading {total_page_count} pages as {format}\n",)
+            println!("downloading {total_page_count} pages as {format}\n");
         }
     }
 
@@ -176,7 +176,7 @@ pub async fn download_wiki(
         println!(
             "saved local copy of the ArchWiki to '{}'",
             location.to_string_lossy()
-        )
+        );
     }
 
     Ok(())

@@ -14,14 +14,14 @@ pub const UNCATEGORIZED_KEY: &str = "Uncategorized";
 
 pub fn extract_tag_attr(element: &Element, tag: &str, attr: &str) -> Option<String> {
     if element.name() == tag {
-        element.attr(attr).map(|attr| attr.to_owned())
+        element.attr(attr).map(ToOwned::to_owned)
     } else {
         None
     }
 }
 
 /// Replaces relative URLs in certain HTML attributes with absolute URLs.
-/// The list of attributes is taken from https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
+/// The list of attributes is taken from <https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes>
 pub fn update_relative_urls(html: &str, base_url: &str) -> String {
     html.replace("href=\"/", &format!("href=\"{base_url}/"))
         .replace("src=\"/", &format!("src=\"{base_url}/"))
@@ -58,7 +58,7 @@ pub fn read_pages_file_as_category_tree(
 
     for (page, cats) in page_to_category_map.into_iter().collect_vec() {
         if cats.is_empty() {
-            uncategorized_pages.push(page)
+            uncategorized_pages.push(page);
         } else {
             for cat in cats {
                 let mut pages: Vec<String> =

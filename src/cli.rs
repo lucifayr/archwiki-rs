@@ -7,6 +7,7 @@ use crate::formats::PageFormat;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
+#[allow(clippy::module_name_repetitions)]
 pub struct CliArgs {
     #[command(subcommand)]
     pub command: Commands,
@@ -62,6 +63,7 @@ pub enum Commands {
 }
 
 #[derive(Parser)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct ReadPageCliArgs {
     #[arg(short, long)]
     /// Don't cache the read page locally

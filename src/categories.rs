@@ -36,9 +36,9 @@ pub fn list_pages(
         return wiki_tree
             .iter()
             .filter_map(|(cat, pages)| {
-                categories_filter
-                    .map(|filter| filter.iter().contains(cat).then_some(pages))
-                    .unwrap_or(Some(pages))
+                categories_filter.map_or(Some(pages), |filter| {
+                    filter.iter().contains(cat).then_some(pages)
+                })
             })
             .flatten()
             .unique()
@@ -49,9 +49,9 @@ pub fn list_pages(
     wiki_tree
         .iter()
         .filter_map(|(cat, pages)| {
-            categories_filter
-                .map(|filter| filter.iter().contains(cat).then_some((cat, pages)))
-                .unwrap_or(Some((cat, pages)))
+            categories_filter.map_or(Some((cat, pages)), |filter| {
+                filter.iter().contains(cat).then_some((cat, pages))
+            })
         })
         .sorted()
         .map(|(cat, pages)| {

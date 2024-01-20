@@ -26,12 +26,12 @@ const BLOCK_LISTED_CATEGORY_PREFIXES: &[&str] = &[
 ];
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct ApiResponse<T> {
+pub struct Response<T> {
     pub query: T,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct ApiResponseWithContinue<T, V> {
+pub struct ResponseWithContinue<T, V> {
     pub query: T,
     pub r#continue: Option<V>,
 }
@@ -61,7 +61,7 @@ pub async fn fetch_text_search(
 ) -> Result<Vec<TextSearchItem>, WikiError> {
     let url = format!("https://wiki.archlinux.org/api.php?action=query&list=search&format=json&srwhat=text&uselang={lang}&srlimit={limit}&srsearch={search}");
     let body = reqwest::get(url).await?.text().await?;
-    let mut res: ApiResponse<TextSearchApiResponse> = serde_json::from_str(&body)?;
+    let mut res: Response<TextSearchApiResponse> = serde_json::from_str(&body)?;
 
     for item in res.query.search.as_mut_slice() {
         item.prettify_snippet(search);
@@ -164,16 +164,16 @@ pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError
     let mut pages: Vec<Page> = vec![];
 
     let body = reqwest::get(api_url).await?.text().await?;
-    let mut api_resp: ApiResponseWithContinue<ApiAllPagesQuery, ApiAllPageContinueParams> =
+    let mut api_resp: ResponseWithContinue<ApiAllPagesQuery, ApiAllPageContinueParams> =
         serde_json::from_str(&body)?;
 
     pages.append(&mut api_resp.query.pages.into_values().collect());
 
     while let Some(continue_params) = api_resp.r#continue {
         let next_api_url = if let Some(gapcontinue) = continue_params.gapcontinue {
-            format!("{api_url}&gapcontinue={}", gapcontinue)
+            format!("{api_url}&gapcontinue={gapcontinue}")
         } else if let Some(clcontinue) = continue_params.clcontinue {
-            format!("{api_url}&clcontinue={}", clcontinue)
+            format!("{api_url}&clcontinue={clcontinue}")
         } else {
             break;
         };
@@ -198,7 +198,7 @@ pub async fn fetch_all_pages() -> Result<HashMap<String, Vec<String>>, WikiError
         )
     });
 
-    Ok(HashMap::from_iter(page_category_tree))
+    Ok(page_category_tree.collect())
 }
 
 fn is_blocked_category(category: &str) -> bool {

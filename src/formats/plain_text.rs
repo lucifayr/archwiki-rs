@@ -6,15 +6,16 @@ use crate::utils::extract_tag_attr;
 
 /// Converts the body of the ArchWiki page to a plain text string, removing all tags and
 /// only leaving the text node content. URLs can be shown in a markdown like syntax.
+#[allow(clippy::module_name_repetitions)]
 pub fn convert_page_to_plain_text(document: &Html, show_urls: bool) -> String {
     document
         .root_element()
         .children()
         .map(|node| format_children_as_plain_text(node, show_urls))
-        .collect::<Vec<String>>()
-        .join("")
+        .collect::<String>()
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub fn format_children_as_plain_text(node: NodeRef<Node>, show_urls: bool) -> String {
     match node.value() {
         Node::Text(text) => text.to_string(),
@@ -23,13 +24,12 @@ pub fn format_children_as_plain_text(node: NodeRef<Node>, show_urls: bool) -> St
                 let child_text = node
                     .children()
                     .map(|node| format_children_as_plain_text(node, show_urls))
-                    .collect::<Vec<String>>()
-                    .join("");
+                    .collect::<String>();
 
                 if show_urls {
                     wrap_text_in_url(
                         &child_text,
-                        &extract_tag_attr(e, "a", "href").unwrap_or("".to_string()),
+                        &extract_tag_attr(e, "a", "href").unwrap_or_default(),
                     )
                 } else {
                     child_text
@@ -38,19 +38,16 @@ pub fn format_children_as_plain_text(node: NodeRef<Node>, show_urls: bool) -> St
             "tbody" | "tr" | "td" | "th" => node
                 .children()
                 .map(|node| format_table(node, show_urls))
-                .collect::<Vec<String>>()
-                .join(""),
+                .collect::<String>(),
             _ => node
                 .children()
                 .map(|node| format_children_as_plain_text(node, show_urls))
-                .collect::<Vec<String>>()
-                .join(""),
+                .collect::<String>(),
         },
         _ => node
             .children()
             .map(|node| format_children_as_plain_text(node, show_urls))
-            .collect::<Vec<String>>()
-            .join(""),
+            .collect::<String>(),
     }
 }
 

@@ -1,6 +1,7 @@
 use scraper::{Html, Selector};
 
 /// Converts the body of the ArchWiki page to a HTML string
+#[allow(clippy::module_name_repetitions)]
 pub fn convert_page_to_html(document: &Html, page: &str) -> String {
     let body_selector = Selector::parse("body").expect("body should be a valid css selector");
     format!(
