@@ -11,6 +11,10 @@ use itertools::Itertools;
 
 use crate::{
     categories::list_pages,
+    cli::{
+        CompletionsCliArgs, InfoCliArgs, ListCategoriesCliArgs, ListPagesCliArgs, LocalWikiCliArgs,
+        ReadPageCliArgs, SearchCliArgs, SyncWikiCliArgs,
+    },
     formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
@@ -40,13 +44,10 @@ async fn main() -> Result<(), WikiError> {
     human_panic::setup_panic!();
 
     let args = CliArgs::parse();
-    let base_dir = match BaseDirs::new() {
-        Some(base_dir) => base_dir,
-        None => {
-            return Err(WikiError::Path(
-                "failed to get valid home directory".to_owned(),
-            ))
-        }
+    let Some(base_dir) = BaseDirs::new() else {
+        return Err(WikiError::Path(
+            "failed to get valid home directory".to_owned(),
+        ));
     };
 
     let cache_dir = base_dir.cache_dir().join("archwiki-rs");
@@ -59,7 +60,7 @@ async fn main() -> Result<(), WikiError> {
     let default_page_file_path = data_dir.join(PAGE_FILE_NAME);
 
     match args.command {
-        Commands::ReadPage {
+        Commands::ReadPage(ReadPageCliArgs {
             page,
             no_cache_write,
             ignore_cache,
@@ -67,7 +68,7 @@ async fn main() -> Result<(), WikiError> {
             show_urls,
             lang,
             format,
-        } => {
+        }) => {
             let page_cache_path = create_cache_page_path(&page, &format, &cache_dir);
             let use_cached_page = !ignore_cache
                 && page_cache_exists(&page_cache_path, disable_cache_invalidation).unwrap_or(false);
@@ -96,7 +97,7 @@ async fn main() -> Result<(), WikiError> {
 
             if !no_cache_write {
                 match fs::write(&page_cache_path, out.as_bytes()) {
-                    Ok(_) => {}
+                    Ok(()) => {}
                     Err(_) => {
                         caching_failed_warning =
                             format!("\n\n! failed to cache page with name {page}");
@@ -106,31 +107,30 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}{caching_failed_warning}");
         }
-        Commands::Search {
+        Commands::Search(SearchCliArgs {
             search,
             limit,
             lang,
             text_search,
-        } => {
-            let out = if !text_search {
+        }) => {
+            let out = if text_search {
+                let search_res = fetch_text_search(&search, &lang, limit).await?;
+                format_text_search_table(&search_res)
+            } else {
                 let search_res = fetch_open_search(&search, &lang, limit).await?;
                 let name_url_pairs = open_search_to_page_url_tupel(&search_res)?;
                 format_open_search_table(&name_url_pairs)
-            } else {
-                let search_res = fetch_text_search(&search, &lang, limit).await?;
-                format_text_search_table(&search_res)
             };
 
             println!("{out}");
         }
-        Commands::ListPages {
+        Commands::ListPages(ListPagesCliArgs {
             flatten,
             categories,
             page_file,
-        } => {
-            let (path, is_default) = page_file
-                .map(|path| (path, false))
-                .unwrap_or((default_page_file_path, true));
+        }) => {
+            let (path, is_default) =
+                page_file.map_or((default_page_file_path, true), |path| (path, false));
 
             let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
             let out = list_pages(
@@ -141,10 +141,9 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::ListCategories { page_file } => {
-            let (path, is_default) = page_file
-                .map(|path| (path, false))
-                .unwrap_or((default_page_file_path, true));
+        Commands::ListCategories(ListCategoriesCliArgs { page_file }) => {
+            let (path, is_default) =
+                page_file.map_or((default_page_file_path, true), |path| (path, false));
 
             let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
             let out = wiki_tree
@@ -162,15 +161,15 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::SyncWiki {
+        Commands::SyncWiki(SyncWikiCliArgs {
             hide_progress,
             print,
             out_file,
-        } => {
+        }) => {
             let path = out_file.unwrap_or(default_page_file_path);
             sync_wiki_info(&path, print, hide_progress).await?;
         }
-        Commands::LocalWiki {
+        Commands::LocalWiki(LocalWikiCliArgs {
             location,
             format,
             page_file,
@@ -178,12 +177,11 @@ async fn main() -> Result<(), WikiError> {
             show_urls,
             override_existing_files,
             hide_progress,
-        } => {
+        }) => {
             let thread_count = thread_count.unwrap_or(num_cpus::get_physical()).max(1);
 
-            let (path, is_default) = page_file
-                .map(|path| (path, false))
-                .unwrap_or((default_page_file_path, true));
+            let (path, is_default) =
+                page_file.map_or((default_page_file_path, true), |path| (path, false));
 
             let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
 
@@ -199,11 +197,11 @@ async fn main() -> Result<(), WikiError> {
             )
             .await?;
         }
-        Commands::Info {
+        Commands::Info(InfoCliArgs {
             show_cache_dir,
             show_data_dir,
             only_values,
-        } => {
+        }) => {
             let no_flags_provided = !show_data_dir && !show_cache_dir;
             let info = [
                 (
@@ -244,7 +242,7 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::GenerateCompletion { shell } => generate_shell_completion(
+        Commands::Completions(CompletionsCliArgs { shell }) => generate_shell_completion(
             shell
                 .unwrap_or(Shell::from_env().expect(
                     "failed to determine shell, please provided it as an explict argument",
@@ -257,5 +255,5 @@ async fn main() -> Result<(), WikiError> {
 
 fn generate_shell_completion(shell: Shell) {
     let mut command = CliArgs::command();
-    generate(shell, &mut command, "archwiki-rs", &mut std::io::stdout())
+    generate(shell, &mut command, "archwiki-rs", &mut std::io::stdout());
 }
