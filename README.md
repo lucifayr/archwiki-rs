@@ -45,8 +45,7 @@ cargo install archwiki-rs
 ```sh
 git clone https://github.com/jackboxx/archwiki-rs
 cd archwiki-rs
-cargo build --release
-cp ./target/release/archwiki-rs $SOME_DIRECTORY_IN_YOUR_PATH # e.g. $HOME/.cargo/bin
+cargo install --path .
 ```
 
 ## Usage
@@ -203,7 +202,7 @@ You can generate a completion file to allow tab completion for most popular shel
 The following example shows how to setup completion for ZSH (with the [oh my zsh](https://github.com/ohmyzsh/ohmyzsh)).
 
 ```sh
-archwiki-rs completions > /home/lucifer/.oh-my-zsh/completions/_archwiki-rs
+archwiki-rs completions > /home/iusearchbtw/.oh-my-zsh/completions/_archwiki-rs
 ```
 
 ## Plugins
