@@ -2,50 +2,15 @@ use std::{
     collections::HashMap,
     fs,
     io::{self, ErrorKind},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use itertools::Itertools;
 use scraper::node::Element;
 
-use crate::{error::WikiError, formats::PageFormat};
+use crate::error::WikiError;
 
 pub const UNCATEGORIZED_KEY: &str = "Uncategorized";
-
-/// Construct a path to cache a page. Different page formats are cached separately.
-/// All none word characters are escaped with an '_'
-pub fn create_cache_page_path(page: &str, format: &PageFormat, cache_dir: &Path) -> PathBuf {
-    let ext = match format {
-        PageFormat::PlainText => "",
-        PageFormat::Markdown => "md",
-        PageFormat::Html => "html",
-    };
-
-    cache_dir.join(to_save_file_name(page)).with_extension(ext)
-}
-
-/// Check if a page has been cached.
-/// If a page has existed for more then 14 days and `disable_cache_invalidation` is false
-/// this function will return false even if a cache file exists.
-pub fn page_cache_exists(
-    cache_location: &Path,
-    disable_cache_invalidation: bool,
-) -> Result<bool, WikiError> {
-    if !cache_location.exists() {
-        return Ok(false);
-    } else if disable_cache_invalidation {
-        return Ok(true);
-    }
-
-    let fourteen_days = 1209600;
-    let secs_since_modified = fs::File::open(cache_location)?
-        .metadata()?
-        .modified()?
-        .elapsed()?
-        .as_secs();
-
-    Ok(secs_since_modified < fourteen_days)
-}
 
 pub fn extract_tag_attr(element: &Element, tag: &str, attr: &str) -> Option<String> {
     if element.name() == tag {
@@ -121,10 +86,6 @@ pub fn read_pages_file_as_category_tree(
     Ok(category_to_page_map)
 }
 
-pub fn to_save_file_name(page: &str) -> String {
-    sanitize_filename::sanitize(page)
-}
-
 pub fn truncate_unicode_str(n: usize, text: &str) -> String {
     let mut count = 0;
     let mut res = vec![];
@@ -140,48 +101,4 @@ pub fn truncate_unicode_str(n: usize, text: &str) -> String {
     }
 
     res.into_iter().collect::<String>()
-}
-
-pub fn page_path(page: &str, format: &PageFormat, parent_dir: &Path) -> PathBuf {
-    let ext = match format {
-        PageFormat::PlainText => "",
-        PageFormat::Markdown => "md",
-        PageFormat::Html => "html",
-    };
-
-    parent_dir.join(to_save_file_name(page)).with_extension(ext)
-}
-
-pub fn create_dir_if_not_exists(dir: &Path) -> Result<(), WikiError> {
-    match fs::create_dir(dir) {
-        Ok(_) => {}
-        Err(err) => {
-            if err.kind() != io::ErrorKind::AlreadyExists {
-                return Err(err.into());
-            }
-        }
-    }
-
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use pretty_assertions::assert_eq;
-
-    #[test]
-    fn test_to_save_file_name() {
-        let cases = [
-            ("Neovim", "Neovim"),
-            ("3D Mouse", "3D Mouse"),
-            ("/etc/fstab", "etcfstab"),
-            (".NET", ".NET"),
-            ("ASUS MeMO Pad 7 (ME176C(X))", "ASUS MeMO Pad 7 (ME176C(X))"),
-        ];
-
-        for (input, output) in cases {
-            assert_eq!(output, to_save_file_name(input));
-        }
-    }
 }

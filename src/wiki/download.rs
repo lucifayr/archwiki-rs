@@ -5,8 +5,6 @@ use std::{
     sync::Arc,
 };
 
-use super::formats::plain_text::convert_page_to_plain_text;
-
 use clap::{builder::PossibleValue, ValueEnum};
 use futures::future;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -14,12 +12,14 @@ use itertools::Itertools;
 
 use crate::{
     error::WikiError,
-    formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
+    formats::{
+        convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
+    },
+    io::{create_dir_if_not_exists, page_path, to_save_file_name},
     utils::truncate_unicode_str,
-    utils::{create_dir_if_not_exists, page_path, to_save_file_name},
-    wiki_api::fetch_all_pages,
-    wiki_api::fetch_page_without_recommendations,
 };
+
+use super::api::{fetch_all_pages, fetch_page_without_recommendations};
 
 pub async fn sync_wiki_info(
     page_path: &Path,

@@ -1,8 +1,12 @@
 use clap::ValueEnum;
 
-pub mod html;
-pub mod markdown;
-pub mod plain_text;
+mod html;
+mod markdown;
+mod plain_text;
+
+pub use html::convert_page_to_html;
+pub use markdown::convert_page_to_markdown;
+pub use plain_text::{convert_page_to_plain_text, format_children_as_plain_text};
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum PageFormat {

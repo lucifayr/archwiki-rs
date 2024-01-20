@@ -5,7 +5,6 @@ use clap_complete::{generate, Shell};
 use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
-use formats::plain_text::convert_page_to_plain_text;
 
 use itertools::Itertools;
 
@@ -15,26 +14,25 @@ use crate::{
         CompletionsCliArgs, InfoCliArgs, ListCategoriesCliArgs, ListPagesCliArgs, LocalWikiCliArgs,
         ReadPageCliArgs, SearchCliArgs, SyncWikiCliArgs,
     },
-    formats::{html::convert_page_to_html, markdown::convert_page_to_markdown, PageFormat},
+    formats::{
+        convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
+    },
+    io::{page_cache_exists, page_path},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
-    utils::{
-        create_cache_page_path, page_cache_exists, read_pages_file_as_category_tree,
-        UNCATEGORIZED_KEY,
-    },
-    wiki_api::{fetch_open_search, fetch_page, fetch_text_search},
-    wiki_download::{download_wiki, sync_wiki_info},
+    utils::{read_pages_file_as_category_tree, UNCATEGORIZED_KEY},
+    wiki::{download_wiki, fetch_open_search, fetch_page, fetch_text_search, sync_wiki_info},
 };
 
 mod categories;
 mod cli;
 mod error;
 mod formats;
+mod io;
 mod languages;
 mod search;
 mod utils;
-mod wiki_api;
-mod wiki_download;
+mod wiki;
 
 const PAGE_FILE_NAME: &str = "pages.yml";
 
@@ -69,7 +67,7 @@ async fn main() -> Result<(), WikiError> {
             lang,
             format,
         }) => {
-            let page_cache_path = create_cache_page_path(&page, &format, &cache_dir);
+            let page_cache_path = page_path(&page, &format, &cache_dir);
             let use_cached_page = !ignore_cache
                 && page_cache_exists(&page_cache_path, disable_cache_invalidation).unwrap_or(false);
 
@@ -242,12 +240,11 @@ async fn main() -> Result<(), WikiError> {
 
             println!("{out}");
         }
-        Commands::Completions(CompletionsCliArgs { shell }) => generate_shell_completion(
-            shell
-                .unwrap_or(Shell::from_env().expect(
-                    "failed to determine shell, please provided it as an explict argument",
-                )),
-        ),
+        Commands::Completions(CompletionsCliArgs { shell }) => {
+            generate_shell_completion(shell.unwrap_or(Shell::from_env().expect(
+                "failed to automatically detect shell, please provided it as an explict argument",
+            )))
+        }
     }
 
     Ok(())

@@ -2,7 +2,7 @@ use colored::Colorize;
 use itertools::Itertools;
 use scraper::Html;
 
-use crate::{error::WikiError, formats::plain_text::format_children};
+use crate::{error::WikiError, formats::format_children_as_plain_text};
 
 #[derive(Debug, PartialEq, Eq, serde::Deserialize)]
 #[serde(untagged)]
@@ -28,7 +28,7 @@ impl TextSearchItem {
         let new_snip = frag
             .root_element()
             .children()
-            .map(|node| format_children(node, false))
+            .map(|node| format_children_as_plain_text(node, false))
             .collect::<Vec<String>>()
             .join("")
             .replace('\n', " ");

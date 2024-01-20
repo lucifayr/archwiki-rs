@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use serde::Deserialize;
 
-use crate::{error::WikiError, wiki_api::ApiResponse};
+use crate::{error::WikiError, wiki::ApiResponse};
 
 const LANGUAGE_API_URL: &str =
     "https://wiki.archlinux.org/api.php?action=query&meta=siteinfo&siprop=languages&format=json";
