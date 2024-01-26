@@ -211,7 +211,7 @@ archwiki-rs completions > /home/iusearchbtw/.oh-my-zsh/completions/_archwiki-rs
 Here's a list of programs that have plugins for `archwiki-rs` to make your life easier
 
 - [Neovim](https://github.com/Jackboxx/archwiki-nvim)
-- [Obsidian](https://github.com/Jackboxx/archwiki-obsidian)
+- [Obsidian](https://github.com/Jackboxx/archwiki-obsidian) (only supported up to v2.2.3)
 
 ## Alternatives
 

@@ -26,12 +26,12 @@ pub enum Commands {
     )]
     Search(SearchCliArgs),
     #[command(
-        about = "List all pages from the ArchWiki that have been downloaded",
+        about = "List all pages from the ArchWiki (requires sync)",
         long_about = "List all pages from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading"
     )]
     ListPages(ListPagesCliArgs),
     #[command(
-        about = "List all categories from the ArchWiki that have been downloaded",
+        about = "List all categories from the ArchWiki (requires sync)",
         long_about = "List categories  from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading"
     )]
     ListCategories(ListCategoriesCliArgs),
