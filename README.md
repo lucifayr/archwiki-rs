@@ -127,7 +127,7 @@ archwiki-rs sync-wiki
 archwiki-rs list-pages
 ```
 
-This is output a styled tree of categories and pages but if you need an easily parseable
+This outputs a styled tree of categories and pages but if you need an easily parseable
 list for a different program to use, you can use the `-f` flag to flatten the output into a
 newline separated list that only contains the names of all pages
 
@@ -171,7 +171,7 @@ archwiki-rs local-wiki ~/local-archwiki --format markdown
 If you don't mind your CPU and network becoming a bit saturated you can increase the
 amount of threads used to fetch data from the wiki. 
 
-Keep in mind that you might get rate limited by the ArchWiki if make too many requests at once.
+Keep in mind that you might get rate limited by the ArchWiki if you make too many requests at once.
 
 ```sh
 archwiki-rs local-wiki -t 8
@@ -216,4 +216,4 @@ Here's a list of programs that have plugins for `archwiki-rs` to make your life 
 ## Alternatives
 
 If you are using Arch Linux a great alternative for this tool is the `wikiman` CLI tool
-in combination with the `arch-wiki-docs` package.
+in combination with the `arch-wiki-docs` package
