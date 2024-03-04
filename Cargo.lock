@@ -89,7 +89,7 @@ dependencies = [
 
 [[package]]
 name = "archwiki-rs"
-version = "3.0.0"
+version = "3.0.1"
 dependencies = [
  "assert_cmd",
  "assert_fs",
