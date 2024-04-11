@@ -105,14 +105,35 @@ pub struct SearchCliArgs {
 #[derive(Parser, Debug)]
 pub struct ListPagesCliArgs {
     #[arg(short, long)]
+    /// Use a different file to read pages from
+    pub page_file: Option<PathBuf>,
+
+    #[command(flatten)]
+    pub args_plain: Option<ListPagesPlainCliArgs>,
+    #[command(flatten)]
+    pub args_json: Option<ListPagesJsonCliArgs>,
+}
+
+#[derive(Args, Debug, Default)]
+#[group(id = "plain-list-pages", conflicts_with_all = ["json-list-pages"])]
+pub struct ListPagesPlainCliArgs {
+    #[arg(short, long)]
     /// Flatten all pages and don't show their category names
     pub flatten: bool,
     #[arg(short, long, value_delimiter = ',')]
     /// Only show pages in these categories
     pub categories: Vec<String>,
+}
+
+#[derive(Args, Debug)]
+#[group(id = "json-list-pages" , conflicts_with_all = ["plain-list-pages"])]
+pub struct ListPagesJsonCliArgs {
     #[arg(short, long)]
-    /// Use a different file to read pages from
-    pub page_file: Option<PathBuf>,
+    /// Display data as pretty-printed JSON
+    pub json: bool,
+    #[arg(long)]
+    /// Display data as raw JSON
+    pub json_raw: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -122,10 +143,10 @@ pub struct ListCategoriesCliArgs {
     pub page_file: Option<PathBuf>,
 
     #[arg(short, long)]
-    /// Display data as pretty-printed json
+    /// Display data as pretty-printed JSON
     pub json: bool,
     #[arg(long)]
-    /// Display data as raw json
+    /// Display data as raw JSON
     pub json_raw: bool,
 }
 
@@ -193,10 +214,10 @@ pub struct InfoPlainCliArgs {
 #[group(id = "json-info", conflicts_with_all = ["plain-info"])]
 pub struct InfoJsonCliArgs {
     #[arg(short, long)]
-    /// Display data as pretty-printed json
+    /// Display data as pretty-printed JSON
     pub json: bool,
     #[arg(long)]
-    /// Display data as raw json
+    /// Display data as raw JSON
     pub json_raw: bool,
 }
 

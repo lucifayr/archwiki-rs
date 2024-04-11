@@ -1,10 +1,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::doc_markdown)]
 
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::Path};
 
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
@@ -12,21 +9,15 @@ use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
 
-use itertools::Itertools;
-
 use crate::{
-    categories::list_pages,
-    cli::{
-        CompletionsCliArgs, ListCategoriesCliArgs, ListPagesCliArgs, LocalWikiCliArgs,
-        ReadPageCliArgs, SearchCliArgs, SyncWikiCliArgs,
-    },
+    cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs, SearchCliArgs, SyncWikiCliArgs},
     formats::{
         convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
     },
     io::{page_cache_exists, page_path},
     languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
-    utils::{read_pages_file_as_category_tree, UNCATEGORIZED_KEY},
+    utils::read_pages_file_as_category_tree,
     wiki::{download_wiki, fetch_open_search, fetch_page, fetch_text_search, sync_wiki_info},
 };
 
@@ -37,6 +28,7 @@ mod formats;
 mod info;
 mod io;
 mod languages;
+mod list;
 mod search;
 mod utils;
 mod wiki;
@@ -72,10 +64,10 @@ async fn main() -> Result<(), WikiError> {
             search_wiki(args).await?;
         }
         Commands::ListPages(args) => {
-            list_wiki_pages(args, default_page_file_path)?;
+            list::wiki_pages(args, default_page_file_path)?;
         }
         Commands::ListCategories(args) => {
-            list_wiki_categories(args, default_page_file_path)?;
+            list::wiki_categories(args, default_page_file_path)?;
         }
         Commands::ListLanguages => {
             let langs = fetch_all_langs().await?;
@@ -197,56 +189,6 @@ async fn search_wiki(
         let search_res = fetch_open_search(&search, &lang, limit).await?;
         let name_url_pairs = open_search_to_page_url_tupel(&search_res)?;
         format_open_search_table(&name_url_pairs)
-    };
-
-    println!("{out}");
-    Ok(())
-}
-
-fn list_wiki_pages(
-    ListPagesCliArgs {
-        flatten,
-        categories,
-        page_file,
-    }: ListPagesCliArgs,
-    default_page_file_path: PathBuf,
-) -> Result<(), WikiError> {
-    let (path, is_default) = page_file.map_or((default_page_file_path, true), |path| (path, false));
-
-    let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
-    let out = list_pages(
-        &wiki_tree,
-        (!categories.is_empty()).then_some(&categories),
-        flatten,
-    );
-
-    println!("{out}");
-    Ok(())
-}
-
-fn list_wiki_categories(
-    ListCategoriesCliArgs {
-        page_file,
-        json,
-        json_raw,
-    }: ListCategoriesCliArgs,
-    default_page_file_path: PathBuf,
-) -> Result<(), WikiError> {
-    let (path, is_default) = page_file.map_or((default_page_file_path, true), |path| (path, false));
-
-    let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
-
-    let out = if json {
-        serde_json::to_string_pretty(&wiki_tree)?
-    } else if json_raw {
-        serde_json::to_string(&wiki_tree)?
-    } else {
-        wiki_tree
-            .keys()
-            .unique()
-            .sorted()
-            .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
-            .join("\n")
     };
 
     println!("{out}");
