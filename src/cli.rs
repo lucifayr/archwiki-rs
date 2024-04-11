@@ -120,6 +120,13 @@ pub struct ListCategoriesCliArgs {
     #[arg(short, long)]
     /// Use a different file to read pages from
     pub page_file: Option<PathBuf>,
+
+    #[arg(short, long)]
+    /// Display data as pretty-printed json
+    pub json: bool,
+    #[arg(long)]
+    /// Display data as raw json
+    pub json_raw: bool,
 }
 
 #[derive(Parser, Debug)]

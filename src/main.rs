@@ -225,18 +225,29 @@ fn list_wiki_pages(
 }
 
 fn list_wiki_categories(
-    ListCategoriesCliArgs { page_file }: ListCategoriesCliArgs,
+    ListCategoriesCliArgs {
+        page_file,
+        json,
+        json_raw,
+    }: ListCategoriesCliArgs,
     default_page_file_path: PathBuf,
 ) -> Result<(), WikiError> {
     let (path, is_default) = page_file.map_or((default_page_file_path, true), |path| (path, false));
 
     let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
-    let out = wiki_tree
-        .keys()
-        .unique()
-        .sorted()
-        .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
-        .join("\n");
+
+    let out = if json {
+        serde_json::to_string_pretty(&wiki_tree)?
+    } else if json_raw {
+        serde_json::to_string(&wiki_tree)?
+    } else {
+        wiki_tree
+            .keys()
+            .unique()
+            .sorted()
+            .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
+            .join("\n")
+    };
 
     println!("{out}");
     Ok(())
