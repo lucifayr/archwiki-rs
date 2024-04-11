@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic)]
 #![allow(clippy::doc_markdown)]
 
 use std::{
@@ -16,7 +17,7 @@ use itertools::Itertools;
 use crate::{
     categories::list_pages,
     cli::{
-        CompletionsCliArgs, InfoCliArgs, ListCategoriesCliArgs, ListPagesCliArgs, LocalWikiCliArgs,
+        CompletionsCliArgs, ListCategoriesCliArgs, ListPagesCliArgs, LocalWikiCliArgs,
         ReadPageCliArgs, SearchCliArgs, SyncWikiCliArgs,
     },
     formats::{
@@ -33,6 +34,7 @@ mod categories;
 mod cli;
 mod error;
 mod formats;
+mod info;
 mod io;
 mod languages;
 mod search;
@@ -118,7 +120,7 @@ async fn main() -> Result<(), WikiError> {
             .await?;
         }
         Commands::Info(args) => {
-            show_info(args, cache_dir, data_dir);
+            info::display(args, cache_dir, data_dir)?;
         }
         Commands::Completions(CompletionsCliArgs { shell }) => {
             generate_shell_completion(shell.unwrap_or(Shell::from_env().expect(
@@ -238,51 +240,6 @@ fn list_wiki_categories(
 
     println!("{out}");
     Ok(())
-}
-
-fn show_info(
-    InfoCliArgs {
-        show_cache_dir,
-        show_data_dir,
-        only_values,
-    }: InfoCliArgs,
-    cache_dir: PathBuf,
-    data_dir: PathBuf,
-) {
-    let no_flags_provided = !show_data_dir && !show_cache_dir;
-    let info = [
-        (!only_values, "VALUE".into(), "NAME", "DESCRIPTION"),
-        (
-            show_cache_dir || no_flags_provided,
-            cache_dir,
-            "cache directory",
-            "stores caches of ArchWiki pages after download to speed up future requests",
-        ),
-        (
-            show_data_dir || no_flags_provided,
-            data_dir,
-            "data directory",
-            "stores log files and ArchWiki metadata",
-        ),
-    ];
-
-    let out = info
-        .iter()
-        .filter_map(|entry| {
-            entry.0.then_some(if only_values {
-                format!("{val}", val = entry.1.to_string_lossy())
-            } else {
-                format!(
-                    "{name:20} | {desc:90} | {val}",
-                    name = entry.2,
-                    desc = entry.3,
-                    val = entry.1.to_string_lossy()
-                )
-            })
-        })
-        .join("\n");
-
-    println!("{out}");
 }
 
 fn generate_shell_completion(shell: Shell) {

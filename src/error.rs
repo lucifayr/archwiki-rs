@@ -7,9 +7,9 @@ use thiserror::Error;
 pub enum WikiError {
     #[error("A network error occurred.\nERROR: {}", .0)]
     Network(#[from] reqwest::Error),
-    #[error("A yaml parsing error occurred.\nERROR: {}", .0)]
+    #[error("A yaml parsing/serialization error occurred.\nERROR: {}", .0)]
     YamlParsing(#[from] serde_yaml::Error),
-    #[error("A json parsing error occurred.\nERROR: {}", .0)]
+    #[error("A json parsing/serialization error occurred.\nERROR: {}", .0)]
     JsonParsing(#[from] serde_json::Error),
     #[error("An IO error occurred.\nERROR: {}", .0)]
     IO(#[from] io::Error),
@@ -17,7 +17,7 @@ pub enum WikiError {
     SystemTime(#[from] SystemTimeError),
     #[error("A path error occurred.\nERROR: {}", .0)]
     Path(String),
-    #[error("A URL parse error occured.\nERROR: {}", .0)]
+    #[error("A URL parsing error occured.\nERROR: {}", .0)]
     UrlParseError(#[from] url::ParseError),
     #[error("An invalid api response was received.\nERROR: {}", .0)]
     InvalidApiResponse(InvalidApiResponse),

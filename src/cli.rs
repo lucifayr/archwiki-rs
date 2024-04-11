@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use clap_complete::Shell;
 
 use crate::formats::PageFormat;
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[allow(clippy::module_name_repetitions)]
 pub struct CliArgs {
@@ -13,7 +13,7 @@ pub struct CliArgs {
     pub command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 pub enum Commands {
     #[command(
         about = "Read a page from the ArchWiki",
@@ -62,7 +62,7 @@ pub enum Commands {
     Completions(CompletionsCliArgs),
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct ReadPageCliArgs {
     #[arg(short, long)]
@@ -88,7 +88,7 @@ pub struct ReadPageCliArgs {
     pub page: String,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct SearchCliArgs {
     pub search: String,
     #[arg(short, long, default_value_t = String::from("en"))]
@@ -102,7 +102,7 @@ pub struct SearchCliArgs {
     pub text_search: bool,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct ListPagesCliArgs {
     #[arg(short, long)]
     /// Flatten all pages and don't show their category names
@@ -115,14 +115,14 @@ pub struct ListPagesCliArgs {
     pub page_file: Option<PathBuf>,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct ListCategoriesCliArgs {
     #[arg(short, long)]
     /// Use a different file to read pages from
     pub page_file: Option<PathBuf>,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct SyncWikiCliArgs {
     #[arg(short = 'H', long)]
     /// Hide progress indicators
@@ -135,7 +135,7 @@ pub struct SyncWikiCliArgs {
     pub out_file: Option<PathBuf>,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct LocalWikiCliArgs {
     #[arg(short, long)]
     /// Amount of threads to use for fetching pages from the ArchWiki. If not provided the
@@ -160,17 +160,40 @@ pub struct LocalWikiCliArgs {
     pub location: PathBuf,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug, Clone, Copy)]
 pub struct InfoCliArgs {
+    #[command(flatten)]
+    pub args_plain: Option<InfoPlainCliArgs>,
+    #[command(flatten)]
+    pub args_json: Option<InfoJsonCliArgs>,
+}
+
+#[derive(Args, Debug, Default, Clone, Copy)]
+#[group(id = "plain-info", conflicts_with_all = ["json-info"])]
+pub struct InfoPlainCliArgs {
     #[arg(short = 'c', long)]
+    /// Show entry for cache directory
     pub show_cache_dir: bool,
     #[arg(short = 'd', long)]
+    /// Show entry for data directory
     pub show_data_dir: bool,
     #[arg(short, long)]
+    /// Only display values, hide names and descriptions
     pub only_values: bool,
 }
 
-#[derive(Parser)]
+#[derive(Args, Debug, Clone, Copy)]
+#[group(id = "json-info", conflicts_with_all = ["plain-info"])]
+pub struct InfoJsonCliArgs {
+    #[arg(short, long)]
+    /// Display data as pretty-printed json
+    pub json: bool,
+    #[arg(long)]
+    /// Display data as raw json
+    pub json_raw: bool,
+}
+
+#[derive(Parser, Debug)]
 pub struct CompletionsCliArgs {
     /// Shell type that completion scripts will be generated for
     pub shell: Option<Shell>,
