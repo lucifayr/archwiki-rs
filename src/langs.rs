@@ -1,7 +1,7 @@
 use itertools::Itertools;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use crate::{error::WikiError, wiki::Response};
+use crate::{cli::ListLanguagesCliArgs, error::WikiError, wiki::Response};
 
 const LANGUAGE_API_URL: &str =
     "https://wiki.archlinux.org/api.php?action=query&meta=siteinfo&siprop=languages&format=json";
@@ -11,21 +11,34 @@ struct LanguageApiResponse {
     languages: Vec<Language>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Language {
     code: String,
-    #[serde(rename = "*")]
+    #[serde(rename(deserialize = "*"))]
     name: String,
 }
 
-pub async fn fetch_all_langs() -> Result<Vec<Language>, WikiError> {
+pub async fn fetch_all() -> Result<Vec<Language>, WikiError> {
     let body = reqwest::get(LANGUAGE_API_URL).await?.text().await?;
     let json: Response<LanguageApiResponse> = serde_json::from_str(&body)?;
 
     Ok(json.query.languages)
 }
 
-pub fn format_lang_table(langs: &[Language]) -> String {
+pub fn display(args: ListLanguagesCliArgs, langs: &[Language]) -> Result<(), WikiError> {
+    let out = if args.json_raw {
+        serde_json::to_string(langs)?
+    } else if args.json {
+        serde_json::to_string_pretty(langs)?
+    } else {
+        fmt_plain(langs)
+    };
+
+    println!("{out}");
+    Ok(())
+}
+
+fn fmt_plain(langs: &[Language]) -> String {
     let mut table = format!("{c1:20} | {c2:90}\n", c1 = "CODE", c2 = "NAME");
     let body = langs
         .iter()
@@ -68,7 +81,7 @@ mod tests {
             },
         ];
 
-        let res = format_lang_table(&langs);
+        let res = fmt_plain(&langs);
         let res_row_count = res.split('\n').collect_vec().len();
         let second_code = res
             .split('\n')

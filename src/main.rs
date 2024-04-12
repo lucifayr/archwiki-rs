@@ -15,19 +15,17 @@ use crate::{
         convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
     },
     io::{page_cache_exists, page_path},
-    languages::{fetch_all_langs, format_lang_table},
     search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
     utils::read_pages_file_as_category_tree,
     wiki::{download_wiki, fetch_open_search, fetch_page, fetch_text_search, sync_wiki_info},
 };
 
-mod categories;
 mod cli;
 mod error;
 mod formats;
 mod info;
 mod io;
-mod languages;
+mod langs;
 mod list;
 mod search;
 mod utils;
@@ -69,11 +67,9 @@ async fn main() -> Result<(), WikiError> {
         Commands::ListCategories(args) => {
             list::wiki_categories(args, default_page_file_path)?;
         }
-        Commands::ListLanguages => {
-            let langs = fetch_all_langs().await?;
-            let out = format_lang_table(&langs);
-
-            println!("{out}");
+        Commands::ListLanguages(args) => {
+            let langs = langs::fetch_all().await?;
+            langs::display(args, &langs)?;
         }
         Commands::SyncWiki(SyncWikiCliArgs {
             hide_progress,

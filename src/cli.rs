@@ -39,7 +39,7 @@ pub enum Commands {
         about = "List all languages that the ArchWiki supports",
         long_about = "List all languages that the ArchWiki supports"
     )]
-    ListLanguages,
+    ListLanguages(ListLanguagesCliArgs),
     #[command(
         about = "Download information about the pages and categories on the ArchWiki",
         long_about = "Download information about the pages and categories on the ArchWiki. Page and category names are used for the 'list-pages' and 'list-categories' sub-commands"
@@ -142,6 +142,16 @@ pub struct ListCategoriesCliArgs {
     /// Use a different file to read pages from
     pub page_file: Option<PathBuf>,
 
+    #[arg(short, long)]
+    /// Display data as pretty-printed JSON
+    pub json: bool,
+    #[arg(long)]
+    /// Display data as raw JSON
+    pub json_raw: bool,
+}
+
+#[derive(Parser, Debug, Clone, Copy)]
+pub struct ListLanguagesCliArgs {
     #[arg(short, long)]
     /// Display data as pretty-printed JSON
     pub json: bool,
