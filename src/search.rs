@@ -4,7 +4,7 @@ use scraper::Html;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    cli::SearchCliArgs,
+    args::cli::SearchCliArgs,
     error::WikiError,
     formats::format_children_as_plain_text,
     wiki::{fetch_open_search, fetch_text_search},
@@ -57,7 +57,7 @@ impl TextSearchItem {
     }
 }
 
-pub async fn fetch_and_display(
+pub async fn fetch(
     SearchCliArgs {
         search,
         lang,
@@ -65,7 +65,7 @@ pub async fn fetch_and_display(
         text_search,
         args_json,
     }: SearchCliArgs,
-) -> Result<(), WikiError> {
+) -> Result<String, WikiError> {
     let out = if text_search {
         let search_res = fetch_text_search(&search, &lang, limit).await?;
         if args_json.json_raw {
@@ -87,8 +87,7 @@ pub async fn fetch_and_display(
         }
     };
 
-    println!("{out}");
-    Ok(())
+    Ok(out)
 }
 
 fn fmt_text_search_plain(search_result: &[TextSearchItem]) -> String {

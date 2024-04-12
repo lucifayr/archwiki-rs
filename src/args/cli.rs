@@ -5,6 +5,8 @@ use clap_complete::Shell;
 
 use crate::formats::PageFormat;
 
+use super::internal::{ListCategoriesArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs};
+
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[allow(clippy::module_name_repetitions)]
@@ -127,26 +129,53 @@ pub struct ListPagesCliArgs {
     pub args_json: Option<ListPagesJsonCliArgs>,
 }
 
-#[derive(Args, Debug, Default)]
+impl From<ListPagesCliArgs> for ListPagesArgs {
+    fn from(value: ListPagesCliArgs) -> Self {
+        Self {
+            args_plain: value.args_plain.map(Into::into),
+            args_json: value.args_json.map(Into::into),
+        }
+    }
+}
+
+#[derive(Args, Debug)]
 #[group(id = "plain-list-pages", conflicts_with_all = ["json-list-pages"])]
 pub struct ListPagesPlainCliArgs {
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = ListPagesPlainArgs::default().flatten)]
     /// Flatten all pages and don't show their category names
     pub flatten: bool,
-    #[arg(short, long, value_delimiter = ',')]
+    #[arg(short, long, value_delimiter = ',', default_values_t = ListPagesPlainArgs::default().categories)]
     /// Only show pages in these categories
     pub categories: Vec<String>,
+}
+
+impl From<ListPagesPlainCliArgs> for ListPagesPlainArgs {
+    fn from(value: ListPagesPlainCliArgs) -> Self {
+        Self {
+            flatten: value.flatten,
+            categories: value.categories,
+        }
+    }
 }
 
 #[derive(Args, Debug)]
 #[group(id = "json-list-pages" , conflicts_with_all = ["plain-list-pages"])]
 pub struct ListPagesJsonCliArgs {
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = ListPagesJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long)]
+    #[arg(long, default_value_t = ListPagesJsonArgs::default().json_raw)]
     /// Display data as raw JSON
     pub json_raw: bool,
+}
+
+impl From<ListPagesJsonCliArgs> for ListPagesJsonArgs {
+    fn from(value: ListPagesJsonCliArgs) -> Self {
+        Self {
+            json: value.json,
+            json_raw: value.json_raw,
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -155,12 +184,21 @@ pub struct ListCategoriesCliArgs {
     /// Use a different file to read pages from
     pub page_file: Option<PathBuf>,
 
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = ListCategoriesArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long)]
+    #[arg(long, default_value_t = ListCategoriesArgs::default().json)]
     /// Display data as raw JSON
     pub json_raw: bool,
+}
+
+impl From<ListCategoriesCliArgs> for ListCategoriesArgs {
+    fn from(value: ListCategoriesCliArgs) -> Self {
+        Self {
+            json: value.json,
+            json_raw: value.json_raw,
+        }
+    }
 }
 
 #[derive(Parser, Debug, Clone, Copy)]

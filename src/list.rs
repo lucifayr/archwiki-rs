@@ -1,25 +1,20 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use itertools::Itertools;
 
 use crate::{
-    cli::{ListCategoriesCliArgs, ListPagesCliArgs, ListPagesPlainCliArgs},
+    args::internal::{ListCategoriesArgs, ListPagesArgs, ListPagesPlainArgs},
     error::WikiError,
-    utils::{read_pages_file_as_category_tree, UNCATEGORIZED_KEY},
+    utils::UNCATEGORIZED_KEY,
 };
 
-pub fn wiki_pages(
-    ListPagesCliArgs {
-        page_file,
+pub fn fmt_pages(
+    ListPagesArgs {
         args_plain,
         args_json,
-    }: ListPagesCliArgs,
-    default_page_file_path: PathBuf,
-) -> Result<(), WikiError> {
-    let (path, is_default) = page_file.map_or((default_page_file_path, true), |path| (path, false));
-
-    let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
+    }: ListPagesArgs,
+    wiki_tree: &HashMap<String, Vec<String>>,
+) -> Result<String, WikiError> {
     let out = match (args_plain, args_json) {
         (Some(args_plain), _) => fmt_page_tree(&wiki_tree, args_plain),
 
@@ -30,25 +25,16 @@ pub fn wiki_pages(
                 serde_json::to_string_pretty(&wiki_tree)?
             }
         }
-        _ => fmt_page_tree(&wiki_tree, ListPagesPlainCliArgs::default()),
+        _ => fmt_page_tree(&wiki_tree, ListPagesPlainArgs::default()),
     };
 
-    println!("{out}");
-    Ok(())
+    Ok(out)
 }
 
-pub fn wiki_categories(
-    ListCategoriesCliArgs {
-        page_file,
-        json,
-        json_raw,
-    }: ListCategoriesCliArgs,
-    default_page_file_path: PathBuf,
-) -> Result<(), WikiError> {
-    let (path, is_default) = page_file.map_or((default_page_file_path, true), |path| (path, false));
-
-    let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
-
+pub fn fmt_categories(
+    ListCategoriesArgs { json, json_raw }: ListCategoriesArgs,
+    wiki_tree: &HashMap<String, Vec<String>>,
+) -> Result<String, WikiError> {
     let out = if json {
         serde_json::to_string_pretty(&wiki_tree)?
     } else if json_raw {
@@ -62,8 +48,7 @@ pub fn wiki_categories(
             .join("\n")
     };
 
-    println!("{out}");
-    Ok(())
+    Ok(out)
 }
 
 /// Returns a print ready list of the provided page names in
@@ -88,12 +73,12 @@ pub fn wiki_categories(
 /// If it is not flattened the list is first ordered by category names and then by page names withing those
 /// categories.
 /// If it is flattened then it will by sorted by page names.
-pub fn fmt_page_tree(
+fn fmt_page_tree(
     wiki_tree: &HashMap<String, Vec<String>>,
-    ListPagesPlainCliArgs {
+    ListPagesPlainArgs {
         flatten,
         categories,
-    }: ListPagesPlainCliArgs,
+    }: ListPagesPlainArgs,
 ) -> String {
     let categories = (!categories.is_empty()).then_some(&categories);
 

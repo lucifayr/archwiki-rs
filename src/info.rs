@@ -4,7 +4,7 @@ use itertools::Itertools;
 use serde::Serialize;
 
 use crate::{
-    cli::{InfoCliArgs, InfoPlainCliArgs},
+    args::cli::{InfoCliArgs, InfoPlainCliArgs},
     error::WikiError,
 };
 

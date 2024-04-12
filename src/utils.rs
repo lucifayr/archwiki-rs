@@ -31,7 +31,7 @@ pub fn update_relative_urls(html: &str, base_url: &str) -> String {
         .replace("poster=\"/", &format!("poster=\"{base_url}/"))
 }
 
-pub fn read_pages_file_as_category_tree(
+pub fn read_pages_as_tree(
     path: &Path,
     is_default_path: bool,
 ) -> Result<HashMap<String, Vec<String>>, WikiError> {

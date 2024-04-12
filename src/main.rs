@@ -3,23 +3,23 @@
 
 use std::{fs, path::Path};
 
+use args::cli::{CliArgs, Commands};
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
-use cli::{CliArgs, Commands};
 use directories::BaseDirs;
 use error::WikiError;
 
 use crate::{
-    cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs, SyncWikiCliArgs},
+    args::cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs, SyncWikiCliArgs},
     formats::{
         convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
     },
     io::{page_cache_exists, page_path},
-    utils::read_pages_file_as_category_tree,
+    utils::read_pages_as_tree,
     wiki::{download_wiki, fetch_page, sync_wiki_info},
 };
 
-mod cli;
+mod args;
 mod error;
 mod formats;
 mod info;
@@ -58,17 +58,33 @@ async fn main() -> Result<(), WikiError> {
             read_page(args, &cache_dir).await?;
         }
         Commands::Search(args) => {
-            search::fetch_and_display(args).await?;
+            let out = search::fetch(args).await?;
+            println!("{out}");
         }
         Commands::ListPages(args) => {
-            list::wiki_pages(args, default_page_file_path)?;
+            let (path, is_default) = args
+                .page_file
+                .clone()
+                .map_or((default_page_file_path, true), |path| (path, false));
+            let wiki_tree = read_pages_as_tree(&path, is_default)?;
+
+            let out = list::fmt_pages(args.into(), &wiki_tree)?;
+            println!("{out}");
         }
         Commands::ListCategories(args) => {
-            list::wiki_categories(args, default_page_file_path)?;
+            let (path, is_default) = args
+                .page_file
+                .clone()
+                .map_or((default_page_file_path, true), |path| (path, false));
+            let wiki_tree = read_pages_as_tree(&path, is_default)?;
+
+            let out = list::fmt_categories(args.into(), &wiki_tree)?;
+            println!("{out}");
         }
         Commands::ListLanguages(args) => {
             let langs = langs::fetch_all().await?;
-            langs::display(args, &langs)?;
+            let out = langs::fmt(args, &langs)?;
+            println!("{out}");
         }
         Commands::SyncWiki(SyncWikiCliArgs {
             hide_progress,
@@ -92,7 +108,7 @@ async fn main() -> Result<(), WikiError> {
             let (path, is_default) =
                 page_file.map_or((default_page_file_path, true), |path| (path, false));
 
-            let wiki_tree = read_pages_file_as_category_tree(&path, is_default)?;
+            let wiki_tree = read_pages_as_tree(&path, is_default)?;
 
             download_wiki(
                 wiki_tree,
