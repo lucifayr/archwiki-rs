@@ -35,7 +35,7 @@ A CLI tool to read pages from the ArchWiki
 Currently, you can only install this tool from [ crates.io ](https://crates.io/crates/archwiki-rs)
 or build it from source.
 
-After installation you might want to run the [`sync-wiki`](#downloading-wiki-info) command.
+After installation, you might want to run the [`sync-wiki`](#downloading-wiki-info) command.
 
 ### crates.io
 
@@ -130,7 +130,7 @@ archwiki-rs sync-wiki
 archwiki-rs list-pages
 ```
 
-This outputs a styled tree of categories and pages but if you need an easily parseable
+This outputs a styled tree of categories and pages but if you need an easily parsable
 list for a different program to use, you can use the `-f` flag to flatten the output into a
 newline separated list that only contains the names of all pages
 
@@ -189,7 +189,7 @@ using the `info` command
 archwiki-rs info
 ```
 
-To only get the value of an entry and not the name and description that belong to it you
+To only get the value of an entry and not the name and description that belong to it, you
 can use the `-o` flag
 
 ```sh
@@ -201,7 +201,7 @@ archwiki-rs info -o
 You can generate a completion file to allow tab completion for most popular shells
 ([list of supported shells](https://docs.rs/clap_complete/latest/clap_complete/shells/enum.Shell.html)).
 
-The following example shows how to setup completion for ZSH (with the [oh my zsh](https://github.com/ohmyzsh/ohmyzsh)).
+The following example shows how to set up completion for ZSH (with [oh my zsh](https://github.com/ohmyzsh/ohmyzsh)).
 
 ```sh
 archwiki-rs completions > /home/iusearchbtw/.oh-my-zsh/completions/_archwiki-rs
