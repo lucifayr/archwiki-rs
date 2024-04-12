@@ -10,14 +10,13 @@ use directories::BaseDirs;
 use error::WikiError;
 
 use crate::{
-    cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs, SearchCliArgs, SyncWikiCliArgs},
+    cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs, SyncWikiCliArgs},
     formats::{
         convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
     },
     io::{page_cache_exists, page_path},
-    search::{format_open_search_table, format_text_search_table, open_search_to_page_url_tupel},
     utils::read_pages_file_as_category_tree,
-    wiki::{download_wiki, fetch_open_search, fetch_page, fetch_text_search, sync_wiki_info},
+    wiki::{download_wiki, fetch_page, sync_wiki_info},
 };
 
 mod cli;
@@ -59,7 +58,7 @@ async fn main() -> Result<(), WikiError> {
             read_page(args, &cache_dir).await?;
         }
         Commands::Search(args) => {
-            search_wiki(args).await?;
+            search::fetch_and_display(args).await?;
         }
         Commands::ListPages(args) => {
             list::wiki_pages(args, default_page_file_path)?;
@@ -167,27 +166,6 @@ async fn read_page(
     }
 
     println!("{out}{caching_failed_warning}");
-    Ok(())
-}
-
-async fn search_wiki(
-    SearchCliArgs {
-        search,
-        lang,
-        limit,
-        text_search,
-    }: SearchCliArgs,
-) -> Result<(), WikiError> {
-    let out = if text_search {
-        let search_res = fetch_text_search(&search, &lang, limit).await?;
-        format_text_search_table(&search_res)
-    } else {
-        let search_res = fetch_open_search(&search, &lang, limit).await?;
-        let name_url_pairs = open_search_to_page_url_tupel(&search_res)?;
-        format_open_search_table(&name_url_pairs)
-    };
-
-    println!("{out}");
     Ok(())
 }
 

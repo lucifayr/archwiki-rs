@@ -1,14 +1,26 @@
 use colored::Colorize;
 use itertools::Itertools;
 use scraper::Html;
+use serde::{Deserialize, Serialize};
 
-use crate::{error::WikiError, formats::format_children_as_plain_text};
+use crate::{
+    cli::SearchCliArgs,
+    error::WikiError,
+    formats::format_children_as_plain_text,
+    wiki::{fetch_open_search, fetch_text_search},
+};
 
-#[derive(Debug, PartialEq, Eq, serde::Deserialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize)]
 #[serde(untagged)]
 pub enum OpenSearchItem {
     Single(String),
     Array(Vec<String>),
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize)]
+pub struct OpenSearchItemParsed {
+    pub title: String,
+    pub url: String,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -16,7 +28,7 @@ pub struct TextSearchApiResponse {
     pub search: Vec<TextSearchItem>,
 }
 
-#[derive(Debug, PartialEq, Eq, serde::Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TextSearchItem {
     pub title: String,
     pub snippet: String,
@@ -45,7 +57,41 @@ impl TextSearchItem {
     }
 }
 
-pub fn format_text_search_table(search_result: &[TextSearchItem]) -> String {
+pub async fn fetch_and_display(
+    SearchCliArgs {
+        search,
+        lang,
+        limit,
+        text_search,
+        args_json,
+    }: SearchCliArgs,
+) -> Result<(), WikiError> {
+    let out = if text_search {
+        let search_res = fetch_text_search(&search, &lang, limit).await?;
+        if args_json.json_raw {
+            serde_json::to_string(&search_res)?
+        } else if args_json.json {
+            serde_json::to_string_pretty(&search_res)?
+        } else {
+            fmt_text_search_plain(&search_res)
+        }
+    } else {
+        let search_res = fetch_open_search(&search, &lang, limit).await?;
+        let name_url_pairs = open_search_to_page_url_pairs(&search_res)?;
+        if args_json.json_raw {
+            serde_json::to_string(&name_url_pairs)?
+        } else if args_json.json {
+            serde_json::to_string_pretty(&name_url_pairs)?
+        } else {
+            fmt_open_search_plain(&name_url_pairs)
+        }
+    };
+
+    println!("{out}");
+    Ok(())
+}
+
+fn fmt_text_search_plain(search_result: &[TextSearchItem]) -> String {
     let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "SNIPPET");
     let body = search_result
         .iter()
@@ -57,11 +103,11 @@ pub fn format_text_search_table(search_result: &[TextSearchItem]) -> String {
     table
 }
 
-pub fn format_open_search_table(name_url_pairs: &[(String, String)]) -> String {
+fn fmt_open_search_plain(name_url_pairs: &[OpenSearchItemParsed]) -> String {
     let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "URL");
     let body = name_url_pairs
         .iter()
-        .map(|(name, url)| format!("{name:20} | {url:90}"))
+        .map(|OpenSearchItemParsed { title, url }| format!("{title:20} | {url:90}"))
         .collect_vec()
         .join("\n");
 
@@ -74,9 +120,9 @@ pub fn format_open_search_table(name_url_pairs: &[(String, String)]) -> String {
 /// Errors:
 /// - If the search results don't have an array as the 1. and 3. elements in the list
 /// - If the arrays in the search results have different lengths
-pub fn open_search_to_page_url_tupel(
+pub fn open_search_to_page_url_pairs(
     search_result: &[OpenSearchItem],
-) -> Result<Vec<(String, String)>, WikiError> {
+) -> Result<Vec<OpenSearchItemParsed>, WikiError> {
     use crate::error::InvalidApiResponse as IAR;
 
     let page_names = search_result.get(1).ok_or(WikiError::InvalidApiResponse(
@@ -98,7 +144,10 @@ pub fn open_search_to_page_url_tupel(
             Ok(names
                 .iter()
                 .zip(urls)
-                .map(|(a, b)| (a.to_owned(), b.to_owned()))
+                .map(|(title, url)| OpenSearchItemParsed {
+                    title: title.clone(),
+                    url: url.clone(),
+                })
                 .collect_vec())
         } else {
             Err(WikiError::InvalidApiResponse(
@@ -182,30 +231,36 @@ mod tests {
         ];
 
         assert_eq!(
-            open_search_to_page_url_tupel(&valid_input).unwrap(),
+            open_search_to_page_url_pairs(&valid_input).unwrap(),
             vec![
-                ("name 1".to_owned(), "url 1".to_owned()),
-                ("name 2".to_owned(), "url 2".to_owned())
+                OpenSearchItemParsed {
+                    title: "name 1".to_owned(),
+                    url: "url 1".to_owned()
+                },
+                OpenSearchItemParsed {
+                    title: "name 2".to_owned(),
+                    url: "url 2".to_owned()
+                },
             ]
         );
 
-        match open_search_to_page_url_tupel(&missing_elements).unwrap_err() {
+        match open_search_to_page_url_pairs(&missing_elements).unwrap_err() {
             WikiError::InvalidApiResponse(res) => {
-                assert_eq!(res, IAR::OpenSearchMissingNthElement(1))
+                assert_eq!(res, IAR::OpenSearchMissingNthElement(1));
             }
             _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
 
-        match open_search_to_page_url_tupel(&not_arrays).unwrap_err() {
+        match open_search_to_page_url_pairs(&not_arrays).unwrap_err() {
             WikiError::InvalidApiResponse(res) => {
-                assert_eq!(res, IAR::OpenSearchNthElementShouldBeArray(3))
+                assert_eq!(res, IAR::OpenSearchNthElementShouldBeArray(3));
             }
             _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
 
-        match open_search_to_page_url_tupel(&different_lengths).unwrap_err() {
+        match open_search_to_page_url_pairs(&different_lengths).unwrap_err() {
             WikiError::InvalidApiResponse(res) => {
-                assert_eq!(res, IAR::OpenSearchArraysLengthMismatch)
+                assert_eq!(res, IAR::OpenSearchArraysLengthMismatch);
             }
             _ => panic!("expected error to be of type 'InvalidApiResponse'"),
         }
@@ -214,12 +269,21 @@ mod tests {
     #[test]
     fn test_format_open_search_table() {
         let pairs = vec![
-            ("page 1".to_owned(), "url 1".to_owned()),
-            ("page 2".to_owned(), "url 2".to_owned()),
-            ("page 3".to_owned(), "url 3".to_owned()),
+            OpenSearchItemParsed {
+                title: "page 1".to_owned(),
+                url: "url 1".to_owned(),
+            },
+            OpenSearchItemParsed {
+                title: "page 2".to_owned(),
+                url: "url 2".to_owned(),
+            },
+            OpenSearchItemParsed {
+                title: "page 3".to_owned(),
+                url: "url 3".to_owned(),
+            },
         ];
 
-        let res = format_open_search_table(&pairs);
+        let res = fmt_open_search_plain(&pairs);
         let res_row_count = res.split('\n').collect_vec().len();
         let third_page = res
             .split('\n')
@@ -255,7 +319,7 @@ mod tests {
             },
         ];
 
-        let res = format_text_search_table(&items);
+        let res = fmt_text_search_plain(&items);
         let res_row_count = res.split('\n').collect_vec().len();
         let third_page = res
             .split('\n')

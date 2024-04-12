@@ -93,11 +93,11 @@ mod tests {
                 I'm great
                 </div>"#;
 
-            let expected_output = r#"
+            let expected_output = r"
                 Hello, world!
                 how are you
                 I'm great
-                "#;
+                ";
 
             let document = Html::parse_document(input);
             let output = convert_page_to_plain_text(&document, false);
@@ -119,7 +119,7 @@ mod tests {
                 url = "example.com".cyan()
             );
 
-            let document = Html::parse_document(&input);
+            let document = Html::parse_document(input);
             let output = convert_page_to_plain_text(&document, true);
 
             dbg!(&output);

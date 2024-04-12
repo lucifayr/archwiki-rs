@@ -100,6 +100,19 @@ pub struct SearchCliArgs {
     #[arg(short, long)]
     /// Search for pages by text content instead of title
     pub text_search: bool,
+
+    #[command(flatten)]
+    pub args_json: SearchJsonCliArgs,
+}
+
+#[derive(Args, Debug, Default)]
+pub struct SearchJsonCliArgs {
+    #[arg(short, long)]
+    /// Display data as pretty-printed JSON
+    pub json: bool,
+    #[arg(long)]
+    /// Display data as raw JSON
+    pub json_raw: bool,
 }
 
 #[derive(Parser, Debug)]
