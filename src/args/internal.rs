@@ -45,12 +45,22 @@ pub struct ListPagesJsonArgs {
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ListCategoriesArgs {
+    pub args_json: Option<ListCategoriesJsonArgs>,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ListCategoriesJsonArgs {
     pub json: bool,
     pub json_raw: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ListLanguagesArgs {
+    pub args_json: Option<ListLanguagesJsonArgs>,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ListLanguagesJsonArgs {
     pub json: bool,
     pub json_raw: bool,
 }
