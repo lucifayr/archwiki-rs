@@ -58,7 +58,7 @@ async fn main() -> Result<(), WikiError> {
             read_page(args, &cache_dir).await?;
         }
         Commands::Search(args) => {
-            let out = search::fetch(args).await?;
+            let out = search::fetch(args.into()).await?;
             println!("{out}");
         }
         Commands::ListPages(args) => {

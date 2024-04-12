@@ -7,7 +7,7 @@ use crate::formats::PageFormat;
 
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListLanguagesArgs, ListPagesArgs,
-    ListPagesJsonArgs, ListPagesPlainArgs,
+    ListPagesJsonArgs, ListPagesPlainArgs, SearchArgs, SearchJsonArgs,
 };
 
 #[derive(Parser, Debug)]
@@ -96,13 +96,13 @@ pub struct ReadPageCliArgs {
 #[derive(Parser, Debug)]
 pub struct SearchCliArgs {
     pub search: String,
-    #[arg(short, long, default_value_t = String::from("en"))]
+    #[arg(short, long, default_value_t = SearchArgs::default().lang)]
     /// Preferred language of the content to search for
     pub lang: String,
-    #[arg(short = 'L', long, default_value_t = 5)]
+    #[arg(short = 'L', long, default_value_t = SearchArgs::default().limit)]
     /// Maximum number of results
     pub limit: u16,
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = SearchArgs::default().text_search)]
     /// Search for pages by text content instead of title
     pub text_search: bool,
 
@@ -110,14 +110,40 @@ pub struct SearchCliArgs {
     pub args_json: SearchJsonCliArgs,
 }
 
+impl From<SearchCliArgs> for SearchArgs {
+    fn from(
+        SearchCliArgs {
+            search,
+            lang,
+            limit,
+            text_search,
+            args_json,
+        }: SearchCliArgs,
+    ) -> Self {
+        Self {
+            search,
+            lang,
+            limit,
+            text_search,
+            args_json: args_json.into(),
+        }
+    }
+}
+
 #[derive(Args, Debug, Default)]
 pub struct SearchJsonCliArgs {
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = SearchJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long)]
+    #[arg(long, default_value_t = SearchJsonArgs::default().json_raw)]
     /// Display data as raw JSON
     pub json_raw: bool,
+}
+
+impl From<SearchJsonCliArgs> for SearchJsonArgs {
+    fn from(SearchJsonCliArgs { json, json_raw }: SearchJsonCliArgs) -> Self {
+        Self { json, json_raw }
+    }
 }
 
 #[derive(Parser, Debug)]

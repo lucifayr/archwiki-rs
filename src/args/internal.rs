@@ -1,3 +1,30 @@
+#[derive(Debug, Clone)]
+pub struct SearchArgs {
+    pub search: String,
+    pub lang: String,
+    pub limit: u16,
+    pub text_search: bool,
+    pub args_json: SearchJsonArgs,
+}
+
+impl Default for SearchArgs {
+    fn default() -> Self {
+        Self {
+            search: String::default(),
+            lang: String::from("en"),
+            limit: 5,
+            text_search: false,
+            args_json: SearchJsonArgs::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SearchJsonArgs {
+    pub json: bool,
+    pub json_raw: bool,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct ListPagesArgs {
     pub args_plain: Option<ListPagesPlainArgs>,
