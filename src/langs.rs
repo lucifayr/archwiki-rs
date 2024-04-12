@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{args::cli::ListLanguagesCliArgs, error::WikiError, wiki::Response};
+use crate::{args::internal::ListLanguagesArgs, error::WikiError, wiki::Response};
 
 const LANGUAGE_API_URL: &str =
     "https://wiki.archlinux.org/api.php?action=query&meta=siteinfo&siprop=languages&format=json";
@@ -25,7 +25,7 @@ pub async fn fetch_all() -> Result<Vec<Language>, WikiError> {
     Ok(json.query.languages)
 }
 
-pub fn fmt(args: ListLanguagesCliArgs, langs: &[Language]) -> Result<String, WikiError> {
+pub fn fmt(args: ListLanguagesArgs, langs: &[Language]) -> Result<String, WikiError> {
     let out = if args.json_raw {
         serde_json::to_string(langs)?
     } else if args.json {

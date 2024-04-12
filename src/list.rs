@@ -16,16 +16,16 @@ pub fn fmt_pages(
     wiki_tree: &HashMap<String, Vec<String>>,
 ) -> Result<String, WikiError> {
     let out = match (args_plain, args_json) {
-        (Some(args_plain), _) => fmt_page_tree(&wiki_tree, args_plain),
+        (Some(args_plain), _) => fmt_page_tree(wiki_tree, args_plain),
 
         (_, Some(args_json)) => {
             if args_json.json_raw {
-                serde_json::to_string(&wiki_tree)?
+                serde_json::to_string(wiki_tree)?
             } else {
-                serde_json::to_string_pretty(&wiki_tree)?
+                serde_json::to_string_pretty(wiki_tree)?
             }
         }
-        _ => fmt_page_tree(&wiki_tree, ListPagesPlainArgs::default()),
+        _ => fmt_page_tree(wiki_tree, ListPagesPlainArgs::default()),
     };
 
     Ok(out)

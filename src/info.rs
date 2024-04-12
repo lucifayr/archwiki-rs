@@ -4,7 +4,7 @@ use itertools::Itertools;
 use serde::Serialize;
 
 use crate::{
-    args::cli::{InfoCliArgs, InfoPlainCliArgs},
+    args::internal::{InfoArgs, InfoPlainArgs},
     error::WikiError,
 };
 
@@ -15,7 +15,7 @@ struct AppInfo {
     data_dir: PathBuf,
 }
 
-pub fn display(args: InfoCliArgs, cache_dir: PathBuf, data_dir: PathBuf) -> Result<(), WikiError> {
+pub fn fmt(args: InfoArgs, cache_dir: PathBuf, data_dir: PathBuf) -> Result<String, WikiError> {
     let info = AppInfo {
         cache_dir,
         data_dir,
@@ -30,20 +30,19 @@ pub fn display(args: InfoCliArgs, cache_dir: PathBuf, data_dir: PathBuf) -> Resu
                 serde_json::to_string_pretty(&info)?
             }
         }
-        _ => fmt_plain(info, InfoPlainCliArgs::default()),
+        _ => fmt_plain(info, InfoPlainArgs::default()),
     };
 
-    println!("{out}");
-    Ok(())
+    Ok(out)
 }
 
 fn fmt_plain(
     info: AppInfo,
-    InfoPlainCliArgs {
+    InfoPlainArgs {
         show_cache_dir,
         show_data_dir,
         only_values,
-    }: InfoPlainCliArgs,
+    }: InfoPlainArgs,
 ) -> String {
     let no_flags_provided = !show_data_dir && !show_cache_dir;
     let info = [

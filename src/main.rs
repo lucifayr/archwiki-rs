@@ -83,7 +83,7 @@ async fn main() -> Result<(), WikiError> {
         }
         Commands::ListLanguages(args) => {
             let langs = langs::fetch_all().await?;
-            let out = langs::fmt(args, &langs)?;
+            let out = langs::fmt(args.into(), &langs)?;
             println!("{out}");
         }
         Commands::SyncWiki(SyncWikiCliArgs {
@@ -123,7 +123,8 @@ async fn main() -> Result<(), WikiError> {
             .await?;
         }
         Commands::Info(args) => {
-            info::display(args, cache_dir, data_dir)?;
+            let out = info::fmt(args.into(), cache_dir, data_dir)?;
+            println!("{out}");
         }
         Commands::Completions(CompletionsCliArgs { shell }) => {
             generate_shell_completion(shell.unwrap_or(Shell::from_env().expect(

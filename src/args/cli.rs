@@ -5,7 +5,10 @@ use clap_complete::Shell;
 
 use crate::formats::PageFormat;
 
-use super::internal::{ListCategoriesArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs};
+use super::internal::{
+    InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListLanguagesArgs, ListPagesArgs,
+    ListPagesJsonArgs, ListPagesPlainArgs,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -130,10 +133,16 @@ pub struct ListPagesCliArgs {
 }
 
 impl From<ListPagesCliArgs> for ListPagesArgs {
-    fn from(value: ListPagesCliArgs) -> Self {
+    fn from(
+        ListPagesCliArgs {
+            args_plain,
+            args_json,
+            ..
+        }: ListPagesCliArgs,
+    ) -> Self {
         Self {
-            args_plain: value.args_plain.map(Into::into),
-            args_json: value.args_json.map(Into::into),
+            args_plain: args_plain.map(Into::into),
+            args_json: args_json.map(Into::into),
         }
     }
 }
@@ -150,10 +159,15 @@ pub struct ListPagesPlainCliArgs {
 }
 
 impl From<ListPagesPlainCliArgs> for ListPagesPlainArgs {
-    fn from(value: ListPagesPlainCliArgs) -> Self {
+    fn from(
+        ListPagesPlainCliArgs {
+            flatten,
+            categories,
+        }: ListPagesPlainCliArgs,
+    ) -> Self {
         Self {
-            flatten: value.flatten,
-            categories: value.categories,
+            flatten,
+            categories,
         }
     }
 }
@@ -170,11 +184,8 @@ pub struct ListPagesJsonCliArgs {
 }
 
 impl From<ListPagesJsonCliArgs> for ListPagesJsonArgs {
-    fn from(value: ListPagesJsonCliArgs) -> Self {
-        Self {
-            json: value.json,
-            json_raw: value.json_raw,
-        }
+    fn from(ListPagesJsonCliArgs { json, json_raw }: ListPagesJsonCliArgs) -> Self {
+        Self { json, json_raw }
     }
 }
 
@@ -193,22 +204,25 @@ pub struct ListCategoriesCliArgs {
 }
 
 impl From<ListCategoriesCliArgs> for ListCategoriesArgs {
-    fn from(value: ListCategoriesCliArgs) -> Self {
-        Self {
-            json: value.json,
-            json_raw: value.json_raw,
-        }
+    fn from(ListCategoriesCliArgs { json, json_raw, .. }: ListCategoriesCliArgs) -> Self {
+        Self { json, json_raw }
     }
 }
 
 #[derive(Parser, Debug, Clone, Copy)]
 pub struct ListLanguagesCliArgs {
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = ListLanguagesArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long)]
+    #[arg(long, default_value_t = ListLanguagesArgs::default().json_raw)]
     /// Display data as raw JSON
     pub json_raw: bool,
+}
+
+impl From<ListLanguagesCliArgs> for ListLanguagesArgs {
+    fn from(ListLanguagesCliArgs { json, json_raw }: ListLanguagesCliArgs) -> Self {
+        Self { json, json_raw }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -257,29 +271,66 @@ pub struct InfoCliArgs {
     pub args_json: Option<InfoJsonCliArgs>,
 }
 
+impl From<InfoCliArgs> for InfoArgs {
+    fn from(
+        InfoCliArgs {
+            args_plain,
+            args_json,
+            ..
+        }: InfoCliArgs,
+    ) -> Self {
+        Self {
+            args_plain: args_plain.map(Into::into),
+            args_json: args_json.map(Into::into),
+        }
+    }
+}
+
 #[derive(Args, Debug, Default, Clone, Copy)]
 #[group(id = "plain-info", conflicts_with_all = ["json-info"])]
 pub struct InfoPlainCliArgs {
-    #[arg(short = 'c', long)]
+    #[arg(short = 'c', long, default_value_t = InfoPlainArgs::default().show_cache_dir)]
     /// Show entry for cache directory
     pub show_cache_dir: bool,
-    #[arg(short = 'd', long)]
+    #[arg(short = 'd', long, default_value_t = InfoPlainArgs::default().show_data_dir)]
     /// Show entry for data directory
     pub show_data_dir: bool,
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = InfoPlainArgs::default().only_values)]
     /// Only display values, hide names and descriptions
     pub only_values: bool,
+}
+
+impl From<InfoPlainCliArgs> for InfoPlainArgs {
+    fn from(
+        InfoPlainCliArgs {
+            show_cache_dir,
+            show_data_dir,
+            only_values,
+        }: InfoPlainCliArgs,
+    ) -> Self {
+        Self {
+            show_cache_dir,
+            show_data_dir,
+            only_values,
+        }
+    }
 }
 
 #[derive(Args, Debug, Clone, Copy)]
 #[group(id = "json-info", conflicts_with_all = ["plain-info"])]
 pub struct InfoJsonCliArgs {
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = InfoJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long)]
+    #[arg(long, default_value_t = InfoJsonArgs::default().json_raw)]
     /// Display data as raw JSON
     pub json_raw: bool,
+}
+
+impl From<InfoJsonCliArgs> for InfoJsonArgs {
+    fn from(InfoJsonCliArgs { json, json_raw }: InfoJsonCliArgs) -> Self {
+        Self { json, json_raw }
+    }
 }
 
 #[derive(Parser, Debug)]
