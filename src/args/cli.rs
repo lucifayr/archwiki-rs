@@ -253,13 +253,13 @@ impl From<ListCategoriesJsonCliArgs> for ListCategoriesJsonArgs {
 #[derive(Parser, Debug)]
 pub struct ListLanguagesCliArgs {
     #[command(flatten)]
-    pub args_json: ListLanguagesJsonCliArgs,
+    pub args_json: Option<ListLanguagesJsonCliArgs>,
 }
 
 impl From<ListLanguagesCliArgs> for ListLanguagesArgs {
     fn from(ListLanguagesCliArgs { args_json }: ListLanguagesCliArgs) -> Self {
         Self {
-            args_json: Some(args_json.into()),
+            args_json: args_json.map(Into::into),
         }
     }
 }
