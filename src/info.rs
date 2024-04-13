@@ -11,14 +11,34 @@ use crate::{
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AppInfo {
-    cache_dir: PathBuf,
-    data_dir: PathBuf,
+    cache_dir: String,
+    data_dir: String,
 }
 
-pub fn fmt(args: InfoArgs, cache_dir: PathBuf, data_dir: PathBuf) -> Result<String, WikiError> {
+pub trait AppDataStorage {
+    fn as_location(&self) -> String;
+}
+
+impl AppDataStorage for PathBuf {
+    fn as_location(&self) -> String {
+        self.to_string_lossy().to_string()
+    }
+}
+
+impl<'a> AppDataStorage for &'a str {
+    fn as_location(&self) -> String {
+        (*self).to_string()
+    }
+}
+
+pub fn fmt(
+    args: InfoArgs,
+    cache_dir: &impl AppDataStorage,
+    data_dir: &impl AppDataStorage,
+) -> Result<String, WikiError> {
     let info = AppInfo {
-        cache_dir,
-        data_dir,
+        cache_dir: cache_dir.as_location(),
+        data_dir: data_dir.as_location(),
     };
 
     let out = match (args.args_plain, args.args_json) {
@@ -65,13 +85,13 @@ fn fmt_plain(
         .iter()
         .filter_map(|entry| {
             entry.0.then_some(if only_values {
-                format!("{val}", val = entry.1.to_string_lossy())
+                entry.1.to_string()
             } else {
                 format!(
                     "{name:20} | {desc:90} | {val}",
                     name = entry.2,
                     desc = entry.3,
-                    val = entry.1.to_string_lossy()
+                    val = entry.1
                 )
             })
         })

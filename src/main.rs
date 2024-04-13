@@ -123,7 +123,7 @@ async fn main() -> Result<(), WikiError> {
             .await?;
         }
         Commands::Info(args) => {
-            let out = info::fmt(args.into(), cache_dir, data_dir)?;
+            let out = info::fmt(args.into(), &cache_dir, &data_dir)?;
             println!("{out}");
         }
         Commands::Completions(CompletionsCliArgs { shell }) => {
