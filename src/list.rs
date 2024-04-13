@@ -35,15 +35,17 @@ pub fn fmt_categories(
     args: ListCategoriesArgs,
     wiki_tree: &HashMap<String, Vec<String>>,
 ) -> Result<String, WikiError> {
+    let categories = wiki_tree
+        .keys()
+        .unique()
+        .sorted()
+        .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
+        .collect_vec();
+
     let out = match args.args_json {
-        Some(args_json) if args_json.json_raw => serde_json::to_string(wiki_tree)?,
-        Some(_) => serde_json::to_string_pretty(wiki_tree)?,
-        None => wiki_tree
-            .keys()
-            .unique()
-            .sorted()
-            .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
-            .join("\n"),
+        Some(args_json) if args_json.json_raw => serde_json::to_string(&categories)?,
+        Some(_) => serde_json::to_string_pretty(&categories)?,
+        None => categories.into_iter().join("\n"),
     };
 
     Ok(out)

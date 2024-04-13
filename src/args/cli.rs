@@ -137,7 +137,7 @@ pub struct SearchJsonCliArgs {
     #[arg(short, long, default_value_t = SearchJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long, default_value_t = SearchJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long, default_value_t = SearchJsonArgs::default().json_raw)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
@@ -206,7 +206,7 @@ pub struct ListPagesJsonCliArgs {
     #[arg(short, long, default_value_t = ListPagesJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long, default_value_t = ListPagesJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long, default_value_t = ListPagesJsonArgs::default().json_raw)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
@@ -241,7 +241,7 @@ pub struct ListCategoriesJsonCliArgs {
     #[arg(short, long, default_value_t = ListCategoriesJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long, default_value_t = ListCategoriesJsonArgs::default().json)]
+    #[arg(short = 'J', long, default_value_t = ListCategoriesJsonArgs::default().json)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
@@ -272,7 +272,7 @@ pub struct ListLanguagesJsonCliArgs {
     #[arg(short, long, default_value_t = ListLanguagesJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long, default_value_t = ListLanguagesJsonArgs::default().json)]
+    #[arg(short = 'J', long, default_value_t = ListLanguagesJsonArgs::default().json)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
@@ -337,7 +337,7 @@ pub struct WikiMetadtaJsonCliArgs {
     #[arg(short, long, default_value_t = WikiMetadataJsonArgs::default().json)]
     /// Format data as pretty-printed JSON
     pub json: bool,
-    #[arg(long, default_value_t = WikiMetadataJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long, default_value_t = WikiMetadataJsonArgs::default().json_raw)]
     /// Format data as raw JSON
     pub json_raw: bool,
 }
@@ -432,7 +432,7 @@ pub struct InfoJsonCliArgs {
     #[arg(short, long, default_value_t = InfoJsonArgs::default().json)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(long, default_value_t = InfoJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long, default_value_t = InfoJsonArgs::default().json_raw)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
