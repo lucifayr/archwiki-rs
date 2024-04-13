@@ -10,13 +10,13 @@ use directories::BaseDirs;
 use error::WikiError;
 
 use crate::{
-    args::cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs, SyncWikiCliArgs},
+    args::cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs},
     formats::{
         convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
     },
     io::{page_cache_exists, page_path},
     utils::read_pages_as_tree,
-    wiki::{download_wiki, fetch_page, sync_wiki_info},
+    wiki::{copy_wiki_to_fs, fetch_page},
 };
 
 mod args;
@@ -86,13 +86,22 @@ async fn main() -> Result<(), WikiError> {
             let out = langs::fmt(args.into(), &langs)?;
             println!("{out}");
         }
-        Commands::SyncWiki(SyncWikiCliArgs {
-            hide_progress,
-            print,
-            out_file,
-        }) => {
-            let path = out_file.unwrap_or(default_page_file_path);
-            sync_wiki_info(&path, print, hide_progress).await?;
+        Commands::SyncWiki(args) => {
+            let path = args.out_file.clone().unwrap_or(default_page_file_path);
+            let print = args.print;
+            let hide_progress = args.hide_progress;
+
+            let out = wiki::fetch_metadata(args.into()).await?;
+
+            if print {
+                println!("{out}");
+            } else {
+                fs::write(&path, out)?;
+
+                if !hide_progress {
+                    println!("data saved to {}", path.to_string_lossy());
+                }
+            }
         }
         Commands::LocalWiki(LocalWikiCliArgs {
             location,
@@ -110,7 +119,7 @@ async fn main() -> Result<(), WikiError> {
 
             let wiki_tree = read_pages_as_tree(&path, is_default)?;
 
-            download_wiki(
+            copy_wiki_to_fs(
                 wiki_tree,
                 format,
                 location,

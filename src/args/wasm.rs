@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListLanguagesArgs, ListLanguagesJsonArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs,
-    SearchArgs, SearchJsonArgs,
+    SearchArgs, SearchJsonArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
 };
 
 #[derive(Debug)]
@@ -49,6 +49,53 @@ impl From<SearchJsonWasmArgs> for SearchJsonArgs {
             json: json.unwrap_or_else(|| Self::default().json),
             json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[wasm_bindgen]
+pub struct WikiMetadataWasmArgs {
+    args_yaml: Option<WikiMetadataYamlWasmArgs>,
+    args_json: Option<WikiMetadataJsonWasmArgs>,
+}
+
+impl From<WikiMetadataWasmArgs> for WikiMetadataArgs {
+    fn from(
+        WikiMetadataWasmArgs {
+            args_yaml,
+            args_json,
+        }: WikiMetadataWasmArgs,
+    ) -> Self {
+        Self {
+            hide_progress: true,
+            args_json: args_json.map(Into::into),
+            args_yaml: args_yaml.map(Into::into),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[wasm_bindgen]
+pub struct WikiMetadataYamlWasmArgs {
+    yaml: bool,
+}
+
+impl From<WikiMetadataYamlWasmArgs> for WikiMetadataYamlArgs {
+    fn from(WikiMetadataYamlWasmArgs { yaml }: WikiMetadataYamlWasmArgs) -> Self {
+        Self { yaml }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[wasm_bindgen]
+pub struct WikiMetadataJsonWasmArgs {
+    json: bool,
+    json_raw: bool,
+}
+
+impl From<WikiMetadataJsonWasmArgs> for WikiMetadataJsonArgs {
+    fn from(WikiMetadataJsonWasmArgs { json, json_raw }: WikiMetadataJsonWasmArgs) -> Self {
+        Self { json, json_raw }
     }
 }
 

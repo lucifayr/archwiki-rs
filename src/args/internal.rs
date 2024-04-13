@@ -26,6 +26,24 @@ pub struct SearchJsonArgs {
 }
 
 #[derive(Debug, Clone, Default)]
+pub struct WikiMetadataArgs {
+    pub hide_progress: bool,
+    pub args_json: Option<WikiMetadataJsonArgs>,
+    pub args_yaml: Option<WikiMetadataYamlArgs>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct WikiMetadataJsonArgs {
+    pub json: bool,
+    pub json_raw: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct WikiMetadataYamlArgs {
+    pub yaml: bool,
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct ListPagesArgs {
     pub args_plain: Option<ListPagesPlainArgs>,
     pub args_json: Option<ListPagesJsonArgs>,

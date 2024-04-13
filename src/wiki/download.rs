@@ -11,6 +11,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use itertools::Itertools;
 
 use crate::{
+    args::internal::WikiMetadataArgs,
     error::WikiError,
     formats::{
         convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
@@ -21,39 +22,43 @@ use crate::{
 
 use super::api::{fetch_all_pages, fetch_page_without_recommendations};
 
-pub async fn sync_wiki_info(
-    page_path: &Path,
-    print: bool,
-    hide_progress: bool,
-) -> Result<(), WikiError> {
+pub async fn fetch_metadata(
+    WikiMetadataArgs {
+        hide_progress,
+        args_json,
+        args_yaml,
+    }: WikiMetadataArgs,
+) -> Result<String, WikiError> {
     let spinner = ProgressBar::new_spinner();
+    let _spin_task;
     if hide_progress {
         spinner.finish_and_clear();
-    }
-
-    let _spin_task = std::thread::spawn(move || loop {
-        spinner.tick();
-        std::thread::sleep(std::time::Duration::from_millis(100));
-    });
+    } else {
+        _spin_task = std::thread::spawn(move || loop {
+            spinner.tick();
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        });
+    };
 
     let wiki_tree = fetch_all_pages().await?;
-    let out = serde_yaml::to_string(&wiki_tree)?;
 
-    if print {
-        println!("{out}");
-    } else {
-        fs::write(page_path, out)?;
-
-        if !hide_progress {
-            println!("data saved to {}", page_path.to_string_lossy());
+    let out = match (args_yaml, args_json) {
+        (Some(_yaml), _) => serde_yaml::to_string(&wiki_tree)?,
+        (_, Some(args_json)) => {
+            if args_json.json_raw {
+                serde_json::to_string(&wiki_tree)?
+            } else {
+                serde_json::to_string_pretty(&wiki_tree)?
+            }
         }
-    }
+        _ => serde_yaml::to_string(&wiki_tree)?,
+    };
 
-    Ok(())
+    Ok(out)
 }
 
-#[allow(clippy::too_many_arguments, clippy::module_name_repetitions)]
-pub async fn download_wiki(
+#[allow(clippy::too_many_arguments)]
+pub async fn copy_wiki_to_fs(
     wiki_tree: HashMap<String, Vec<String>>,
     format: PageFormat,
     location: PathBuf,

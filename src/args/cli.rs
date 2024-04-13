@@ -8,7 +8,7 @@ use crate::formats::PageFormat;
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListLanguagesArgs, ListLanguagesJsonArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs,
-    SearchArgs, SearchJsonArgs,
+    SearchArgs, SearchJsonArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
 };
 
 #[derive(Parser, Debug)]
@@ -50,7 +50,7 @@ pub enum Commands {
         about = "Download information about the pages and categories on the ArchWiki",
         long_about = "Download information about the pages and categories on the ArchWiki. Page and category names are used for the 'list-pages' and 'list-categories' sub-commands"
     )]
-    SyncWiki(SyncWikiCliArgs),
+    SyncWiki(WikiMetadataCliArgs),
     #[command(
         about = "Download a copy of the ArchWiki. Will take a long time :)",
         long_about = "Download a copy of the ArchWiki. Will take a long time :). The exact hierarchy of the wiki is not mainted, sub-categories are put at the top level of the wiki directory"
@@ -281,16 +281,68 @@ impl From<ListLanguagesJsonCliArgs> for ListLanguagesJsonArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct SyncWikiCliArgs {
+pub struct WikiMetadataCliArgs {
     #[arg(short = 'H', long)]
     /// Hide progress indicators
     pub hide_progress: bool,
     #[arg(short, long)]
-    /// Print result to stdout instead of writing to a file. Output is formatted as YAML
+    /// Print result to stdout instead of writing to a file. By default output is formatted as YAML
     pub print: bool,
     #[arg(short, long)]
     /// Use custom output file location
     pub out_file: Option<PathBuf>,
+    #[command(flatten)]
+    pub args_yaml: Option<WikiMetdataYamlCliArgs>,
+    #[command(flatten)]
+    pub args_json: Option<WikiMetadtaJsonCliArgs>,
+}
+
+impl From<WikiMetadataCliArgs> for WikiMetadataArgs {
+    fn from(
+        WikiMetadataCliArgs {
+            hide_progress,
+            args_yaml,
+            args_json,
+            ..
+        }: WikiMetadataCliArgs,
+    ) -> Self {
+        Self {
+            hide_progress,
+            args_json: args_json.map(Into::into),
+            args_yaml: args_yaml.map(Into::into),
+        }
+    }
+}
+
+#[derive(Args, Debug, Clone, Copy)]
+#[group(id = "yaml-sync-wiki", conflicts_with_all = ["json-sync-wiki"])]
+pub struct WikiMetdataYamlCliArgs {
+    #[arg(short, long, default_value_t = WikiMetadataYamlArgs::default().yaml)]
+    /// Format data as YAML
+    pub yaml: bool,
+}
+
+impl From<WikiMetdataYamlCliArgs> for WikiMetadataYamlArgs {
+    fn from(WikiMetdataYamlCliArgs { yaml }: WikiMetdataYamlCliArgs) -> Self {
+        Self { yaml }
+    }
+}
+
+#[derive(Args, Debug, Clone, Copy)]
+#[group(id = "json-sync-wiki", conflicts_with_all = ["yaml-sync-wiki"])]
+pub struct WikiMetadtaJsonCliArgs {
+    #[arg(short, long, default_value_t = WikiMetadataJsonArgs::default().json)]
+    /// Format data as pretty-printed JSON
+    pub json: bool,
+    #[arg(long, default_value_t = WikiMetadataJsonArgs::default().json_raw)]
+    /// Format data as raw JSON
+    pub json_raw: bool,
+}
+
+impl From<WikiMetadtaJsonCliArgs> for WikiMetadataJsonArgs {
+    fn from(WikiMetadtaJsonCliArgs { json, json_raw }: WikiMetadtaJsonCliArgs) -> Self {
+        Self { json, json_raw }
+    }
 }
 
 #[derive(Parser, Debug)]
