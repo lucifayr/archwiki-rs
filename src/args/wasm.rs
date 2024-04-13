@@ -2,8 +2,9 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
-    ListLanguagesArgs, ListLanguagesJsonArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs,
-    SearchArgs, SearchJsonArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
+    ListCategoriesPlainArgs, ListLanguagesArgs, ListLanguagesJsonArgs, ListLanguagesPlainArgs,
+    ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs, SearchArgs, SearchJsonArgs,
+    SearchPlainArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
 };
 
 #[derive(Debug)]
@@ -13,6 +14,7 @@ pub struct SearchWasmArgs {
     lang: Option<String>,
     limit: Option<u16>,
     text_search: Option<bool>,
+    args_plain: Option<SearchPlainWasmArgs>,
     args_json: Option<SearchJsonWasmArgs>,
 }
 
@@ -23,6 +25,7 @@ impl From<SearchWasmArgs> for SearchArgs {
             lang,
             limit,
             text_search,
+            args_plain,
             args_json,
         }: SearchWasmArgs,
     ) -> Self {
@@ -31,7 +34,22 @@ impl From<SearchWasmArgs> for SearchArgs {
             lang: lang.unwrap_or_else(|| Self::default().lang),
             limit: limit.unwrap_or_else(|| Self::default().limit),
             text_search: text_search.unwrap_or_else(|| Self::default().text_search),
-            args_json: args_json.map_or_else(|| Self::default().args_json, Into::into),
+            args_plain: args_plain.map(Into::into),
+            args_json: Some(args_json.unwrap_or_default().into()),
+        }
+    }
+}
+
+#[derive(Debug)]
+#[wasm_bindgen]
+pub struct SearchPlainWasmArgs {
+    plain: Option<bool>,
+}
+
+impl From<SearchPlainWasmArgs> for SearchPlainArgs {
+    fn from(SearchPlainWasmArgs { plain }: SearchPlainWasmArgs) -> Self {
+        Self {
+            plain: plain.unwrap_or_else(|| Self::default().plain),
         }
     }
 }
@@ -41,6 +59,15 @@ impl From<SearchWasmArgs> for SearchArgs {
 pub struct SearchJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+impl Default for SearchJsonWasmArgs {
+    fn default() -> Self {
+        Self {
+            json: None,
+            json_raw: Some(true),
+        }
+    }
 }
 
 impl From<SearchJsonWasmArgs> for SearchJsonArgs {
@@ -68,7 +95,7 @@ impl From<WikiMetadataWasmArgs> for WikiMetadataArgs {
     ) -> Self {
         Self {
             hide_progress: true,
-            args_json: args_json.map(Into::into),
+            args_json: Some(args_json.unwrap_or_default().into()),
             args_yaml: args_yaml.map(Into::into),
         }
     }
@@ -77,25 +104,39 @@ impl From<WikiMetadataWasmArgs> for WikiMetadataArgs {
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
 pub struct WikiMetadataYamlWasmArgs {
-    yaml: bool,
+    yaml: Option<bool>,
 }
 
 impl From<WikiMetadataYamlWasmArgs> for WikiMetadataYamlArgs {
     fn from(WikiMetadataYamlWasmArgs { yaml }: WikiMetadataYamlWasmArgs) -> Self {
-        Self { yaml }
+        Self {
+            yaml: yaml.unwrap_or_else(|| Self::default().yaml),
+        }
     }
 }
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
 pub struct WikiMetadataJsonWasmArgs {
-    json: bool,
-    json_raw: bool,
+    json: Option<bool>,
+    json_raw: Option<bool>,
+}
+
+impl Default for WikiMetadataJsonWasmArgs {
+    fn default() -> Self {
+        Self {
+            json: None,
+            json_raw: Some(true),
+        }
+    }
 }
 
 impl From<WikiMetadataJsonWasmArgs> for WikiMetadataJsonArgs {
     fn from(WikiMetadataJsonWasmArgs { json, json_raw }: WikiMetadataJsonWasmArgs) -> Self {
-        Self { json, json_raw }
+        Self {
+            json: json.unwrap_or_else(|| Self::default().json),
+            json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
+        }
     }
 }
 
@@ -115,7 +156,7 @@ impl From<ListPagesWasmArgs> for ListPagesArgs {
     ) -> Self {
         Self {
             args_plain: args_plain.map(Into::into),
-            args_json: args_json.map(Into::into),
+            args_json: Some(args_json.unwrap_or_default().into()),
         }
     }
 }
@@ -148,6 +189,15 @@ pub struct ListPagesJsonWasmArgs {
     json_raw: Option<bool>,
 }
 
+impl Default for ListPagesJsonWasmArgs {
+    fn default() -> Self {
+        Self {
+            json: None,
+            json_raw: Some(true),
+        }
+    }
+}
+
 impl From<ListPagesJsonWasmArgs> for ListPagesJsonArgs {
     fn from(ListPagesJsonWasmArgs { json, json_raw }: ListPagesJsonWasmArgs) -> Self {
         Self {
@@ -160,13 +210,33 @@ impl From<ListPagesJsonWasmArgs> for ListPagesJsonArgs {
 #[derive(Debug)]
 #[wasm_bindgen]
 pub struct ListCategoriesWasmArgs {
+    args_plain: Option<ListCategoriesPlainWasmArgs>,
     args_json: Option<ListCategoriesJsonWasmArgs>,
 }
 
 impl From<ListCategoriesWasmArgs> for ListCategoriesArgs {
-    fn from(ListCategoriesWasmArgs { args_json }: ListCategoriesWasmArgs) -> Self {
+    fn from(
+        ListCategoriesWasmArgs {
+            args_json,
+            args_plain,
+        }: ListCategoriesWasmArgs,
+    ) -> Self {
         Self {
-            args_json: args_json.map(Into::into),
+            args_plain: args_plain.map(Into::into),
+            args_json: Some(args_json.unwrap_or_default().into()),
+        }
+    }
+}
+#[derive(Debug)]
+#[wasm_bindgen]
+pub struct ListCategoriesPlainWasmArgs {
+    plain: Option<bool>,
+}
+
+impl From<ListCategoriesPlainWasmArgs> for ListCategoriesPlainArgs {
+    fn from(ListCategoriesPlainWasmArgs { plain }: ListCategoriesPlainWasmArgs) -> Self {
+        Self {
+            plain: plain.unwrap_or_else(|| Self::default().plain),
         }
     }
 }
@@ -176,6 +246,15 @@ impl From<ListCategoriesWasmArgs> for ListCategoriesArgs {
 pub struct ListCategoriesJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+impl Default for ListCategoriesJsonWasmArgs {
+    fn default() -> Self {
+        Self {
+            json: None,
+            json_raw: Some(true),
+        }
+    }
 }
 
 impl From<ListCategoriesJsonWasmArgs> for ListCategoriesJsonArgs {
@@ -190,13 +269,34 @@ impl From<ListCategoriesJsonWasmArgs> for ListCategoriesJsonArgs {
 #[derive(Debug)]
 #[wasm_bindgen]
 pub struct ListLanguagesWasmArgs {
+    args_plain: Option<ListLanguagesPlainWasmArgs>,
     args_json: Option<ListLanguagesJsonWasmArgs>,
 }
 
 impl From<ListLanguagesWasmArgs> for ListLanguagesArgs {
-    fn from(ListLanguagesWasmArgs { args_json }: ListLanguagesWasmArgs) -> Self {
+    fn from(
+        ListLanguagesWasmArgs {
+            args_json,
+            args_plain,
+        }: ListLanguagesWasmArgs,
+    ) -> Self {
         Self {
-            args_json: args_json.map(Into::into),
+            args_plain: args_plain.map(Into::into),
+            args_json: Some(args_json.unwrap_or_default().into()),
+        }
+    }
+}
+
+#[derive(Debug)]
+#[wasm_bindgen]
+pub struct ListLanguagesPlainWasmArgs {
+    plain: Option<bool>,
+}
+
+impl From<ListLanguagesPlainWasmArgs> for ListLanguagesPlainArgs {
+    fn from(ListLanguagesPlainWasmArgs { plain }: ListLanguagesPlainWasmArgs) -> Self {
+        Self {
+            plain: plain.unwrap_or_else(|| Self::default().plain),
         }
     }
 }
@@ -206,6 +306,15 @@ impl From<ListLanguagesWasmArgs> for ListLanguagesArgs {
 pub struct ListLanguagesJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+impl Default for ListLanguagesJsonWasmArgs {
+    fn default() -> Self {
+        Self {
+            json: None,
+            json_raw: Some(true),
+        }
+    }
 }
 
 impl From<ListLanguagesJsonWasmArgs> for ListLanguagesJsonArgs {
@@ -233,7 +342,7 @@ impl From<InfoWasmArgs> for InfoArgs {
     ) -> Self {
         Self {
             args_plain: args_plain.map(Into::into),
-            args_json: args_json.map(Into::into),
+            args_json: Some(args_json.unwrap_or_default().into()),
         }
     }
 }
@@ -267,6 +376,15 @@ impl From<InfoPlainWasmArgs> for InfoPlainArgs {
 pub struct InfoJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+impl Default for InfoJsonWasmArgs {
+    fn default() -> Self {
+        Self {
+            json: None,
+            json_raw: Some(true),
+        }
+    }
 }
 
 impl From<InfoJsonWasmArgs> for InfoJsonArgs {

@@ -4,7 +4,8 @@ pub struct SearchArgs {
     pub lang: String,
     pub limit: u16,
     pub text_search: bool,
-    pub args_json: SearchJsonArgs,
+    pub args_plain: Option<SearchPlainArgs>,
+    pub args_json: Option<SearchJsonArgs>,
 }
 
 impl Default for SearchArgs {
@@ -14,9 +15,15 @@ impl Default for SearchArgs {
             lang: String::from("en"),
             limit: 5,
             text_search: false,
-            args_json: SearchJsonArgs::default(),
+            args_plain: None,
+            args_json: None,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SearchPlainArgs {
+    pub plain: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -63,7 +70,13 @@ pub struct ListPagesJsonArgs {
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ListCategoriesArgs {
+    pub args_plain: Option<ListCategoriesPlainArgs>,
     pub args_json: Option<ListCategoriesJsonArgs>,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ListCategoriesPlainArgs {
+    pub plain: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -74,7 +87,13 @@ pub struct ListCategoriesJsonArgs {
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ListLanguagesArgs {
+    pub args_plain: Option<ListLanguagesPlainArgs>,
     pub args_json: Option<ListLanguagesJsonArgs>,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ListLanguagesPlainArgs {
+    pub plain: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default)]

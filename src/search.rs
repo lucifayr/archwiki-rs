@@ -63,27 +63,27 @@ pub async fn fetch(
         lang,
         limit,
         text_search,
+        args_plain,
         args_json,
     }: SearchArgs,
 ) -> Result<String, WikiError> {
     let out = if text_search {
         let search_res = fetch_text_search(&search, &lang, limit).await?;
-        if args_json.json_raw {
-            serde_json::to_string(&search_res)?
-        } else if args_json.json {
-            serde_json::to_string_pretty(&search_res)?
-        } else {
-            fmt_text_search_plain(&search_res)
+
+        match (args_plain, args_json) {
+            (Some(_plain), _) => fmt_text_search_plain(&search_res),
+            (_, Some(args_json)) if args_json.json_raw => serde_json::to_string(&search_res)?,
+            (_, Some(_json)) => serde_json::to_string_pretty(&search_res)?,
+            _ => fmt_text_search_plain(&search_res),
         }
     } else {
         let search_res = fetch_open_search(&search, &lang, limit).await?;
         let name_url_pairs = open_search_to_page_url_pairs(&search_res)?;
-        if args_json.json_raw {
-            serde_json::to_string(&name_url_pairs)?
-        } else if args_json.json {
-            serde_json::to_string_pretty(&name_url_pairs)?
-        } else {
-            fmt_open_search_plain(&name_url_pairs)
+        match (args_plain, args_json) {
+            (Some(_plain), _) => fmt_open_search_plain(&name_url_pairs),
+            (_, Some(args_json)) if args_json.json_raw => serde_json::to_string(&name_url_pairs)?,
+            (_, Some(_json)) => serde_json::to_string_pretty(&name_url_pairs)?,
+            _ => fmt_open_search_plain(&name_url_pairs),
         }
     };
 

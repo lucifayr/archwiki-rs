@@ -108,7 +108,7 @@ pub struct SearchCliArgs {
     pub text_search: bool,
 
     #[command(flatten)]
-    pub args_json: SearchJsonCliArgs,
+    pub args_json: Option<SearchJsonCliArgs>,
 }
 
 impl From<SearchCliArgs> for SearchArgs {
@@ -126,7 +126,8 @@ impl From<SearchCliArgs> for SearchArgs {
             lang,
             limit,
             text_search,
-            args_json: args_json.into(),
+            args_json: args_json.map(Into::into),
+            args_plain: None,
         }
     }
 }
@@ -223,13 +224,14 @@ pub struct ListCategoriesCliArgs {
     pub page_file: Option<PathBuf>,
 
     #[command(flatten)]
-    pub args_json: ListCategoriesJsonCliArgs,
+    pub args_json: Option<ListCategoriesJsonCliArgs>,
 }
 
 impl From<ListCategoriesCliArgs> for ListCategoriesArgs {
     fn from(ListCategoriesCliArgs { args_json, .. }: ListCategoriesCliArgs) -> Self {
         Self {
-            args_json: Some(args_json.into()),
+            args_json: args_json.map(Into::into),
+            args_plain: None,
         }
     }
 }
@@ -260,6 +262,7 @@ impl From<ListLanguagesCliArgs> for ListLanguagesArgs {
     fn from(ListLanguagesCliArgs { args_json }: ListLanguagesCliArgs) -> Self {
         Self {
             args_json: args_json.map(Into::into),
+            args_plain: None,
         }
     }
 }
