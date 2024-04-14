@@ -13,28 +13,25 @@ pub(crate) const LOCATION_OF_CACHE_IN_WASM_WITH_FS: &str = "";
 pub(crate) const LOCATION_OF_DATA_IN_WASM_WITH_FS: &str = "";
 
 /// TODO add docs
-#[wasm_bindgen]
-#[allow(non_snake_case)]
-pub async fn fetchWikiMetadata(args: WikiMetadataWasmArgs) -> Result<String, String> {
+#[wasm_bindgen(js_name = fetchWikiMetadata)]
+pub async fn fetch_wiki_metadata(args: WikiMetadataWasmArgs) -> Result<String, String> {
     wiki::fetch_metadata(args.into())
         .await
         .map_err(|err| err.to_string())
 }
 
-#[wasm_bindgen]
-#[allow(non_snake_case)]
-pub async fn searchWikiPages(args: SearchWasmArgs) -> Result<String, String> {
+#[wasm_bindgen(js_name = searchWikiPages)]
+pub async fn search_wiki_pages(args: SearchWasmArgs) -> Result<String, String> {
     search::fetch(args.into())
         .await
         .map_err(|err| err.to_string())
 }
 
-#[wasm_bindgen]
-#[allow(non_snake_case)]
-pub fn appInfo(args: InfoWasmArgs, env_is_browser: Option<bool>) -> Result<String, String> {
+#[wasm_bindgen(js_name = appInfo)]
+pub fn app_info(args: InfoWasmArgs) -> Result<String, String> {
     let cache_dir;
     let data_dir;
-    if let Some(false) = env_is_browser {
+    if todo!("create function that used feature flags to get env") {
         cache_dir = LOCATION_OF_CACHE_IN_WASM_WITH_FS;
         data_dir = LOCATION_OF_DATA_IN_WASM_WITH_FS;
     } else {

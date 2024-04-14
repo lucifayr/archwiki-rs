@@ -1,4 +1,5 @@
 #![cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]
+#![allow(non_snake_case)]
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -18,6 +19,28 @@ pub struct SearchWasmArgs {
     text_search: Option<bool>,
     args_plain: Option<SearchPlainWasmArgs>,
     args_json: Option<SearchJsonWasmArgs>,
+}
+
+#[wasm_bindgen]
+impl SearchWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        search: Option<String>,
+        lang: Option<String>,
+        limit: Option<u16>,
+        textSearch: Option<bool>,
+        argsPlain: Option<SearchPlainWasmArgs>,
+        argsJson: Option<SearchJsonWasmArgs>,
+    ) -> Self {
+        Self {
+            search,
+            lang,
+            limit,
+            text_search: textSearch,
+            args_plain: argsPlain,
+            args_json: argsJson,
+        }
+    }
 }
 
 impl From<SearchWasmArgs> for SearchArgs {
@@ -48,6 +71,14 @@ pub struct SearchPlainWasmArgs {
     plain: Option<bool>,
 }
 
+#[wasm_bindgen]
+impl SearchPlainWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(plain: Option<bool>) -> Self {
+        Self { plain }
+    }
+}
+
 impl From<SearchPlainWasmArgs> for SearchPlainArgs {
     fn from(SearchPlainWasmArgs { plain }: SearchPlainWasmArgs) -> Self {
         Self {
@@ -61,6 +92,17 @@ impl From<SearchPlainWasmArgs> for SearchPlainArgs {
 pub struct SearchJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl SearchJsonWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
+        Self {
+            json,
+            json_raw: jsonRaw,
+        }
+    }
 }
 
 impl Default for SearchJsonWasmArgs {
@@ -88,6 +130,20 @@ pub struct WikiMetadataWasmArgs {
     args_json: Option<WikiMetadataJsonWasmArgs>,
 }
 
+#[wasm_bindgen]
+impl WikiMetadataWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        argsYaml: Option<WikiMetadataYamlWasmArgs>,
+        argsJson: Option<WikiMetadataJsonWasmArgs>,
+    ) -> Self {
+        Self {
+            args_yaml: argsYaml,
+            args_json: argsJson,
+        }
+    }
+}
+
 impl From<WikiMetadataWasmArgs> for WikiMetadataArgs {
     fn from(
         WikiMetadataWasmArgs {
@@ -109,6 +165,14 @@ pub struct WikiMetadataYamlWasmArgs {
     yaml: Option<bool>,
 }
 
+#[wasm_bindgen]
+impl WikiMetadataYamlWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(yaml: Option<bool>) -> Self {
+        Self { yaml }
+    }
+}
+
 impl From<WikiMetadataYamlWasmArgs> for WikiMetadataYamlArgs {
     fn from(WikiMetadataYamlWasmArgs { yaml }: WikiMetadataYamlWasmArgs) -> Self {
         Self {
@@ -122,6 +186,17 @@ impl From<WikiMetadataYamlWasmArgs> for WikiMetadataYamlArgs {
 pub struct WikiMetadataJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl WikiMetadataJsonWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
+        Self {
+            json,
+            json_raw: jsonRaw,
+        }
+    }
 }
 
 impl Default for WikiMetadataJsonWasmArgs {
@@ -149,6 +224,20 @@ pub struct ListPagesWasmArgs {
     args_json: Option<ListPagesJsonWasmArgs>,
 }
 
+#[wasm_bindgen]
+impl ListPagesWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        argsPlain: Option<ListPagesPlainWasmArgs>,
+        argsJson: Option<ListPagesJsonWasmArgs>,
+    ) -> Self {
+        Self {
+            args_plain: argsPlain,
+            args_json: argsJson,
+        }
+    }
+}
+
 impl From<ListPagesWasmArgs> for ListPagesArgs {
     fn from(
         ListPagesWasmArgs {
@@ -170,6 +259,17 @@ pub struct ListPagesPlainWasmArgs {
     categories: Option<Vec<String>>,
 }
 
+#[wasm_bindgen]
+impl ListPagesPlainWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(flatten: Option<bool>, categories: Option<Vec<String>>) -> Self {
+        Self {
+            flatten,
+            categories,
+        }
+    }
+}
+
 impl From<ListPagesPlainWasmArgs> for ListPagesPlainArgs {
     fn from(
         ListPagesPlainWasmArgs {
@@ -189,6 +289,17 @@ impl From<ListPagesPlainWasmArgs> for ListPagesPlainArgs {
 pub struct ListPagesJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl ListPagesJsonWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
+        Self {
+            json,
+            json_raw: jsonRaw,
+        }
+    }
 }
 
 impl Default for ListPagesJsonWasmArgs {
@@ -216,6 +327,20 @@ pub struct ListCategoriesWasmArgs {
     args_json: Option<ListCategoriesJsonWasmArgs>,
 }
 
+#[wasm_bindgen]
+impl ListCategoriesWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        argsPlain: Option<ListCategoriesPlainWasmArgs>,
+        argsJson: Option<ListCategoriesJsonWasmArgs>,
+    ) -> Self {
+        Self {
+            args_plain: argsPlain,
+            args_json: argsJson,
+        }
+    }
+}
+
 impl From<ListCategoriesWasmArgs> for ListCategoriesArgs {
     fn from(
         ListCategoriesWasmArgs {
@@ -235,6 +360,14 @@ pub struct ListCategoriesPlainWasmArgs {
     plain: Option<bool>,
 }
 
+#[wasm_bindgen]
+impl ListCategoriesPlainWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(plain: Option<bool>) -> Self {
+        Self { plain }
+    }
+}
+
 impl From<ListCategoriesPlainWasmArgs> for ListCategoriesPlainArgs {
     fn from(ListCategoriesPlainWasmArgs { plain }: ListCategoriesPlainWasmArgs) -> Self {
         Self {
@@ -248,6 +381,17 @@ impl From<ListCategoriesPlainWasmArgs> for ListCategoriesPlainArgs {
 pub struct ListCategoriesJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl ListCategoriesJsonWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
+        Self {
+            json,
+            json_raw: jsonRaw,
+        }
+    }
 }
 
 impl Default for ListCategoriesJsonWasmArgs {
@@ -275,6 +419,20 @@ pub struct ListLanguagesWasmArgs {
     args_json: Option<ListLanguagesJsonWasmArgs>,
 }
 
+#[wasm_bindgen]
+impl ListLanguagesWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        argsPlain: Option<ListLanguagesPlainWasmArgs>,
+        argsJson: Option<ListLanguagesJsonWasmArgs>,
+    ) -> Self {
+        Self {
+            args_plain: argsPlain,
+            args_json: argsJson,
+        }
+    }
+}
+
 impl From<ListLanguagesWasmArgs> for ListLanguagesArgs {
     fn from(
         ListLanguagesWasmArgs {
@@ -295,6 +453,14 @@ pub struct ListLanguagesPlainWasmArgs {
     plain: Option<bool>,
 }
 
+#[wasm_bindgen]
+impl ListLanguagesPlainWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(plain: Option<bool>) -> Self {
+        Self { plain }
+    }
+}
+
 impl From<ListLanguagesPlainWasmArgs> for ListLanguagesPlainArgs {
     fn from(ListLanguagesPlainWasmArgs { plain }: ListLanguagesPlainWasmArgs) -> Self {
         Self {
@@ -308,6 +474,17 @@ impl From<ListLanguagesPlainWasmArgs> for ListLanguagesPlainArgs {
 pub struct ListLanguagesJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl ListLanguagesJsonWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
+        Self {
+            json,
+            json_raw: jsonRaw,
+        }
+    }
 }
 
 impl Default for ListLanguagesJsonWasmArgs {
@@ -335,6 +512,17 @@ pub struct InfoWasmArgs {
     args_json: Option<InfoJsonWasmArgs>,
 }
 
+#[wasm_bindgen]
+impl InfoWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(argsPlain: Option<InfoPlainWasmArgs>, argsJson: Option<InfoJsonWasmArgs>) -> Self {
+        Self {
+            args_plain: argsPlain,
+            args_json: argsJson,
+        }
+    }
+}
+
 impl From<InfoWasmArgs> for InfoArgs {
     fn from(
         InfoWasmArgs {
@@ -355,6 +543,22 @@ pub struct InfoPlainWasmArgs {
     show_cache_dir: Option<bool>,
     show_data_dir: Option<bool>,
     only_values: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl InfoPlainWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        showCacheDir: Option<bool>,
+        showDataDir: Option<bool>,
+        onlyValues: Option<bool>,
+    ) -> Self {
+        Self {
+            show_cache_dir: showCacheDir,
+            show_data_dir: showDataDir,
+            only_values: onlyValues,
+        }
+    }
 }
 
 impl From<InfoPlainWasmArgs> for InfoPlainArgs {
@@ -378,6 +582,17 @@ impl From<InfoPlainWasmArgs> for InfoPlainArgs {
 pub struct InfoJsonWasmArgs {
     json: Option<bool>,
     json_raw: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl InfoJsonWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
+        Self {
+            json,
+            json_raw: jsonRaw,
+        }
+    }
 }
 
 impl Default for InfoJsonWasmArgs {
