@@ -1,3 +1,24 @@
+use crate::formats::PageFormat;
+
+#[derive(Debug, Clone)]
+pub struct ReadPageArgs {
+    pub page: String,
+    pub format: PageFormat,
+    pub lang: String,
+    pub show_urls: bool,
+}
+
+impl Default for ReadPageArgs {
+    fn default() -> Self {
+        Self {
+            page: String::default(),
+            format: PageFormat::default(),
+            lang: String::from("en"),
+            show_urls: false,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SearchArgs {
     pub search: String,

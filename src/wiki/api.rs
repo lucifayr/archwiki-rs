@@ -5,7 +5,9 @@ use serde::Deserialize;
 use url::Url;
 
 use crate::{
+    args::internal::ReadPageArgs,
     error::WikiError,
+    formats::format_page,
     search::{
         open_search_is_page_exact_match, open_search_to_page_names, OpenSearchItem,
         TextSearchApiResponse, TextSearchItem,
@@ -70,12 +72,24 @@ pub async fn fetch_text_search(
     Ok(res.query.search)
 }
 
+#[allow(unused)]
+pub async fn fetch_and_format_page(
+    ReadPageArgs {
+        page,
+        format,
+        lang,
+        show_urls,
+    }: ReadPageArgs,
+) -> Result<String, WikiError> {
+    let doc = fetch_page(&page, &lang).await?;
+    Ok(format_page(&format, &doc, &page, show_urls))
+}
+
 /// Gets the HTML content of an ArchWiki page.
 ///
 /// If the ArchWiki page doesn't exists the top 5 pages that are most
 /// like the page that was given as an argument are returned as a `NoPageFound` error.
-pub async fn fetch_page(page: &str, lang: Option<&str>) -> Result<Html, WikiError> {
-    let lang = lang.unwrap_or("en");
+pub async fn fetch_page(page: &str, lang: &str) -> Result<Html, WikiError> {
     let search_res = fetch_open_search(page, lang, 5).await?;
 
     let Some(page_title) = open_search_is_page_exact_match(page, &search_res)? else {

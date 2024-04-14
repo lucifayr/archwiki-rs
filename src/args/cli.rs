@@ -10,7 +10,8 @@ use crate::formats::PageFormat;
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListLanguagesArgs, ListLanguagesJsonArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs,
-    SearchArgs, SearchJsonArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
+    ReadPageArgs, SearchArgs, SearchJsonArgs, WikiMetadataArgs, WikiMetadataJsonArgs,
+    WikiMetadataYamlArgs,
 };
 
 #[derive(Parser, Debug)]
@@ -86,10 +87,10 @@ pub struct ReadPageCliArgs {
     #[arg(short, long)]
     /// Show URLs for plain-text output
     pub show_urls: bool,
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = ReadPageArgs::default().lang)]
     /// Preferred page language
-    pub lang: Option<String>,
-    #[arg(short, long, value_enum, default_value_t = PageFormat::PlainText)]
+    pub lang: String,
+    #[arg(short, long, value_enum, default_value_t = ReadPageArgs::default().format)]
     /// The format that the page should be displayed in
     pub format: PageFormat,
     /// The name of the page to read or an absolute URL to the page

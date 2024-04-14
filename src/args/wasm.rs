@@ -1,19 +1,68 @@
 #![cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]
 #![allow(non_snake_case)]
 
+// TODO remove default impls -> into new fn
+
 use wasm_bindgen::prelude::wasm_bindgen;
+
+use crate::formats::PageFormat;
 
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListCategoriesPlainArgs, ListLanguagesArgs, ListLanguagesJsonArgs, ListLanguagesPlainArgs,
-    ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs, SearchArgs, SearchJsonArgs,
+    ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs, ReadPageArgs, SearchArgs, SearchJsonArgs,
     SearchPlainArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
 };
+
+#[derive(Debug, Clone)]
+#[wasm_bindgen]
+pub struct ReadPageWasmArgs {
+    page: String,
+    format: Option<PageFormat>,
+    lang: Option<String>,
+    show_urls: Option<bool>,
+}
+
+#[wasm_bindgen]
+impl ReadPageWasmArgs {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        page: String,
+        format: Option<PageFormat>,
+        lang: Option<String>,
+        showUrls: Option<bool>,
+    ) -> Self {
+        Self {
+            page,
+            format,
+            lang,
+            show_urls: showUrls,
+        }
+    }
+}
+
+impl From<ReadPageWasmArgs> for ReadPageArgs {
+    fn from(
+        ReadPageWasmArgs {
+            page,
+            format,
+            lang,
+            show_urls,
+        }: ReadPageWasmArgs,
+    ) -> Self {
+        Self {
+            page,
+            format: format.unwrap_or_else(|| PageFormat::Html),
+            lang: lang.unwrap_or_else(|| Self::default().lang),
+            show_urls: show_urls.unwrap_or_else(|| Self::default().show_urls),
+        }
+    }
+}
 
 #[derive(Debug)]
 #[wasm_bindgen]
 pub struct SearchWasmArgs {
-    search: Option<String>,
+    search: String,
     lang: Option<String>,
     limit: Option<u16>,
     text_search: Option<bool>,
@@ -25,7 +74,7 @@ pub struct SearchWasmArgs {
 impl SearchWasmArgs {
     #[wasm_bindgen(constructor)]
     pub fn new(
-        search: Option<String>,
+        search: String,
         lang: Option<String>,
         limit: Option<u16>,
         textSearch: Option<bool>,
@@ -55,7 +104,7 @@ impl From<SearchWasmArgs> for SearchArgs {
         }: SearchWasmArgs,
     ) -> Self {
         Self {
-            search: search.unwrap_or_else(|| Self::default().search),
+            search,
             lang: lang.unwrap_or_else(|| Self::default().lang),
             limit: limit.unwrap_or_else(|| Self::default().limit),
             text_search: text_search.unwrap_or_else(|| Self::default().text_search),

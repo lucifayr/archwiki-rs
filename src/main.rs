@@ -11,9 +11,7 @@ use error::WikiError;
 
 use crate::{
     args::cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs},
-    formats::{
-        convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
-    },
+    formats::format_page,
     io::{page_cache_exists, page_path},
     utils::read_pages_as_tree,
     wiki::{copy_wiki_to_fs, fetch_page},
@@ -164,12 +162,8 @@ async fn read_page(
     let out = if use_cached_page {
         fs::read_to_string(&page_cache_path)?
     } else {
-        match fetch_page(&page, lang.as_deref()).await {
-            Ok(document) => match format {
-                PageFormat::PlainText => convert_page_to_plain_text(&document, show_urls),
-                PageFormat::Markdown => convert_page_to_markdown(&document, &page),
-                PageFormat::Html => convert_page_to_html(&document, &page),
-            },
+        match fetch_page(&page, &lang).await {
+            Ok(document) => format_page(&format, &document, &page, show_urls),
             Err(err)
                 if !ignore_cache && page_cache_exists(&page_cache_path, true).unwrap_or(false) =>
             {
