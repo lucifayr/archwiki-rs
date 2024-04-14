@@ -6,13 +6,12 @@ use std::{fs, path::Path};
 use args::cli::{CliArgs, Commands};
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
-use directories::BaseDirs;
 use error::WikiError;
 
 use crate::{
     args::cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs},
     formats::format_page,
-    io::{page_cache_exists, page_path},
+    io::{app_dirs, page_cache_exists, page_path, AppDirs},
     utils::read_pages_as_tree,
     wiki::{copy_wiki_to_fs, fetch_page},
 };
@@ -36,15 +35,12 @@ async fn main() -> Result<(), WikiError> {
     human_panic::setup_panic!();
 
     let args = CliArgs::parse();
-    let Some(base_dir) = BaseDirs::new() else {
-        return Err(WikiError::Path(
-            "failed to get valid home directory".to_owned(),
-        ));
-    };
+    let AppDirs {
+        data_dir,
+        cache_dir,
+        log_dir,
+    } = app_dirs()?;
 
-    let cache_dir = base_dir.cache_dir().join("archwiki-rs");
-    let data_dir = base_dir.data_local_dir().join("archwiki-rs");
-    let log_dir = data_dir.join("logs");
     fs::create_dir_all(&cache_dir)?;
     fs::create_dir_all(&data_dir)?;
     fs::create_dir_all(&log_dir)?;

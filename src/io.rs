@@ -1,4 +1,4 @@
-#![cfg(any(feature = "wasm-nodejs", feature = "cli"))]
+#![cfg(feature = "cli")]
 
 use std::{
     fs, io,
@@ -6,6 +6,29 @@ use std::{
 };
 
 use crate::{error::WikiError, formats::PageFormat};
+
+pub struct AppDirs {
+    pub data_dir: PathBuf,
+    pub cache_dir: PathBuf,
+    pub log_dir: PathBuf,
+}
+pub fn app_dirs() -> Result<AppDirs, WikiError> {
+    let Some(base_dir) = directories::BaseDirs::new() else {
+        return Err(WikiError::Path(
+            "failed to get valid home directory".to_owned(),
+        ));
+    };
+
+    let cache_dir = base_dir.cache_dir().join("archwiki-rs");
+    let data_dir = base_dir.data_local_dir().join("archwiki-rs");
+    let log_dir = data_dir.join("logs");
+
+    Ok(AppDirs {
+        data_dir,
+        cache_dir,
+        log_dir,
+    })
+}
 
 pub fn page_path(page: &str, format: &PageFormat, parent_dir: &Path) -> PathBuf {
     let ext = match format {

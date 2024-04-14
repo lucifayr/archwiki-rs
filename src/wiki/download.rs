@@ -68,7 +68,6 @@ fn progress_spinner(hide_progress: bool) -> Option<std::thread::JoinHandle<()>> 
 #[cfg(feature = "cli")]
 pub use local_wiki::copy_wiki_to_fs;
 
-// TODO: make available in node/wasm-nodejs
 #[cfg(feature = "cli")]
 mod local_wiki {
     use super::{

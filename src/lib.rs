@@ -22,7 +22,7 @@ mod search;
 mod utils;
 mod wiki;
 
-#[cfg(any(feature = "wasm-nodejs", feature = "cli"))]
+#[cfg(feature = "cli")]
 mod io;
 
 #[cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]

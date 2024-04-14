@@ -1,8 +1,6 @@
 #![cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]
 #![allow(non_snake_case)]
 
-// TODO remove default impls -> into new fn
-
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::formats::PageFormat;
@@ -547,114 +545,6 @@ impl Default for ListLanguagesJsonWasmArgs {
 
 impl From<ListLanguagesJsonWasmArgs> for ListLanguagesJsonArgs {
     fn from(ListLanguagesJsonWasmArgs { json, json_raw }: ListLanguagesJsonWasmArgs) -> Self {
-        Self {
-            json: json.unwrap_or_else(|| Self::default().json),
-            json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct InfoWasmArgs {
-    args_plain: Option<InfoPlainWasmArgs>,
-    args_json: Option<InfoJsonWasmArgs>,
-}
-
-#[wasm_bindgen]
-impl InfoWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(argsPlain: Option<InfoPlainWasmArgs>, argsJson: Option<InfoJsonWasmArgs>) -> Self {
-        Self {
-            args_plain: argsPlain,
-            args_json: argsJson,
-        }
-    }
-}
-
-impl From<InfoWasmArgs> for InfoArgs {
-    fn from(
-        InfoWasmArgs {
-            args_plain,
-            args_json,
-        }: InfoWasmArgs,
-    ) -> Self {
-        Self {
-            args_plain: args_plain.map(Into::into),
-            args_json: Some(args_json.unwrap_or_default().into()),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct InfoPlainWasmArgs {
-    show_cache_dir: Option<bool>,
-    show_data_dir: Option<bool>,
-    only_values: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl InfoPlainWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(
-        showCacheDir: Option<bool>,
-        showDataDir: Option<bool>,
-        onlyValues: Option<bool>,
-    ) -> Self {
-        Self {
-            show_cache_dir: showCacheDir,
-            show_data_dir: showDataDir,
-            only_values: onlyValues,
-        }
-    }
-}
-
-impl From<InfoPlainWasmArgs> for InfoPlainArgs {
-    fn from(
-        InfoPlainWasmArgs {
-            show_cache_dir,
-            show_data_dir,
-            only_values,
-        }: InfoPlainWasmArgs,
-    ) -> Self {
-        Self {
-            show_cache_dir: show_cache_dir.unwrap_or_else(|| Self::default().show_cache_dir),
-            show_data_dir: show_data_dir.unwrap_or_else(|| Self::default().show_data_dir),
-            only_values: only_values.unwrap_or_else(|| Self::default().only_values),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct InfoJsonWasmArgs {
-    json: Option<bool>,
-    json_raw: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl InfoJsonWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
-        Self {
-            json,
-            json_raw: jsonRaw,
-        }
-    }
-}
-
-impl Default for InfoJsonWasmArgs {
-    fn default() -> Self {
-        Self {
-            json: None,
-            json_raw: Some(true),
-        }
-    }
-}
-
-impl From<InfoJsonWasmArgs> for InfoJsonArgs {
-    fn from(InfoJsonWasmArgs { json, json_raw }: InfoJsonWasmArgs) -> Self {
         Self {
             json: json.unwrap_or_else(|| Self::default().json),
             json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
