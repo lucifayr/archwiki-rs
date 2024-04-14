@@ -1,0 +1,6 @@
+{
+  "name": "archwiki-web",
+  "description": "WASM bindings to some of the functionality of the archwiki-rs CLI tool for the web runtime",
+  "version": "0.1.0",
+  "keywords": ["ArchWiki"]
+}
