@@ -15,6 +15,12 @@ use crate::{
 
 // TODO add docs
 
+// TODO add setup function for panic hooks
+//#[wasm_bindgen(start)]
+// fn main() -> Result<(), JsValue> {
+// ...
+// }
+
 #[wasm_bindgen(js_name = fetchWikiPage)]
 pub async fn fetch_wiki_page(args: ReadPageWasmArgs) -> Result<String, String> {
     wiki::fetch_and_format_page(args.into())

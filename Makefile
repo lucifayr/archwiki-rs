@@ -6,6 +6,12 @@ WASM_NODEJS_PKG_DIR = wasm-nodejs/pkg
 
 cli : 
 	cargo build --release
+	# todo add commit and tag
+
+cli-publish : cli 
+	git push --follow-tags && git push github && git push --tags github \
+    && glab release create "v$version" -n "v$version" \
+	&& gh release create "v$version" -t "v$version" --generate-notes
 
 wasm-web :
 	wasm-pack build --release -t web -s $(NPMJS_SCOPE) --out-name $(WASM_WEB_PKG_NAME) --out-dir $(WASM_WEB_PKG_DIR)  ./ --features wasm-web --no-default-features
