@@ -25,7 +25,7 @@ pub struct CliArgs {
 pub enum Commands {
     #[command(
         about = "Read a page from the ArchWiki",
-        long_about = "Read a page from the ArchWiki, if the page is not found similar page names are recommended"
+        long_about = "Read a page from the ArchWiki. If the page is not found similar page names are recommended."
     )]
     ReadPage(ReadPageCliArgs),
     #[command(
@@ -34,13 +34,13 @@ pub enum Commands {
     )]
     Search(SearchCliArgs),
     #[command(
-        about = "List all pages from the ArchWiki (requires sync)",
-        long_about = "List all pages from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading"
+        about = "List all pages from the ArchWiki (requires metadata to be synced)",
+        long_about = "List metadata information of pages from the ArchWiki that has been downloaded. See 'sync-wiki' for information on downloading metadata."
     )]
     ListPages(ListPagesCliArgs),
     #[command(
-        about = "List all categories from the ArchWiki (requires sync)",
-        long_about = "List categories  from the ArchWiki that have been downloaded. See 'sync-wiki' for information on downloading"
+        about = "List all categories from the ArchWiki (requires metadata to be synced)",
+        long_about = "List metadata information of categories from the ArchWiki that has been downloaded. See 'sync-wiki' for information on downloading metadata."
     )]
     ListCategories(ListCategoriesCliArgs),
     #[command(
@@ -49,13 +49,13 @@ pub enum Commands {
     )]
     ListLanguages(ListLanguagesCliArgs),
     #[command(
-        about = "Download information about the pages and categories on the ArchWiki",
-        long_about = "Download information about the pages and categories on the ArchWiki. Page and category names are used for the 'list-pages' and 'list-categories' sub-commands"
+        about = "Download metadata information about the pages and categories on the ArchWiki",
+        long_about = "Download metadata information about the pages and categories on the ArchWiki. Page and category names are used for the 'list-pages' and 'list-categories' sub-commands."
     )]
     SyncWiki(WikiMetadataCliArgs),
     #[command(
         about = "Download a copy of the ArchWiki. Will take a long time :)",
-        long_about = "Download a copy of the ArchWiki. Will take a long time :). The exact hierarchy of the wiki is not mainted, sub-categories are put at the top level of the wiki directory"
+        long_about = "Download a copy of the ArchWiki. Will take a long time :). The exact hierarchy of the wiki is not mainted, sub-categories are put at the top level of the wiki directory."
     )]
     LocalWiki(LocalWikiCliArgs),
     #[command(
