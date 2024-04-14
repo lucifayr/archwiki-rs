@@ -1,4 +1,6 @@
-use std::path::PathBuf;
+#![cfg(feature = "cli")]
+
+use std::path::Path;
 
 use itertools::Itertools;
 use serde::Serialize;
@@ -15,7 +17,7 @@ struct AppInfo {
     data_dir: String,
 }
 
-pub fn fmt(args: InfoArgs, cache_dir: &PathBuf, data_dir: &PathBuf) -> Result<String, WikiError> {
+pub fn fmt(args: InfoArgs, cache_dir: &Path, data_dir: &Path) -> Result<String, WikiError> {
     let info = AppInfo {
         cache_dir: cache_dir.to_string_lossy().to_string(),
         data_dir: data_dir.to_string_lossy().to_string(),

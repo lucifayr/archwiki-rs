@@ -8,9 +8,9 @@ use std::{
 use crate::{error::WikiError, formats::PageFormat};
 
 pub struct AppDirs {
-    pub data_dir: PathBuf,
-    pub cache_dir: PathBuf,
-    pub log_dir: PathBuf,
+    pub data: PathBuf,
+    pub cache: PathBuf,
+    pub log: PathBuf,
 }
 pub fn app_dirs() -> Result<AppDirs, WikiError> {
     let Some(base_dir) = directories::BaseDirs::new() else {
@@ -24,9 +24,9 @@ pub fn app_dirs() -> Result<AppDirs, WikiError> {
     let log_dir = data_dir.join("logs");
 
     Ok(AppDirs {
-        data_dir,
-        cache_dir,
-        log_dir,
+        data: data_dir,
+        cache: cache_dir,
+        log: log_dir,
     })
 }
 

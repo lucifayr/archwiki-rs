@@ -36,9 +36,9 @@ async fn main() -> Result<(), WikiError> {
 
     let args = CliArgs::parse();
     let AppDirs {
-        data_dir,
-        cache_dir,
-        log_dir,
+        data: data_dir,
+        cache: cache_dir,
+        log: log_dir,
     } = app_dirs()?;
 
     fs::create_dir_all(&cache_dir)?;

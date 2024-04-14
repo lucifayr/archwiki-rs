@@ -50,7 +50,7 @@ impl From<ReadPageWasmArgs> for ReadPageArgs {
     ) -> Self {
         Self {
             page,
-            format: format.unwrap_or_else(|| PageFormat::Html),
+            format: format.unwrap_or(PageFormat::Html),
             lang: lang.unwrap_or_else(|| Self::default().lang),
             show_urls: show_urls.unwrap_or_else(|| Self::default().show_urls),
         }

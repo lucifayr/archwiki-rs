@@ -15,13 +15,14 @@ compile_error!("tests have to be run with the 'cli' feature flag");
 mod args;
 mod error;
 mod formats;
-mod info;
 mod langs;
 mod list;
 mod search;
 mod utils;
 mod wiki;
 
+#[cfg(feature = "cli")]
+mod info;
 #[cfg(feature = "cli")]
 mod io;
 
