@@ -9,6 +9,9 @@ compile_error!("the features 'cli' and 'wasm-web' can't be enabled at the same t
 #[cfg(all(feature = "cli", feature = "wasm-nodejs"))]
 compile_error!("the features 'cli' and 'wasm-nodejs' can't be enabled at the same time!");
 
+#[cfg(all(test, not(feature = "cli")))]
+compile_error!("tests have to be run with the 'cli' feature flag");
+
 mod args;
 mod error;
 mod formats;

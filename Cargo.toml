@@ -20,11 +20,6 @@ required-features = ["cli"]
 crate-type = ["cdylib", "rlib"]
 required-features = ["wasm-web"]
 
-# [[lib]]
-# name = "archwiki-wasm-nodejs"
-# crate-type = ["cdylib", "rlib"]
-# required-features = ["wasm-nodejs"]
-
 [features]
 cli = ["dep:clap", "dep:clap_complete", "dep:tokio", "dep:unicode-width", "dep:colored", "dep:indicatif", "dep:directories", "dep:sanitize-filename", "dep:human-panic", "dep:termination", "dep:num_cpus"]
 

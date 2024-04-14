@@ -88,6 +88,7 @@ fn wrap_text_in_url(text: &str, url: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use colored::Colorize;
     use pretty_assertions::assert_eq;
 
     #[tokio::test]
@@ -122,7 +123,7 @@ mod tests {
     Hello, world!
     example[{url}]
 "#,
-                url = "example.com"
+                url = "example.com".cyan()
             );
 
             let document = Html::parse_document(input);
