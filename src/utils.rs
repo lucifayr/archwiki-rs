@@ -85,20 +85,3 @@ pub fn read_pages_as_tree(
 
     Ok(category_to_page_map)
 }
-
-pub fn truncate_unicode_str(n: usize, text: &str) -> String {
-    let mut count = 0;
-    let mut res = vec![];
-    let mut chars = text.chars();
-
-    while count < n {
-        if let Some(char) = chars.next() {
-            count += unicode_width::UnicodeWidthChar::width(char).unwrap_or(0);
-            res.push(char);
-        } else {
-            break;
-        }
-    }
-
-    res.into_iter().collect::<String>()
-}

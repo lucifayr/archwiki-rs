@@ -1,5 +1,5 @@
-use colored::Colorize;
 use itertools::Itertools;
+use regex::Regex;
 use scraper::Html;
 use serde::{Deserialize, Serialize};
 
@@ -48,13 +48,23 @@ impl TextSearchItem {
             .case_insensitive(true)
             .build()
         {
-            self.snippet = rgx
-                .replace_all(&new_snip, format!("{}", "$1".cyan()))
-                .to_string();
+            self.snippet = highlight_results(&rgx, &new_snip);
         } else {
             self.snippet = new_snip;
         }
     }
+}
+
+#[cfg(any(feature = "wasm-nodejs", feature = "cli"))]
+fn highlight_results(rgx: &Regex, snippet: &str) -> String {
+    use colored::Colorize;
+    rgx.replace_all(snippet, format!("{}", "$1".cyan()))
+        .to_string()
+}
+
+#[cfg(not(any(feature = "wasm-nodejs", feature = "cli")))]
+fn highlight_results(rgx: &Regex, snippet: &str) -> String {
+    rgx.replace_all(snippet, "$1").to_string()
 }
 
 pub async fn fetch(

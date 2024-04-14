@@ -1,4 +1,3 @@
-use colored::Colorize;
 use ego_tree::NodeRef;
 use scraper::{Html, Node};
 
@@ -75,8 +74,15 @@ fn format_table(node: NodeRef<Node>, show_urls: bool) -> String {
     }
 }
 
+#[cfg(any(feature = "wasm-nodejs", feature = "cli"))]
 fn wrap_text_in_url(text: &str, url: &str) -> String {
+    use colored::Colorize;
     format!("{text}[{url}]", url = url.cyan())
+}
+
+#[cfg(not(any(feature = "wasm-nodejs", feature = "cli")))]
+fn wrap_text_in_url(text: &str, url: &str) -> String {
+    format!("{text}[{url}]")
 }
 
 #[cfg(test)]
@@ -116,7 +122,7 @@ mod tests {
     Hello, world!
     example[{url}]
 "#,
-                url = "example.com".cyan()
+                url = "example.com"
             );
 
             let document = Html::parse_document(input);

@@ -1,3 +1,5 @@
+#![cfg(any(feature = "wasm-nodejs", feature = "cli"))]
+
 use std::{
     fs, io,
     path::{Path, PathBuf},

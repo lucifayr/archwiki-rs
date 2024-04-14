@@ -1,3 +1,5 @@
+#![cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]
+
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use super::internal::{
