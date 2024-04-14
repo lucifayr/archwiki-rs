@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 use futures::TryFutureExt;
-use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
+use wasm_bindgen::{convert::IntoWasmAbi, prelude::wasm_bindgen, JsValue};
 
 use crate::{
     args::wasm::{
-        ListCategoriesWasmArgs, ListPagesWasmArgs, ReadPageWasmArgs, SearchWasmArgs,
-        WikiMetadataWasmArgs,
+        ListCategoriesWasmArgs, ListLanguagesWasmArgs, ListPagesWasmArgs, ReadPageWasmArgs,
+        SearchWasmArgs, WikiMetadataWasmArgs,
     },
-    list, search, wiki,
+    langs, list, search, wiki,
 };
 
 // TODO add docs
@@ -51,4 +51,10 @@ pub fn list_wiki_categories(
         serde_wasm_bindgen::from_value(metadata).map_err(|err| err.to_string())?;
 
     list::fmt_categories(args.into(), &wiki_tree).map_err(|err| err.to_string())
+}
+
+#[wasm_bindgen(js_name = listWikiLanguages)]
+pub async fn list_wiki_languages(args: ListLanguagesWasmArgs) -> Result<String, String> {
+    let langs = langs::fetch_all().await.map_err(|err| err.to_string())?;
+    langs::fmt(args.into(), &langs).map_err(|err| err.to_string())
 }
