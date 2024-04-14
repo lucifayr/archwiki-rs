@@ -52,7 +52,12 @@ pub fn read_pages_as_tree(
     })?;
 
     let page_to_category_map: HashMap<String, Vec<String>> = serde_yaml::from_str(&content)?; // also parses JSON files
+    Ok(flip_page_tree(page_to_category_map))
+}
 
+pub fn flip_page_tree(
+    page_to_category_map: HashMap<String, Vec<String>>,
+) -> HashMap<String, Vec<String>> {
     let mut category_to_page_map = HashMap::new();
     let mut uncategorized_pages = vec![];
 
@@ -83,5 +88,5 @@ pub fn read_pages_as_tree(
         }
     }
 
-    Ok(category_to_page_map)
+    category_to_page_map
 }

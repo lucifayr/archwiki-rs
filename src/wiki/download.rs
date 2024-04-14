@@ -43,7 +43,7 @@ pub async fn fetch_metadata(
     Ok(out)
 }
 
-#[cfg(any(feature = "wasm-nodejs", feature = "cli"))]
+#[cfg(feature = "cli")]
 fn progress_spinner(hide_progress: bool) -> Option<std::thread::JoinHandle<()>> {
     let spinner = indicatif::ProgressBar::new_spinner();
     let mut spin_task = None;
@@ -60,7 +60,10 @@ fn progress_spinner(hide_progress: bool) -> Option<std::thread::JoinHandle<()>> 
     spin_task
 }
 
-#[cfg(not(any(feature = "wasm-nodejs", feature = "cli")))]
+#[cfg(all(
+    not(feature = "cli"),
+    any(feature = "wasm-web", feature = "wasm-nodejs")
+))]
 fn progress_spinner(hide_progress: bool) -> Option<std::thread::JoinHandle<()>> {
     None
 }

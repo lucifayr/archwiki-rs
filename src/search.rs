@@ -55,14 +55,17 @@ impl TextSearchItem {
     }
 }
 
-#[cfg(any(feature = "wasm-nodejs", feature = "cli"))]
+#[cfg(feature = "cli")]
 fn highlight_results(rgx: &Regex, snippet: &str) -> String {
     use colored::Colorize;
     rgx.replace_all(snippet, format!("{}", "$1".cyan()))
         .to_string()
 }
 
-#[cfg(not(any(feature = "wasm-nodejs", feature = "cli")))]
+#[cfg(all(
+    not(feature = "cli"),
+    any(feature = "wasm-web", feature = "wasm-nodejs")
+))]
 fn highlight_results(rgx: &Regex, snippet: &str) -> String {
     rgx.replace_all(snippet, "$1").to_string()
 }

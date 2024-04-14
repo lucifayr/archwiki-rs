@@ -95,6 +95,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "colored",
+ "console_error_panic_hook",
  "directories",
  "ego-tree",
  "futures",
@@ -311,6 +312,16 @@ dependencies = [
  "libc",
  "unicode-width",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "console_error_panic_hook"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen",
 ]
 
 [[package]]

@@ -74,13 +74,16 @@ fn format_table(node: NodeRef<Node>, show_urls: bool) -> String {
     }
 }
 
-#[cfg(any(feature = "wasm-nodejs", feature = "cli"))]
+#[cfg(feature = "cli")]
 fn wrap_text_in_url(text: &str, url: &str) -> String {
     use colored::Colorize;
     format!("{text}[{url}]", url = url.cyan())
 }
 
-#[cfg(not(any(feature = "wasm-nodejs", feature = "cli")))]
+#[cfg(all(
+    not(feature = "cli"),
+    any(feature = "wasm-web", feature = "wasm-nodejs")
+))]
 fn wrap_text_in_url(text: &str, url: &str) -> String {
     format!("{text}[{url}]")
 }

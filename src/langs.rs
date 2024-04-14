@@ -25,11 +25,18 @@ pub async fn fetch_all() -> Result<Vec<Language>, WikiError> {
     Ok(json.query.languages)
 }
 
-pub fn fmt(args: ListLanguagesArgs, langs: &[Language]) -> Result<String, WikiError> {
-    let out = match args.args_json {
-        Some(args_json) if args_json.json_raw => serde_json::to_string(langs)?,
-        Some(_) => serde_json::to_string_pretty(langs)?,
-        None => fmt_plain(langs),
+pub fn fmt(
+    ListLanguagesArgs {
+        args_plain,
+        args_json,
+    }: ListLanguagesArgs,
+    langs: &[Language],
+) -> Result<String, WikiError> {
+    let out = match (args_plain, args_json) {
+        (Some(args_plain), _) if args_plain.plain => fmt_plain(langs),
+        (_, Some(args_json)) if args_json.json_raw => serde_json::to_string(langs)?,
+        (_, Some(args_json)) if args_json.json => serde_json::to_string_pretty(langs)?,
+        _ => fmt_plain(langs),
     };
 
     Ok(out)

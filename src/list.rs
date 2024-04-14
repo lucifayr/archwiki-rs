@@ -32,7 +32,10 @@ pub fn fmt_pages(
 }
 
 pub fn fmt_categories(
-    args: ListCategoriesArgs,
+    ListCategoriesArgs {
+        args_plain,
+        args_json,
+    }: ListCategoriesArgs,
     wiki_tree: &HashMap<String, Vec<String>>,
 ) -> Result<String, WikiError> {
     let categories = wiki_tree
@@ -42,10 +45,11 @@ pub fn fmt_categories(
         .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
         .collect_vec();
 
-    let out = match args.args_json {
-        Some(args_json) if args_json.json_raw => serde_json::to_string(&categories)?,
-        Some(_) => serde_json::to_string_pretty(&categories)?,
-        None => categories.into_iter().join("\n"),
+    let out = match (args_plain, args_json) {
+        (Some(args_plain), _) if args_plain.plain => categories.into_iter().join("\n"),
+        (_, Some(args_json)) if args_json.json_raw => serde_json::to_string(&categories)?,
+        (_, Some(args_json)) if args_json.json => serde_json::to_string_pretty(&categories)?,
+        _ => categories.into_iter().join("\n"),
     };
 
     Ok(out)
