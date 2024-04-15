@@ -45,19 +45,23 @@ bump-wasm-nodejs :
 	git commit -m "bump wasm-nodejs version to $(WASM_NODEJS_VERSION)"
 	git tag "wasm-nodejs-v$(WASM_NODEJS_VERSION)"
 
-publish-cli : bump-cli 
+push-tags: 
 	git push --follow-tags 
 	git push github 
 	git push --tags github
+
+publish-cli : bump-cli push-tags
 	cargo publish
 	glab release create "v$(CLI_VERSION)" -n "cli v$(CLI_VERSION)"
 	gh release create "v$(CLI_VERSION)" -t "cli v$(CLI_VERSION)" --generate-notes
 
-publish-wasm-web : bump-wasm-web
+publish-wasm-web : bump-wasm-web push-tags
+	wasm-pack publish
 	glab release create "wasm-web-v$(WASM_WEB_VERSION)" -n "wasm web v$(WASM_WEB_VERSION)"
 	gh release create "wasm-web-v$(WASM_WEB_VERSION)" -t "wasm web v$(WASM_WEB_VERSION)" --generate-notes
 
-publish-wasm-nodejs : bump-wasm-nodejs
+publish-wasm-nodejs : bump-wasm-nodejs push-tags
+	wasm-pack publish
 	glab release create "wasm-nodejs-v$(WASM_NODEJS_VERSION)" -n "wasm nodejs v$(WASM_NODEJS_VERSION)"
 	gh release create "wasm-nodejs-v$(WASM_NODEJS_VERSION)" -t "wasm nodejs v$(WASM_NODEJS_VERSION)" --generate-notes
 
