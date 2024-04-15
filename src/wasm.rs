@@ -5,8 +5,8 @@ use wasm_bindgen::{convert::IntoWasmAbi, prelude::wasm_bindgen, JsValue};
 
 use crate::{
     args::wasm::{
-        ListCategoriesWasmArgs, ListLanguagesWasmArgs, ListPagesWasmArgs, ReadPageWasmArgs,
-        SearchWasmArgs, WikiMetadataWasmArgs,
+        ListCategoriesArgs, ListLanguagesArgs, ListPagesArgs, ReadPageArgs, SearchArgs,
+        WikiMetadataArgs,
     },
     langs, list, search,
     utils::flip_page_tree,
@@ -29,13 +29,13 @@ fn main() {
 /// - On network errors
 /// - When no page is found
 #[wasm_bindgen(js_name = fetchWikiPage)]
-pub async fn fetch_wiki_page(args: ReadPageWasmArgs) -> Result<String, String> {
+pub async fn fetch_wiki_page(args: ReadPageArgs) -> Result<String, String> {
     wiki::fetch_and_format_page(args.into())
         .await
         .map_err(|err| err.to_string())
 }
 
-/// Search content on the ArchWiki for the specified query. See `SearchWasmArgs` for more details
+/// Search content on the ArchWiki for the specified query. See `SearchArgs` for more details
 /// on how to define a search.
 ///
 /// # Returns
@@ -48,7 +48,7 @@ pub async fn fetch_wiki_page(args: ReadPageWasmArgs) -> Result<String, String> {
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = searchWikiPages)]
-pub async fn search_wiki_pages(args: SearchWasmArgs) -> Result<String, String> {
+pub async fn search_wiki_pages(args: SearchArgs) -> Result<String, String> {
     search::fetch(args.into())
         .await
         .map_err(|err| err.to_string())
@@ -87,7 +87,7 @@ pub async fn search_wiki_pages(args: SearchWasmArgs) -> Result<String, String> {
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = fetchWikiMetadata)]
-pub async fn fetch_wiki_metadata(args: WikiMetadataWasmArgs) -> Result<String, String> {
+pub async fn fetch_wiki_metadata(args: WikiMetadataArgs) -> Result<String, String> {
     wiki::fetch_metadata(args.into())
         .await
         .map_err(|err| err.to_string())
@@ -105,7 +105,7 @@ pub async fn fetch_wiki_metadata(args: WikiMetadataWasmArgs) -> Result<String, S
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = listWikiPages)]
-pub fn list_wiki_pages(args: ListPagesWasmArgs, metadata: JsValue) -> Result<String, String> {
+pub fn list_wiki_pages(args: ListPagesArgs, metadata: JsValue) -> Result<String, String> {
     let page_to_category_map: HashMap<String, Vec<String>> =
         serde_wasm_bindgen::from_value(metadata).map_err(|err| err.to_string())?;
     let wiki_tree = flip_page_tree(page_to_category_map);
@@ -125,10 +125,7 @@ pub fn list_wiki_pages(args: ListPagesWasmArgs, metadata: JsValue) -> Result<Str
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = listWikiCategories)]
-pub fn list_wiki_categories(
-    args: ListCategoriesWasmArgs,
-    metadata: JsValue,
-) -> Result<String, String> {
+pub fn list_wiki_categories(args: ListCategoriesArgs, metadata: JsValue) -> Result<String, String> {
     let page_to_category_map: HashMap<String, Vec<String>> =
         serde_wasm_bindgen::from_value(metadata).map_err(|err| err.to_string())?;
     let wiki_tree = flip_page_tree(page_to_category_map);
@@ -148,7 +145,7 @@ pub fn list_wiki_categories(
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = listWikiLanguages)]
-pub async fn list_wiki_languages(args: ListLanguagesWasmArgs) -> Result<String, String> {
+pub async fn list_wiki_languages(args: ListLanguagesArgs) -> Result<String, String> {
     let langs = langs::fetch_all().await.map_err(|err| err.to_string())?;
     langs::fmt(args.into(), &langs).map_err(|err| err.to_string())
 }

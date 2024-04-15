@@ -11,7 +11,7 @@ use scraper::Html;
 #[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
 #[cfg_attr(
     any(feature = "wasm-web", feature = "wasm-nodejs"),
-    wasm_bindgen::prelude::wasm_bindgen
+    wasm_bindgen::prelude::wasm_bindgen(js_name = PageFmtArgs)
 )]
 pub enum PageFormat {
     PlainText,

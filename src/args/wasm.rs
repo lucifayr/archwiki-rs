@@ -5,15 +5,11 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::formats::PageFormat;
 
-use super::internal::{
-    InfoArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs, ListLanguagesArgs,
-    ListLanguagesFmtArgs, ListPagesArgs, ListPagesFmtArgs, ListPagesPlainArgs, ReadPageArgs,
-    SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
-};
+use super::internal;
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub struct ReadPageWasmArgs {
+pub struct ReadPageArgs {
     page: String,
     format: Option<PageFormat>,
     lang: Option<String>,
@@ -21,7 +17,7 @@ pub struct ReadPageWasmArgs {
 }
 
 #[wasm_bindgen]
-impl ReadPageWasmArgs {
+impl ReadPageArgs {
     #[wasm_bindgen(constructor)]
     pub fn new(
         page: String,
@@ -38,14 +34,14 @@ impl ReadPageWasmArgs {
     }
 }
 
-impl From<ReadPageWasmArgs> for ReadPageArgs {
+impl From<ReadPageArgs> for internal::ReadPageArgs {
     fn from(
-        ReadPageWasmArgs {
+        ReadPageArgs {
             page,
             format,
             lang,
             show_urls,
-        }: ReadPageWasmArgs,
+        }: ReadPageArgs,
     ) -> Self {
         Self {
             page,
@@ -58,23 +54,23 @@ impl From<ReadPageWasmArgs> for ReadPageArgs {
 
 #[derive(Debug)]
 #[wasm_bindgen]
-pub struct SearchWasmArgs {
+pub struct SearchArgs {
     search: String,
     lang: Option<String>,
     limit: Option<u16>,
     text_search: Option<bool>,
-    fmt: Option<SearchFmtWasmArgs>,
+    fmt: Option<SearchFmtArgs>,
 }
 
 #[wasm_bindgen]
-impl SearchWasmArgs {
+impl SearchArgs {
     #[wasm_bindgen(constructor)]
     pub fn new(
         search: String,
         lang: Option<String>,
         limit: Option<u16>,
         textSearch: Option<bool>,
-        fmt: Option<SearchFmtWasmArgs>,
+        fmt: Option<SearchFmtArgs>,
     ) -> Self {
         Self {
             search,
@@ -86,15 +82,15 @@ impl SearchWasmArgs {
     }
 }
 
-impl From<SearchWasmArgs> for SearchArgs {
+impl From<SearchArgs> for internal::SearchArgs {
     fn from(
-        SearchWasmArgs {
+        SearchArgs {
             search,
             lang,
             limit,
             text_search,
             fmt,
-        }: SearchWasmArgs,
+        }: SearchArgs,
     ) -> Self {
         Self {
             search,
@@ -108,38 +104,38 @@ impl From<SearchWasmArgs> for SearchArgs {
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub enum SearchFmtWasmArgs {
+pub enum SearchFmtArgs {
     JsonPretty,
     JsonRaw,
     Plain,
 }
 
-impl From<Option<SearchFmtWasmArgs>> for SearchFmtArgs {
-    fn from(value: Option<SearchFmtWasmArgs>) -> Self {
+impl From<Option<SearchFmtArgs>> for internal::SearchFmtArgs {
+    fn from(value: Option<SearchFmtArgs>) -> Self {
         match value {
-            None | Some(SearchFmtWasmArgs::JsonRaw) => Self::JsonRaw,
-            Some(SearchFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            Some(SearchFmtWasmArgs::Plain) => Self::Plain,
+            None | Some(SearchFmtArgs::JsonRaw) => Self::JsonRaw,
+            Some(SearchFmtArgs::JsonPretty) => Self::JsonPretty,
+            Some(SearchFmtArgs::Plain) => Self::Plain,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub struct WikiMetadataWasmArgs {
-    fmt: Option<WikiMetadataFmtWasmArgs>,
+pub struct WikiMetadataArgs {
+    fmt: Option<WikiMetadataFmtArgs>,
 }
 
 #[wasm_bindgen]
-impl WikiMetadataWasmArgs {
+impl WikiMetadataArgs {
     #[wasm_bindgen(constructor)]
-    pub fn new(fmt: Option<WikiMetadataFmtWasmArgs>) -> Self {
+    pub fn new(fmt: Option<WikiMetadataFmtArgs>) -> Self {
         Self { fmt }
     }
 }
 
-impl From<WikiMetadataWasmArgs> for WikiMetadataArgs {
-    fn from(WikiMetadataWasmArgs { fmt }: WikiMetadataWasmArgs) -> Self {
+impl From<WikiMetadataArgs> for internal::WikiMetadataArgs {
+    fn from(WikiMetadataArgs { fmt }: WikiMetadataArgs) -> Self {
         Self {
             hide_progress: true,
             fmt: fmt.into(),
@@ -149,36 +145,33 @@ impl From<WikiMetadataWasmArgs> for WikiMetadataArgs {
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub enum WikiMetadataFmtWasmArgs {
+pub enum WikiMetadataFmtArgs {
     JsonPretty,
     JsonRaw,
     Yaml,
 }
 
-impl From<Option<WikiMetadataFmtWasmArgs>> for WikiMetadataFmtArgs {
-    fn from(value: Option<WikiMetadataFmtWasmArgs>) -> Self {
+impl From<Option<WikiMetadataFmtArgs>> for internal::WikiMetadataFmtArgs {
+    fn from(value: Option<WikiMetadataFmtArgs>) -> Self {
         match value {
-            None | Some(WikiMetadataFmtWasmArgs::JsonRaw) => Self::JsonRaw,
-            Some(WikiMetadataFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            Some(WikiMetadataFmtWasmArgs::Yaml) => Self::Yaml,
+            None | Some(WikiMetadataFmtArgs::JsonRaw) => Self::JsonRaw,
+            Some(WikiMetadataFmtArgs::JsonPretty) => Self::JsonPretty,
+            Some(WikiMetadataFmtArgs::Yaml) => Self::Yaml,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub struct ListPagesWasmArgs {
-    fmt: Option<ListPagesFmtWasmArgs>,
-    args_plain: Option<ListPagesPlainWasmArgs>,
+pub struct ListPagesArgs {
+    fmt: Option<ListPagesFmtArgs>,
+    args_plain: Option<ListPagesPlainArgs>,
 }
 
 #[wasm_bindgen]
-impl ListPagesWasmArgs {
+impl ListPagesArgs {
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        fmt: Option<ListPagesFmtWasmArgs>,
-        argsPlain: Option<ListPagesPlainWasmArgs>,
-    ) -> Self {
+    pub fn new(fmt: Option<ListPagesFmtArgs>, argsPlain: Option<ListPagesPlainArgs>) -> Self {
         Self {
             fmt,
             args_plain: argsPlain,
@@ -186,8 +179,8 @@ impl ListPagesWasmArgs {
     }
 }
 
-impl From<ListPagesWasmArgs> for ListPagesArgs {
-    fn from(ListPagesWasmArgs { fmt, args_plain }: ListPagesWasmArgs) -> Self {
+impl From<ListPagesArgs> for internal::ListPagesArgs {
+    fn from(ListPagesArgs { fmt, args_plain }: ListPagesArgs) -> Self {
         Self {
             fmt: fmt.into(),
             args_plain: args_plain.map(Into::into),
@@ -197,34 +190,34 @@ impl From<ListPagesWasmArgs> for ListPagesArgs {
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub enum ListPagesFmtWasmArgs {
+pub enum ListPagesFmtArgs {
     JsonPretty,
     JsonRaw,
     Plain,
 }
 
-impl From<Option<ListPagesFmtWasmArgs>> for ListPagesFmtArgs {
-    fn from(value: Option<ListPagesFmtWasmArgs>) -> Self {
+impl From<Option<ListPagesFmtArgs>> for internal::ListPagesFmtArgs {
+    fn from(value: Option<ListPagesFmtArgs>) -> Self {
         match value {
-            None | Some(ListPagesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
-            Some(ListPagesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            Some(ListPagesFmtWasmArgs::Plain) => Self::Plain,
+            None | Some(ListPagesFmtArgs::JsonRaw) => Self::JsonRaw,
+            Some(ListPagesFmtArgs::JsonPretty) => Self::JsonPretty,
+            Some(ListPagesFmtArgs::Plain) => Self::Plain,
         }
     }
 }
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub struct ListPagesPlainWasmArgs {
+pub struct ListPagesPlainArgs {
     flatten: bool,
     categories: Vec<String>,
 }
 
-impl From<ListPagesPlainWasmArgs> for ListPagesPlainArgs {
+impl From<ListPagesPlainArgs> for internal::ListPagesPlainArgs {
     fn from(
-        ListPagesPlainWasmArgs {
+        ListPagesPlainArgs {
             flatten,
             categories,
-        }: ListPagesPlainWasmArgs,
+        }: ListPagesPlainArgs,
     ) -> Self {
         Self {
             flatten,
@@ -235,76 +228,76 @@ impl From<ListPagesPlainWasmArgs> for ListPagesPlainArgs {
 
 #[derive(Debug)]
 #[wasm_bindgen]
-pub struct ListCategoriesWasmArgs {
-    fmt: Option<ListCategoriesFmtWasmArgs>,
+pub struct ListCategoriesArgs {
+    fmt: Option<ListCategoriesFmtArgs>,
 }
 
 #[wasm_bindgen]
-impl ListCategoriesWasmArgs {
+impl ListCategoriesArgs {
     #[wasm_bindgen(constructor)]
-    pub fn new(fmt: Option<ListCategoriesFmtWasmArgs>) -> Self {
+    pub fn new(fmt: Option<ListCategoriesFmtArgs>) -> Self {
         Self { fmt }
     }
 }
 
-impl From<ListCategoriesWasmArgs> for ListCategoriesArgs {
-    fn from(ListCategoriesWasmArgs { fmt }: ListCategoriesWasmArgs) -> Self {
+impl From<ListCategoriesArgs> for internal::ListCategoriesArgs {
+    fn from(ListCategoriesArgs { fmt }: ListCategoriesArgs) -> Self {
         Self { fmt: fmt.into() }
     }
 }
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub enum ListCategoriesFmtWasmArgs {
+pub enum ListCategoriesFmtArgs {
     JsonPretty,
     JsonRaw,
     Plain,
 }
 
-impl From<Option<ListCategoriesFmtWasmArgs>> for ListCategoriesFmtArgs {
-    fn from(value: Option<ListCategoriesFmtWasmArgs>) -> Self {
+impl From<Option<ListCategoriesFmtArgs>> for internal::ListCategoriesFmtArgs {
+    fn from(value: Option<ListCategoriesFmtArgs>) -> Self {
         match value {
-            None | Some(ListCategoriesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
-            Some(ListCategoriesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            Some(ListCategoriesFmtWasmArgs::Plain) => Self::Plain,
+            None | Some(ListCategoriesFmtArgs::JsonRaw) => Self::JsonRaw,
+            Some(ListCategoriesFmtArgs::JsonPretty) => Self::JsonPretty,
+            Some(ListCategoriesFmtArgs::Plain) => Self::Plain,
         }
     }
 }
 
 #[derive(Debug)]
 #[wasm_bindgen]
-pub struct ListLanguagesWasmArgs {
-    fmt: Option<ListLanguagesFmtWasmArgs>,
+pub struct ListLanguagesArgs {
+    fmt: Option<ListLanguagesFmtArgs>,
 }
 
 #[wasm_bindgen]
-impl ListLanguagesWasmArgs {
+impl ListLanguagesArgs {
     #[wasm_bindgen(constructor)]
-    pub fn new(fmt: Option<ListLanguagesFmtWasmArgs>) -> Self {
+    pub fn new(fmt: Option<ListLanguagesFmtArgs>) -> Self {
         Self { fmt }
     }
 }
 
-impl From<ListLanguagesWasmArgs> for ListLanguagesArgs {
-    fn from(ListLanguagesWasmArgs { fmt }: ListLanguagesWasmArgs) -> Self {
+impl From<ListLanguagesArgs> for internal::ListLanguagesArgs {
+    fn from(ListLanguagesArgs { fmt }: ListLanguagesArgs) -> Self {
         Self { fmt: fmt.into() }
     }
 }
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub enum ListLanguagesFmtWasmArgs {
+pub enum ListLanguagesFmtArgs {
     JsonPretty,
     JsonRaw,
     Plain,
 }
 
-impl From<Option<ListLanguagesFmtWasmArgs>> for ListLanguagesFmtArgs {
-    fn from(value: Option<ListLanguagesFmtWasmArgs>) -> Self {
+impl From<Option<ListLanguagesFmtArgs>> for internal::ListLanguagesFmtArgs {
+    fn from(value: Option<ListLanguagesFmtArgs>) -> Self {
         match value {
-            None | Some(ListLanguagesFmtWasmArgs::Plain) => Self::Plain,
-            Some(ListLanguagesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
-            Some(ListLanguagesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
+            None | Some(ListLanguagesFmtArgs::Plain) => Self::Plain,
+            Some(ListLanguagesFmtArgs::JsonRaw) => Self::JsonRaw,
+            Some(ListLanguagesFmtArgs::JsonPretty) => Self::JsonPretty,
         }
     }
 }
