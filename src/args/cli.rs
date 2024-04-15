@@ -8,7 +8,7 @@ use clap_complete::Shell;
 use crate::formats::PageFormat;
 
 use super::internal::{
-    InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs,
+    InfoArgs, InfoFmtArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs,
     ListLanguagesArgs, ListLanguagesFmtArgs, ListPagesArgs, ListPagesFmtArgs, ListPagesPlainArgs,
     ReadPageArgs, SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
 };
@@ -398,7 +398,7 @@ pub struct LocalWikiCliArgs {
     pub location: PathBuf,
 }
 
-#[derive(Parser, Debug, Clone, Copy)]
+#[derive(Parser, Debug)]
 pub struct InfoCliArgs {
     #[command(flatten)]
     pub args_plain: Option<InfoPlainCliArgs>,
@@ -415,22 +415,22 @@ impl From<InfoCliArgs> for InfoArgs {
         }: InfoCliArgs,
     ) -> Self {
         Self {
-            args_plain: args_plain.map(Into::into),
-            args_json: args_json.map(Into::into),
+            args_plain: args_plain.clone().map(Into::into),
+            fmt: (args_plain, args_json).into(),
         }
     }
 }
 
-#[derive(Args, Debug, Default, Clone, Copy)]
+#[derive(Args, Debug, Clone)]
 #[group(id = "plain-info", conflicts_with_all = ["json-info"])]
 pub struct InfoPlainCliArgs {
-    #[arg(short = 'c', long, default_value_t = InfoPlainArgs::default().show_cache_dir)]
+    #[arg(short = 'c', long)]
     /// Show entry for cache directory
     pub show_cache_dir: bool,
-    #[arg(short = 'd', long, default_value_t = InfoPlainArgs::default().show_data_dir)]
+    #[arg(short = 'd', long)]
     /// Show entry for data directory
     pub show_data_dir: bool,
-    #[arg(short, long, default_value_t = InfoPlainArgs::default().only_values)]
+    #[arg(short, long)]
     /// Only display values, hide names and descriptions
     pub only_values: bool,
 }
@@ -451,20 +451,25 @@ impl From<InfoPlainCliArgs> for InfoPlainArgs {
     }
 }
 
-#[derive(Args, Debug, Clone, Copy)]
+#[derive(Args, Debug)]
 #[group(id = "json-info", conflicts_with_all = ["plain-info"])]
 pub struct InfoJsonCliArgs {
-    #[arg(short, long, default_value_t = InfoJsonArgs::default().json)]
+    #[arg(short, long)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(short = 'J', long, default_value_t = InfoJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
 
-impl From<InfoJsonCliArgs> for InfoJsonArgs {
-    fn from(InfoJsonCliArgs { json, json_raw }: InfoJsonCliArgs) -> Self {
-        Self { json, json_raw }
+impl From<(Option<InfoPlainCliArgs>, Option<InfoJsonCliArgs>)> for InfoFmtArgs {
+    fn from(value: (Option<InfoPlainCliArgs>, Option<InfoJsonCliArgs>)) -> Self {
+        match value {
+            (Some(_plain_args), _) => Self::Plain,
+            (_, Some(args)) if args.json_raw => Self::JsonRaw,
+            (_, Some(args)) if args.json => Self::JsonPretty,
+            _ => Self::Plain,
+        }
     }
 }
 

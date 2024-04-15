@@ -6,9 +6,9 @@ use wasm_bindgen::prelude::wasm_bindgen;
 use crate::formats::PageFormat;
 
 use super::internal::{
-    InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs,
-    ListLanguagesArgs, ListLanguagesFmtArgs, ListPagesArgs, ListPagesFmtArgs, ListPagesPlainArgs,
-    ReadPageArgs, SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
+    InfoArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs, ListLanguagesArgs,
+    ListLanguagesFmtArgs, ListPagesArgs, ListPagesFmtArgs, ListPagesPlainArgs, ReadPageArgs,
+    SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
 };
 
 #[derive(Debug, Clone)]
@@ -117,10 +117,9 @@ pub enum SearchFmtWasmArgs {
 impl From<Option<SearchFmtWasmArgs>> for SearchFmtArgs {
     fn from(value: Option<SearchFmtWasmArgs>) -> Self {
         match value {
-            Some(SearchFmtWasmArgs::Plain) => Self::Plain,
-            Some(SearchFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            None | Some(SearchFmtWasmArgs::JsonRaw) => Self::JsonRaw,
             Some(SearchFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            None => Self::JsonRaw,
+            Some(SearchFmtWasmArgs::Plain) => Self::Plain,
         }
     }
 }
@@ -159,10 +158,9 @@ pub enum WikiMetadataFmtWasmArgs {
 impl From<Option<WikiMetadataFmtWasmArgs>> for WikiMetadataFmtArgs {
     fn from(value: Option<WikiMetadataFmtWasmArgs>) -> Self {
         match value {
-            Some(WikiMetadataFmtWasmArgs::Yaml) => Self::Yaml,
-            Some(WikiMetadataFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            None | Some(WikiMetadataFmtWasmArgs::JsonRaw) => Self::JsonRaw,
             Some(WikiMetadataFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            None => Self::JsonRaw,
+            Some(WikiMetadataFmtWasmArgs::Yaml) => Self::Yaml,
         }
     }
 }
@@ -208,10 +206,9 @@ pub enum ListPagesFmtWasmArgs {
 impl From<Option<ListPagesFmtWasmArgs>> for ListPagesFmtArgs {
     fn from(value: Option<ListPagesFmtWasmArgs>) -> Self {
         match value {
-            Some(ListPagesFmtWasmArgs::Plain) => Self::Plain,
-            Some(ListPagesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            None | Some(ListPagesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
             Some(ListPagesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            None => Self::JsonRaw,
+            Some(ListPagesFmtWasmArgs::Plain) => Self::Plain,
         }
     }
 }
@@ -267,10 +264,9 @@ pub enum ListCategoriesFmtWasmArgs {
 impl From<Option<ListCategoriesFmtWasmArgs>> for ListCategoriesFmtArgs {
     fn from(value: Option<ListCategoriesFmtWasmArgs>) -> Self {
         match value {
-            Some(ListCategoriesFmtWasmArgs::Plain) => Self::Plain,
-            Some(ListCategoriesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            None | Some(ListCategoriesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
             Some(ListCategoriesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            None => Self::JsonRaw,
+            Some(ListCategoriesFmtWasmArgs::Plain) => Self::Plain,
         }
     }
 }
@@ -306,10 +302,9 @@ pub enum ListLanguagesFmtWasmArgs {
 impl From<Option<ListLanguagesFmtWasmArgs>> for ListLanguagesFmtArgs {
     fn from(value: Option<ListLanguagesFmtWasmArgs>) -> Self {
         match value {
-            Some(ListLanguagesFmtWasmArgs::Plain) => Self::Plain,
+            None | Some(ListLanguagesFmtWasmArgs::Plain) => Self::Plain,
             Some(ListLanguagesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
             Some(ListLanguagesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
-            None => Self::JsonRaw,
         }
     }
 }

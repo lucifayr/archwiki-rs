@@ -6,7 +6,7 @@ use itertools::Itertools;
 use serde::Serialize;
 
 use crate::{
-    args::internal::{InfoArgs, InfoPlainArgs},
+    args::internal::{InfoArgs, InfoFmtArgs, InfoPlainArgs},
     error::WikiError,
 };
 
@@ -17,22 +17,20 @@ struct AppInfo {
     data_dir: String,
 }
 
-pub fn fmt(args: InfoArgs, cache_dir: &Path, data_dir: &Path) -> Result<String, WikiError> {
+pub fn fmt(
+    InfoArgs { fmt, args_plain }: InfoArgs,
+    cache_dir: &Path,
+    data_dir: &Path,
+) -> Result<String, WikiError> {
     let info = AppInfo {
         cache_dir: cache_dir.to_string_lossy().to_string(),
         data_dir: data_dir.to_string_lossy().to_string(),
     };
 
-    let out = match (args.args_plain, args.args_json) {
-        (Some(args_plain), _) => fmt_plain(info, args_plain),
-        (_, Some(args_json)) => {
-            if args_json.json_raw {
-                serde_json::to_string(&info)?
-            } else {
-                serde_json::to_string_pretty(&info)?
-            }
-        }
-        _ => fmt_plain(info, InfoPlainArgs::default()),
+    let out = match fmt {
+        InfoFmtArgs::Plain => fmt_plain(info, args_plain.unwrap_or_default()),
+        InfoFmtArgs::JsonRaw => serde_json::to_string(&info)?,
+        InfoFmtArgs::JsonPretty => serde_json::to_string_pretty(&info)?,
     };
 
     Ok(out)
