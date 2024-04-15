@@ -21,25 +21,31 @@ check-version-wasm-nodejs :
 	! git diff --quiet $(WASM_NODEJS_PKG_NAME).json
 	git diff $(WASM_NODEJS_PKG_NAME).json | grep -q '+  "version": '
 
-bump-cli : check-version-cli
+build-wasm-web:
+	wasm-pack build --release -t web -s $(NPMJS_SCOPE) --out-name $(WASM_WEB_PKG_NAME) --out-dir $(WASM_WEB_PKG_DIR)  ./ --features wasm-web --no-default-features
+	jq -s '.[0] * .[1]'  $(WASM_WEB_PKG_DIR)/package.json $(WASM_WEB_PKG_NAME).json | sponge $(WASM_WEB_PKG_DIR)/package.json
+	cp $(WASM_WEB_PKG_NAME)-README.md $(WASM_WEB_PKG_DIR)/README.md
+
+build-wasm-nodejs:
+	wasm-pack build --release -t nodejs -s $(NPMJS_SCOPE) --out-name $(WASM_NODEJS_PKG_NAME) --out-dir $(WASM_NODEJS_PKG_DIR) ./ --features wasm-nodejs --no-default-features
+	jq -s '.[0] * .[1]'  $(WASM_NODEJS_PKG_DIR)/package.json $(WASM_NODEJS_PKG_NAME).json | sponge $(WASM_NODEJS_PKG_DIR)/package.json
+	cp $(WASM_NODEJS_PKG_NAME)-README.md $(WASM_NODEJS_PKG_DIR)/README.md
+
+build-wasm: build-wasm-web build-wasm-nodejs
+
+bump-cli : check-version-cli build-wasm-web
 	cargo build --release
 	git add Cargo.toml Cargo.lock
 	git commit -m "bump cli version to $(CLI_VERSION)"
 	git tag "v$(CLI_VERSION)"
 
 bump-wasm-web : check-version-wasm-web 
-	wasm-pack build --release -t web -s $(NPMJS_SCOPE) --out-name $(WASM_WEB_PKG_NAME) --out-dir $(WASM_WEB_PKG_DIR)  ./ --features wasm-web --no-default-features
-	jq -s '.[0] * .[1]'  $(WASM_WEB_PKG_DIR)/package.json $(WASM_WEB_PKG_NAME).json | sponge $(WASM_WEB_PKG_DIR)/package.json
-	cp $(WASM_WEB_PKG_NAME)-README.md $(WASM_WEB_PKG_DIR)/README.md
 	wasm-pack pack $(WASM_WEB_PKG_DIR)
 	git add $(WASM_WEB_PKG_NAME).json
 	git commit -m "bump wasm-web version to $(WASM_WEB_VERSION)"
 	git tag "wasm-web-v$(WASM_WEB_VERSION)"
 
-bump-wasm-nodejs : check-version-wasm-nodejs
-	wasm-pack build --release -t nodejs -s $(NPMJS_SCOPE) --out-name $(WASM_NODEJS_PKG_NAME) --out-dir $(WASM_NODEJS_PKG_DIR) ./ --features wasm-nodejs --no-default-features
-	jq -s '.[0] * .[1]'  $(WASM_NODEJS_PKG_DIR)/package.json $(WASM_NODEJS_PKG_NAME).json | sponge $(WASM_NODEJS_PKG_DIR)/package.json
-	cp $(WASM_NODEJS_PKG_NAME)-README.md $(WASM_NODEJS_PKG_DIR)/README.md
+bump-wasm-nodejs : check-version-wasm-nodejs build-wasm-nodejs
 	wasm-pack pack $(WASM_NODEJS_PKG_DIR)
 	git add $(WASM_NODEJS_PKG_NAME).json
 	git commit -m "bump wasm-nodejs version to $(WASM_NODEJS_VERSION)"
