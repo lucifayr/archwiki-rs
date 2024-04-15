@@ -39,7 +39,7 @@ bump-cli : check-version-cli build-wasm-web
 	git commit -m "bump cli version to $(CLI_VERSION)"
 	git tag "v$(CLI_VERSION)"
 
-bump-wasm-web : check-version-wasm-web 
+bump-wasm-web : check-version-wasm-web build-wasm-web
 	wasm-pack pack $(WASM_WEB_PKG_DIR)
 	git add $(WASM_WEB_PKG_NAME).json
 	git commit -m "bump wasm-web version to $(WASM_WEB_VERSION)"
@@ -55,22 +55,21 @@ bump-wasm : bump-wasm-web bump-wasm-nodejs
 
 push-tags: 
 	git push --follow-tags 
-	git push github 
-	git push --tags github
+	git push --follow-tags github
 
 publish-cli : bump-cli push-tags
 	cargo publish
 	glab release create "v$(CLI_VERSION)" -n "cli v$(CLI_VERSION)"
-	gh release create "v$(CLI_VERSION)" -t "cli v$(CLI_VERSION)" --generate-notes
+	gh release create "v$(CLI_VERSION)" -t "cli v$(CLI_VERSION)" --generate-notes --target main --latest=true
 
 publish-wasm-web : bump-wasm-web push-tags
 	wasm-pack publish $(WASM_WEB_PKG_DIR)
 	glab release create "wasm-web-v$(WASM_WEB_VERSION)" -n "wasm web v$(WASM_WEB_VERSION)"
-	gh release create "wasm-web-v$(WASM_WEB_VERSION)" -t "wasm web v$(WASM_WEB_VERSION)" --generate-notes
+	gh release create "wasm-web-v$(WASM_WEB_VERSION)" -t "wasm web v$(WASM_WEB_VERSION)" --generate-notes --target main --latest=false 
 
 publish-wasm-nodejs : bump-wasm-nodejs push-tags
 	wasm-pack publish $(WASM_NODEJS_PKG_DIR)
 	glab release create "wasm-nodejs-v$(WASM_NODEJS_VERSION)" -n "wasm nodejs v$(WASM_NODEJS_VERSION)"
-	gh release create "wasm-nodejs-v$(WASM_NODEJS_VERSION)" -t "wasm nodejs v$(WASM_NODEJS_VERSION)" --generate-notes
+	gh release create "wasm-nodejs-v$(WASM_NODEJS_VERSION)" -t "wasm nodejs v$(WASM_NODEJS_VERSION)" --generate-notes --target main --latest=false 
 
 publish-wasm : publish-wasm-web publish-wasm-nodejs
