@@ -10,8 +10,8 @@ use crate::formats::PageFormat;
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListLanguagesArgs, ListLanguagesJsonArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs,
-    ReadPageArgs, SearchArgs, SearchJsonArgs, WikiMetadataArgs, WikiMetadataJsonArgs,
-    WikiMetadataYamlArgs,
+    ReadPageArgs, SearchArgs, SearchFmtArgs, SearchJsonArgs, WikiMetadataArgs,
+    WikiMetadataJsonArgs, WikiMetadataYamlArgs,
 };
 
 #[derive(Parser, Debug)]
@@ -129,8 +129,18 @@ impl From<SearchCliArgs> for SearchArgs {
             lang,
             limit,
             text_search,
-            args_json: args_json.map(Into::into),
-            args_plain: None,
+            fmt: args_json.into(),
+        }
+    }
+}
+
+impl From<Option<SearchJsonCliArgs>> for SearchFmtArgs {
+    fn from(value: Option<SearchJsonCliArgs>) -> Self {
+        match value {
+            Some(args) if args.json_raw => Self::JsonRaw,
+            Some(args) if args.json => Self::JsonPretty,
+            Some(_) => Self::JsonPretty,
+            None => Self::Plain,
         }
     }
 }

@@ -8,8 +8,8 @@ use crate::formats::PageFormat;
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListCategoriesPlainArgs, ListLanguagesArgs, ListLanguagesJsonArgs, ListLanguagesPlainArgs,
-    ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs, ReadPageArgs, SearchArgs, SearchJsonArgs,
-    SearchPlainArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
+    ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs, ReadPageArgs, SearchArgs, SearchFmtArgs,
+    SearchJsonArgs, SearchPlainArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
 };
 
 #[derive(Debug, Clone)]
@@ -64,8 +64,7 @@ pub struct SearchWasmArgs {
     lang: Option<String>,
     limit: Option<u16>,
     text_search: Option<bool>,
-    args_plain: Option<SearchPlainWasmArgs>,
-    args_json: Option<SearchJsonWasmArgs>,
+    fmt: Option<SearchFmtWasmArgs>,
 }
 
 #[wasm_bindgen]
@@ -76,16 +75,14 @@ impl SearchWasmArgs {
         lang: Option<String>,
         limit: Option<u16>,
         textSearch: Option<bool>,
-        argsPlain: Option<SearchPlainWasmArgs>,
-        argsJson: Option<SearchJsonWasmArgs>,
+        fmt: Option<SearchFmtWasmArgs>,
     ) -> Self {
         Self {
             search,
             lang,
             limit,
+            fmt,
             text_search: textSearch,
-            args_plain: argsPlain,
-            args_json: argsJson,
         }
     }
 }
@@ -97,8 +94,7 @@ impl From<SearchWasmArgs> for SearchArgs {
             lang,
             limit,
             text_search,
-            args_plain,
-            args_json,
+            fmt,
         }: SearchWasmArgs,
     ) -> Self {
         Self {
@@ -106,8 +102,26 @@ impl From<SearchWasmArgs> for SearchArgs {
             lang: lang.unwrap_or_else(|| Self::default().lang),
             limit: limit.unwrap_or_else(|| Self::default().limit),
             text_search: text_search.unwrap_or_else(|| Self::default().text_search),
-            args_plain: args_plain.map(Into::into),
-            args_json: Some(args_json.unwrap_or_default().into()),
+            fmt: fmt.into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[wasm_bindgen]
+pub enum SearchFmtWasmArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
+}
+
+impl From<Option<SearchFmtWasmArgs>> for SearchFmtArgs {
+    fn from(value: Option<SearchFmtWasmArgs>) -> Self {
+        match value {
+            Some(SearchFmtWasmArgs::Plain) => Self::Plain,
+            Some(SearchFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            Some(SearchFmtWasmArgs::JsonPretty) => Self::JsonPretty,
+            None => Self::JsonRaw,
         }
     }
 }

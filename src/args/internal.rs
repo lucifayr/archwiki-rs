@@ -25,8 +25,7 @@ pub struct SearchArgs {
     pub lang: String,
     pub limit: u16,
     pub text_search: bool,
-    pub args_plain: Option<SearchPlainArgs>,
-    pub args_json: Option<SearchJsonArgs>,
+    pub fmt: SearchFmtArgs,
 }
 
 impl Default for SearchArgs {
@@ -36,10 +35,16 @@ impl Default for SearchArgs {
             lang: String::from("en"),
             limit: 5,
             text_search: false,
-            args_plain: None,
-            args_json: None,
+            fmt: SearchFmtArgs::Plain,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum SearchFmtArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
