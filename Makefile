@@ -8,7 +8,6 @@ CLI_VERSION=$(shell cargo metadata --no-deps --format-version 1 | jq -r '.packag
 WASM_WEB_VERSION=$(shell jq -r '.version' $(WASM_WEB_PKG_NAME).json)
 WASM_NODEJS_VERSION=$(shell jq -r '.version' $(WASM_NODEJS_PKG_NAME).json)
 
-# check that version changed and required envs are set
 check-version-cli : 
 	! git diff --quiet Cargo.toml
 	git diff Cargo.toml | grep  '+version = ' -B 2 | head -n 1 | grep -q ' name = "archwiki-rs"'
