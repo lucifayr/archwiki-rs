@@ -9,7 +9,7 @@ use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListCategoriesPlainArgs, ListLanguagesArgs, ListLanguagesJsonArgs, ListLanguagesPlainArgs,
     ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs, ReadPageArgs, SearchArgs, SearchFmtArgs,
-    SearchJsonArgs, SearchPlainArgs, WikiMetadataArgs, WikiMetadataJsonArgs, WikiMetadataYamlArgs,
+    WikiMetadataArgs, WikiMetadataFmtArgs,
 };
 
 #[derive(Debug, Clone)]
@@ -126,154 +126,44 @@ impl From<Option<SearchFmtWasmArgs>> for SearchFmtArgs {
     }
 }
 
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct SearchPlainWasmArgs {
-    plain: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl SearchPlainWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(plain: Option<bool>) -> Self {
-        Self { plain }
-    }
-}
-
-impl From<SearchPlainWasmArgs> for SearchPlainArgs {
-    fn from(SearchPlainWasmArgs { plain }: SearchPlainWasmArgs) -> Self {
-        Self {
-            plain: plain.unwrap_or_else(|| Self::default().plain),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct SearchJsonWasmArgs {
-    json: Option<bool>,
-    json_raw: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl SearchJsonWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
-        Self {
-            json,
-            json_raw: jsonRaw,
-        }
-    }
-}
-
-impl Default for SearchJsonWasmArgs {
-    fn default() -> Self {
-        Self {
-            json: None,
-            json_raw: Some(true),
-        }
-    }
-}
-
-impl From<SearchJsonWasmArgs> for SearchJsonArgs {
-    fn from(SearchJsonWasmArgs { json, json_raw }: SearchJsonWasmArgs) -> Self {
-        Self {
-            json: json.unwrap_or_else(|| Self::default().json),
-            json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
 pub struct WikiMetadataWasmArgs {
-    args_yaml: Option<WikiMetadataYamlWasmArgs>,
-    args_json: Option<WikiMetadataJsonWasmArgs>,
+    fmt: Option<WikiMetadataFmtWasmArgs>,
 }
 
 #[wasm_bindgen]
 impl WikiMetadataWasmArgs {
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        argsYaml: Option<WikiMetadataYamlWasmArgs>,
-        argsJson: Option<WikiMetadataJsonWasmArgs>,
-    ) -> Self {
-        Self {
-            args_yaml: argsYaml,
-            args_json: argsJson,
-        }
+    pub fn new(fmt: Option<WikiMetadataFmtWasmArgs>) -> Self {
+        Self { fmt }
     }
 }
 
 impl From<WikiMetadataWasmArgs> for WikiMetadataArgs {
-    fn from(
-        WikiMetadataWasmArgs {
-            args_yaml,
-            args_json,
-        }: WikiMetadataWasmArgs,
-    ) -> Self {
+    fn from(WikiMetadataWasmArgs { fmt }: WikiMetadataWasmArgs) -> Self {
         Self {
             hide_progress: true,
-            args_json: Some(args_json.unwrap_or_default().into()),
-            args_yaml: args_yaml.map(Into::into),
+            fmt: fmt.into(),
         }
     }
 }
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub struct WikiMetadataYamlWasmArgs {
-    yaml: Option<bool>,
+pub enum WikiMetadataFmtWasmArgs {
+    JsonPretty,
+    JsonRaw,
+    Yaml,
 }
 
-#[wasm_bindgen]
-impl WikiMetadataYamlWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(yaml: Option<bool>) -> Self {
-        Self { yaml }
-    }
-}
-
-impl From<WikiMetadataYamlWasmArgs> for WikiMetadataYamlArgs {
-    fn from(WikiMetadataYamlWasmArgs { yaml }: WikiMetadataYamlWasmArgs) -> Self {
-        Self {
-            yaml: yaml.unwrap_or_else(|| Self::default().yaml),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-#[wasm_bindgen]
-pub struct WikiMetadataJsonWasmArgs {
-    json: Option<bool>,
-    json_raw: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl WikiMetadataJsonWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
-        Self {
-            json,
-            json_raw: jsonRaw,
-        }
-    }
-}
-
-impl Default for WikiMetadataJsonWasmArgs {
-    fn default() -> Self {
-        Self {
-            json: None,
-            json_raw: Some(true),
-        }
-    }
-}
-
-impl From<WikiMetadataJsonWasmArgs> for WikiMetadataJsonArgs {
-    fn from(WikiMetadataJsonWasmArgs { json, json_raw }: WikiMetadataJsonWasmArgs) -> Self {
-        Self {
-            json: json.unwrap_or_else(|| Self::default().json),
-            json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
+impl From<Option<WikiMetadataFmtWasmArgs>> for WikiMetadataFmtArgs {
+    fn from(value: Option<WikiMetadataFmtWasmArgs>) -> Self {
+        match value {
+            Some(WikiMetadataFmtWasmArgs::Yaml) => Self::Yaml,
+            Some(WikiMetadataFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            Some(WikiMetadataFmtWasmArgs::JsonPretty) => Self::JsonPretty,
+            None => Self::JsonRaw,
         }
     }
 }

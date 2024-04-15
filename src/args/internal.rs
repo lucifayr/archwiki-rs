@@ -47,33 +47,17 @@ pub enum SearchFmtArgs {
     Plain,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct SearchPlainArgs {
-    pub plain: bool,
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct SearchJsonArgs {
-    pub json: bool,
-    pub json_raw: bool,
-}
-
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct WikiMetadataArgs {
     pub hide_progress: bool,
-    pub args_json: Option<WikiMetadataJsonArgs>,
-    pub args_yaml: Option<WikiMetadataYamlArgs>,
+    pub fmt: WikiMetadataFmtArgs,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct WikiMetadataJsonArgs {
-    pub json: bool,
-    pub json_raw: bool,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct WikiMetadataYamlArgs {
-    pub yaml: bool,
+#[derive(Debug, Clone)]
+pub enum WikiMetadataFmtArgs {
+    JsonPretty,
+    JsonRaw,
+    Yaml,
 }
 
 #[derive(Debug, Clone, Default)]

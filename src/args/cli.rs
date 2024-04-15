@@ -10,8 +10,7 @@ use crate::formats::PageFormat;
 use super::internal::{
     InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
     ListLanguagesArgs, ListLanguagesJsonArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs,
-    ReadPageArgs, SearchArgs, SearchFmtArgs, SearchJsonArgs, WikiMetadataArgs,
-    WikiMetadataJsonArgs, WikiMetadataYamlArgs,
+    ReadPageArgs, SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
 };
 
 #[derive(Parser, Debug)]
@@ -147,18 +146,12 @@ impl From<Option<SearchJsonCliArgs>> for SearchFmtArgs {
 
 #[derive(Args, Debug, Default)]
 pub struct SearchJsonCliArgs {
-    #[arg(short, long, default_value_t = SearchJsonArgs::default().json)]
+    #[arg(short, long)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(short = 'J', long, default_value_t = SearchJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long)]
     /// Display data as raw JSON
     pub json_raw: bool,
-}
-
-impl From<SearchJsonCliArgs> for SearchJsonArgs {
-    fn from(SearchJsonCliArgs { json, json_raw }: SearchJsonCliArgs) -> Self {
-        Self { json, json_raw }
-    }
 }
 
 #[derive(Parser, Debug)]
@@ -324,8 +317,28 @@ impl From<WikiMetadataCliArgs> for WikiMetadataArgs {
     ) -> Self {
         Self {
             hide_progress,
-            args_json: args_json.map(Into::into),
-            args_yaml: args_yaml.map(Into::into),
+            fmt: (args_yaml, args_json).into(),
+        }
+    }
+}
+
+impl
+    From<(
+        Option<WikiMetdataYamlCliArgs>,
+        Option<WikiMetadtaJsonCliArgs>,
+    )> for WikiMetadataFmtArgs
+{
+    fn from(
+        value: (
+            Option<WikiMetdataYamlCliArgs>,
+            Option<WikiMetadtaJsonCliArgs>,
+        ),
+    ) -> Self {
+        match value {
+            (Some(args), _) if args.yaml => Self::Yaml,
+            (_, Some(args)) if args.json_raw => Self::JsonRaw,
+            (_, Some(args)) if args.json => Self::JsonPretty,
+            _ => Self::Yaml,
         }
     }
 }
@@ -333,32 +346,20 @@ impl From<WikiMetadataCliArgs> for WikiMetadataArgs {
 #[derive(Args, Debug, Clone, Copy)]
 #[group(id = "yaml-sync-wiki", conflicts_with_all = ["json-sync-wiki"])]
 pub struct WikiMetdataYamlCliArgs {
-    #[arg(short, long, default_value_t = WikiMetadataYamlArgs::default().yaml)]
+    #[arg(short, long)]
     /// Format data as YAML
     pub yaml: bool,
-}
-
-impl From<WikiMetdataYamlCliArgs> for WikiMetadataYamlArgs {
-    fn from(WikiMetdataYamlCliArgs { yaml }: WikiMetdataYamlCliArgs) -> Self {
-        Self { yaml }
-    }
 }
 
 #[derive(Args, Debug, Clone, Copy)]
 #[group(id = "json-sync-wiki", conflicts_with_all = ["yaml-sync-wiki"])]
 pub struct WikiMetadtaJsonCliArgs {
-    #[arg(short, long, default_value_t = WikiMetadataJsonArgs::default().json)]
+    #[arg(short, long)]
     /// Format data as pretty-printed JSON
     pub json: bool,
-    #[arg(short = 'J', long, default_value_t = WikiMetadataJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long)]
     /// Format data as raw JSON
     pub json_raw: bool,
-}
-
-impl From<WikiMetadtaJsonCliArgs> for WikiMetadataJsonArgs {
-    fn from(WikiMetadtaJsonCliArgs { json, json_raw }: WikiMetadtaJsonCliArgs) -> Self {
-        Self { json, json_raw }
-    }
 }
 
 #[derive(Parser, Debug)]

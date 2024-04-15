@@ -8,7 +8,7 @@ use std::{
 use futures::future;
 
 use crate::{
-    args::internal::WikiMetadataArgs,
+    args::internal::{WikiMetadataArgs, WikiMetadataFmtArgs},
     error::WikiError,
     formats::{
         convert_page_to_html, convert_page_to_markdown, convert_page_to_plain_text, PageFormat,
@@ -18,26 +18,16 @@ use crate::{
 use super::api::{fetch_all_pages, fetch_page_without_recommendations};
 
 pub async fn fetch_metadata(
-    WikiMetadataArgs {
-        hide_progress,
-        args_json,
-        args_yaml,
-    }: WikiMetadataArgs,
+    WikiMetadataArgs { hide_progress, fmt }: WikiMetadataArgs,
 ) -> Result<String, WikiError> {
     #[cfg(feature = "cli")]
     let _spin_task = progress_spinner(hide_progress);
 
     let wiki_tree = fetch_all_pages().await?;
-    let out = match (args_yaml, args_json) {
-        (Some(_yaml), _) => serde_yaml::to_string(&wiki_tree)?,
-        (_, Some(args_json)) => {
-            if args_json.json_raw {
-                serde_json::to_string(&wiki_tree)?
-            } else {
-                serde_json::to_string_pretty(&wiki_tree)?
-            }
-        }
-        _ => serde_yaml::to_string(&wiki_tree)?,
+    let out = match fmt {
+        WikiMetadataFmtArgs::Yaml => serde_yaml::to_string(&wiki_tree)?,
+        WikiMetadataFmtArgs::JsonRaw => serde_json::to_string(&wiki_tree)?,
+        WikiMetadataFmtArgs::JsonPretty => serde_json::to_string_pretty(&wiki_tree)?,
     };
 
     Ok(out)
