@@ -10,8 +10,16 @@ WASM_NODEJS_VERSION=$(shell jq -r '.version' $(WASM_NODEJS_PKG_NAME).json)
 
 # check that version changed and required envs are set
 check-version-cli : 
+	! git diff --quiet Cargo.toml
+	git diff Cargo.toml | grep  '+version = ' -B 2 | head -n 1 | grep -q ' name = "archwiki-rs"'
+
 check-version-wasm-web :
+	! git diff --quiet $(WASM_WEB_PKG_NAME).json
+	git diff $(WASM_WEB_PKG_NAME).json | grep -q '+  "version": '
+
 check-version-wasm-nodejs :
+	! git diff --quiet $(WASM_NODEJS_PKG_NAME).json
+	git diff $(WASM_NODEJS_PKG_NAME).json | grep -q '+  "version": '
 
 bump-cli : check-version-cli
 	cargo build --release
