@@ -1,6 +1,6 @@
 {
   "name": "archwiki-node",
   "description": "WASM bindings to some of the functionality of the archwiki-rs CLI tool for the nodejs runtime",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "keywords": ["ArchWiki"]
 }
