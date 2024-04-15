@@ -3,39 +3,29 @@ use std::collections::HashMap;
 use itertools::Itertools;
 
 use crate::{
-    args::internal::{ListCategoriesArgs, ListPagesArgs, ListPagesPlainArgs},
+    args::internal::{
+        ListCategoriesArgs, ListCategoriesFmtArgs, ListPagesArgs, ListPagesFmtArgs,
+        ListPagesPlainArgs,
+    },
     error::WikiError,
     utils::UNCATEGORIZED_KEY,
 };
 
 pub fn fmt_pages(
-    ListPagesArgs {
-        args_plain,
-        args_json,
-    }: ListPagesArgs,
+    ListPagesArgs { fmt, args_plain }: ListPagesArgs,
     wiki_tree: &HashMap<String, Vec<String>>,
 ) -> Result<String, WikiError> {
-    let out = match (args_plain, args_json) {
-        (Some(args_plain), _) => fmt_page_tree(wiki_tree, args_plain),
-
-        (_, Some(args_json)) => {
-            if args_json.json_raw {
-                serde_json::to_string(wiki_tree)?
-            } else {
-                serde_json::to_string_pretty(wiki_tree)?
-            }
-        }
-        _ => fmt_page_tree(wiki_tree, ListPagesPlainArgs::default()),
+    let out = match fmt {
+        ListPagesFmtArgs::Plain => fmt_page_tree(wiki_tree, args_plain.unwrap_or_default()),
+        ListPagesFmtArgs::JsonRaw => serde_json::to_string(wiki_tree)?,
+        ListPagesFmtArgs::JsonPretty => serde_json::to_string_pretty(wiki_tree)?,
     };
 
     Ok(out)
 }
 
 pub fn fmt_categories(
-    ListCategoriesArgs {
-        args_plain,
-        args_json,
-    }: ListCategoriesArgs,
+    ListCategoriesArgs { fmt }: ListCategoriesArgs,
     wiki_tree: &HashMap<String, Vec<String>>,
 ) -> Result<String, WikiError> {
     let categories = wiki_tree
@@ -45,11 +35,10 @@ pub fn fmt_categories(
         .filter(|cat| cat.as_str() != UNCATEGORIZED_KEY)
         .collect_vec();
 
-    let out = match (args_plain, args_json) {
-        (Some(args_plain), _) if args_plain.plain => categories.into_iter().join("\n"),
-        (_, Some(args_json)) if args_json.json_raw => serde_json::to_string(&categories)?,
-        (_, Some(args_json)) if args_json.json => serde_json::to_string_pretty(&categories)?,
-        _ => categories.into_iter().join("\n"),
+    let out = match fmt {
+        ListCategoriesFmtArgs::Plain => categories.into_iter().join("\n"),
+        ListCategoriesFmtArgs::JsonRaw => serde_json::to_string(&categories)?,
+        ListCategoriesFmtArgs::JsonPretty => serde_json::to_string_pretty(&categories)?,
     };
 
     Ok(out)

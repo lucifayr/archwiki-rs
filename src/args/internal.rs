@@ -60,10 +60,10 @@ pub enum WikiMetadataFmtArgs {
     Yaml,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ListPagesArgs {
+    pub fmt: ListPagesFmtArgs,
     pub args_plain: Option<ListPagesPlainArgs>,
-    pub args_json: Option<ListPagesJsonArgs>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -72,44 +72,35 @@ pub struct ListPagesPlainArgs {
     pub categories: Vec<String>,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct ListPagesJsonArgs {
-    pub json: bool,
-    pub json_raw: bool,
+#[derive(Debug, Clone)]
+pub enum ListPagesFmtArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone)]
 pub struct ListCategoriesArgs {
-    pub args_plain: Option<ListCategoriesPlainArgs>,
-    pub args_json: Option<ListCategoriesJsonArgs>,
+    pub fmt: ListCategoriesFmtArgs,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct ListCategoriesPlainArgs {
-    pub plain: bool,
+#[derive(Debug, Clone)]
+pub enum ListCategoriesFmtArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct ListCategoriesJsonArgs {
-    pub json: bool,
-    pub json_raw: bool,
-}
-
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone)]
 pub struct ListLanguagesArgs {
-    pub args_plain: Option<ListLanguagesPlainArgs>,
-    pub args_json: Option<ListLanguagesJsonArgs>,
+    pub fmt: ListLanguagesFmtArgs,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct ListLanguagesPlainArgs {
-    pub plain: bool,
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct ListLanguagesJsonArgs {
-    pub json: bool,
-    pub json_raw: bool,
+#[derive(Debug, Clone)]
+pub enum ListLanguagesFmtArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
 }
 
 #[derive(Debug, Clone, Copy, Default)]

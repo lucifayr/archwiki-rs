@@ -1,7 +1,11 @@
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{args::internal::ListLanguagesArgs, error::WikiError, wiki::Response};
+use crate::{
+    args::internal::{ListLanguagesArgs, ListLanguagesFmtArgs},
+    error::WikiError,
+    wiki::Response,
+};
 
 const LANGUAGE_API_URL: &str =
     "https://wiki.archlinux.org/api.php?action=query&meta=siteinfo&siprop=languages&format=json";
@@ -26,17 +30,13 @@ pub async fn fetch_all() -> Result<Vec<Language>, WikiError> {
 }
 
 pub fn fmt(
-    ListLanguagesArgs {
-        args_plain,
-        args_json,
-    }: ListLanguagesArgs,
+    ListLanguagesArgs { fmt }: ListLanguagesArgs,
     langs: &[Language],
 ) -> Result<String, WikiError> {
-    let out = match (args_plain, args_json) {
-        (Some(args_plain), _) if args_plain.plain => fmt_plain(langs),
-        (_, Some(args_json)) if args_json.json_raw => serde_json::to_string(langs)?,
-        (_, Some(args_json)) if args_json.json => serde_json::to_string_pretty(langs)?,
-        _ => fmt_plain(langs),
+    let out = match fmt {
+        ListLanguagesFmtArgs::Plain => fmt_plain(langs),
+        ListLanguagesFmtArgs::JsonRaw => serde_json::to_string(langs)?,
+        ListLanguagesFmtArgs::JsonPretty => serde_json::to_string_pretty(langs)?,
     };
 
     Ok(out)

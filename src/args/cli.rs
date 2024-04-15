@@ -8,8 +8,8 @@ use clap_complete::Shell;
 use crate::formats::PageFormat;
 
 use super::internal::{
-    InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
-    ListLanguagesArgs, ListLanguagesJsonArgs, ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs,
+    InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs,
+    ListLanguagesArgs, ListLanguagesFmtArgs, ListPagesArgs, ListPagesFmtArgs, ListPagesPlainArgs,
     ReadPageArgs, SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
 };
 
@@ -175,19 +175,19 @@ impl From<ListPagesCliArgs> for ListPagesArgs {
         }: ListPagesCliArgs,
     ) -> Self {
         Self {
-            args_plain: args_plain.map(Into::into),
-            args_json: args_json.map(Into::into),
+            args_plain: args_plain.clone().map(Into::into),
+            fmt: (args_plain, args_json).into(),
         }
     }
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[group(id = "plain-list-pages", conflicts_with_all = ["json-list-pages"])]
 pub struct ListPagesPlainCliArgs {
-    #[arg(short, long, default_value_t = ListPagesPlainArgs::default().flatten)]
+    #[arg(short, long)]
     /// Flatten all pages and don't show their category names
     pub flatten: bool,
-    #[arg(short, long, value_delimiter = ',', default_values_t = ListPagesPlainArgs::default().categories)]
+    #[arg(short, long, value_delimiter = ',')]
     /// Only show pages in these categories
     pub categories: Vec<String>,
 }
@@ -209,17 +209,22 @@ impl From<ListPagesPlainCliArgs> for ListPagesPlainArgs {
 #[derive(Args, Debug)]
 #[group(id = "json-list-pages" , conflicts_with_all = ["plain-list-pages"])]
 pub struct ListPagesJsonCliArgs {
-    #[arg(short, long, default_value_t = ListPagesJsonArgs::default().json)]
+    #[arg(short, long)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(short = 'J', long, default_value_t = ListPagesJsonArgs::default().json_raw)]
+    #[arg(short = 'J', long)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
 
-impl From<ListPagesJsonCliArgs> for ListPagesJsonArgs {
-    fn from(ListPagesJsonCliArgs { json, json_raw }: ListPagesJsonCliArgs) -> Self {
-        Self { json, json_raw }
+impl From<(Option<ListPagesPlainCliArgs>, Option<ListPagesJsonCliArgs>)> for ListPagesFmtArgs {
+    fn from(value: (Option<ListPagesPlainCliArgs>, Option<ListPagesJsonCliArgs>)) -> Self {
+        match value {
+            (Some(_plain_args), _) => Self::Plain,
+            (_, Some(args)) if args.json_raw => Self::JsonRaw,
+            (_, Some(args)) if args.json => Self::JsonPretty,
+            _ => Self::Plain,
+        }
     }
 }
 
@@ -236,25 +241,28 @@ pub struct ListCategoriesCliArgs {
 impl From<ListCategoriesCliArgs> for ListCategoriesArgs {
     fn from(ListCategoriesCliArgs { args_json, .. }: ListCategoriesCliArgs) -> Self {
         Self {
-            args_json: args_json.map(Into::into),
-            args_plain: None,
+            fmt: args_json.into(),
         }
     }
 }
 
 #[derive(Args, Debug)]
 pub struct ListCategoriesJsonCliArgs {
-    #[arg(short, long, default_value_t = ListCategoriesJsonArgs::default().json)]
+    #[arg(short, long)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(short = 'J', long, default_value_t = ListCategoriesJsonArgs::default().json)]
+    #[arg(short = 'J', long)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
 
-impl From<ListCategoriesJsonCliArgs> for ListCategoriesJsonArgs {
-    fn from(ListCategoriesJsonCliArgs { json, json_raw }: ListCategoriesJsonCliArgs) -> Self {
-        Self { json, json_raw }
+impl From<Option<ListCategoriesJsonCliArgs>> for ListCategoriesFmtArgs {
+    fn from(value: Option<ListCategoriesJsonCliArgs>) -> Self {
+        match value {
+            Some(args) if args.json_raw => Self::JsonRaw,
+            Some(args) if args.json => Self::JsonPretty,
+            _ => Self::Plain,
+        }
     }
 }
 
@@ -267,25 +275,28 @@ pub struct ListLanguagesCliArgs {
 impl From<ListLanguagesCliArgs> for ListLanguagesArgs {
     fn from(ListLanguagesCliArgs { args_json }: ListLanguagesCliArgs) -> Self {
         Self {
-            args_json: args_json.map(Into::into),
-            args_plain: None,
+            fmt: args_json.into(),
         }
     }
 }
 
 #[derive(Args, Debug)]
 pub struct ListLanguagesJsonCliArgs {
-    #[arg(short, long, default_value_t = ListLanguagesJsonArgs::default().json)]
+    #[arg(short, long)]
     /// Display data as pretty-printed JSON
     pub json: bool,
-    #[arg(short = 'J', long, default_value_t = ListLanguagesJsonArgs::default().json)]
+    #[arg(short = 'J', long)]
     /// Display data as raw JSON
     pub json_raw: bool,
 }
 
-impl From<ListLanguagesJsonCliArgs> for ListLanguagesJsonArgs {
-    fn from(ListLanguagesJsonCliArgs { json, json_raw }: ListLanguagesJsonCliArgs) -> Self {
-        Self { json, json_raw }
+impl From<Option<ListLanguagesJsonCliArgs>> for ListLanguagesFmtArgs {
+    fn from(value: Option<ListLanguagesJsonCliArgs>) -> Self {
+        match value {
+            Some(args) if args.json_raw => Self::JsonRaw,
+            Some(args) if args.json => Self::JsonPretty,
+            _ => Self::Plain,
+        }
     }
 }
 

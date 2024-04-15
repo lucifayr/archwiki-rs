@@ -6,10 +6,9 @@ use wasm_bindgen::prelude::wasm_bindgen;
 use crate::formats::PageFormat;
 
 use super::internal::{
-    InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesJsonArgs,
-    ListCategoriesPlainArgs, ListLanguagesArgs, ListLanguagesJsonArgs, ListLanguagesPlainArgs,
-    ListPagesArgs, ListPagesJsonArgs, ListPagesPlainArgs, ReadPageArgs, SearchArgs, SearchFmtArgs,
-    WikiMetadataArgs, WikiMetadataFmtArgs,
+    InfoArgs, InfoJsonArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs,
+    ListLanguagesArgs, ListLanguagesFmtArgs, ListPagesArgs, ListPagesFmtArgs, ListPagesPlainArgs,
+    ReadPageArgs, SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
 };
 
 #[derive(Debug, Clone)]
@@ -168,57 +167,59 @@ impl From<Option<WikiMetadataFmtWasmArgs>> for WikiMetadataFmtArgs {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[wasm_bindgen]
 pub struct ListPagesWasmArgs {
+    fmt: Option<ListPagesFmtWasmArgs>,
     args_plain: Option<ListPagesPlainWasmArgs>,
-    args_json: Option<ListPagesJsonWasmArgs>,
 }
 
 #[wasm_bindgen]
 impl ListPagesWasmArgs {
     #[wasm_bindgen(constructor)]
     pub fn new(
+        fmt: Option<ListPagesFmtWasmArgs>,
         argsPlain: Option<ListPagesPlainWasmArgs>,
-        argsJson: Option<ListPagesJsonWasmArgs>,
     ) -> Self {
         Self {
+            fmt,
             args_plain: argsPlain,
-            args_json: argsJson,
         }
     }
 }
 
 impl From<ListPagesWasmArgs> for ListPagesArgs {
-    fn from(
-        ListPagesWasmArgs {
-            args_plain,
-            args_json,
-        }: ListPagesWasmArgs,
-    ) -> Self {
+    fn from(ListPagesWasmArgs { fmt, args_plain }: ListPagesWasmArgs) -> Self {
         Self {
+            fmt: fmt.into(),
             args_plain: args_plain.map(Into::into),
-            args_json: Some(args_json.unwrap_or_default().into()),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[wasm_bindgen]
+pub enum ListPagesFmtWasmArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
+}
+
+impl From<Option<ListPagesFmtWasmArgs>> for ListPagesFmtArgs {
+    fn from(value: Option<ListPagesFmtWasmArgs>) -> Self {
+        match value {
+            Some(ListPagesFmtWasmArgs::Plain) => Self::Plain,
+            Some(ListPagesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            Some(ListPagesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
+            None => Self::JsonRaw,
+        }
+    }
+}
+#[derive(Debug, Clone)]
 #[wasm_bindgen]
 pub struct ListPagesPlainWasmArgs {
-    flatten: Option<bool>,
-    categories: Option<Vec<String>>,
-}
-
-#[wasm_bindgen]
-impl ListPagesPlainWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(flatten: Option<bool>, categories: Option<Vec<String>>) -> Self {
-        Self {
-            flatten,
-            categories,
-        }
-    }
+    flatten: bool,
+    categories: Vec<String>,
 }
 
 impl From<ListPagesPlainWasmArgs> for ListPagesPlainArgs {
@@ -229,44 +230,8 @@ impl From<ListPagesPlainWasmArgs> for ListPagesPlainArgs {
         }: ListPagesPlainWasmArgs,
     ) -> Self {
         Self {
-            flatten: flatten.unwrap_or_else(|| Self::default().flatten),
-            categories: categories.unwrap_or_else(|| Self::default().categories),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct ListPagesJsonWasmArgs {
-    json: Option<bool>,
-    json_raw: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl ListPagesJsonWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
-        Self {
-            json,
-            json_raw: jsonRaw,
-        }
-    }
-}
-
-impl Default for ListPagesJsonWasmArgs {
-    fn default() -> Self {
-        Self {
-            json: None,
-            json_raw: Some(true),
-        }
-    }
-}
-
-impl From<ListPagesJsonWasmArgs> for ListPagesJsonArgs {
-    fn from(ListPagesJsonWasmArgs { json, json_raw }: ListPagesJsonWasmArgs) -> Self {
-        Self {
-            json: json.unwrap_or_else(|| Self::default().json),
-            json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
+            flatten,
+            categories,
         }
     }
 }
@@ -274,91 +239,38 @@ impl From<ListPagesJsonWasmArgs> for ListPagesJsonArgs {
 #[derive(Debug)]
 #[wasm_bindgen]
 pub struct ListCategoriesWasmArgs {
-    args_plain: Option<ListCategoriesPlainWasmArgs>,
-    args_json: Option<ListCategoriesJsonWasmArgs>,
+    fmt: Option<ListCategoriesFmtWasmArgs>,
 }
 
 #[wasm_bindgen]
 impl ListCategoriesWasmArgs {
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        argsPlain: Option<ListCategoriesPlainWasmArgs>,
-        argsJson: Option<ListCategoriesJsonWasmArgs>,
-    ) -> Self {
-        Self {
-            args_plain: argsPlain,
-            args_json: argsJson,
-        }
+    pub fn new(fmt: Option<ListCategoriesFmtWasmArgs>) -> Self {
+        Self { fmt }
     }
 }
 
 impl From<ListCategoriesWasmArgs> for ListCategoriesArgs {
-    fn from(
-        ListCategoriesWasmArgs {
-            args_json,
-            args_plain,
-        }: ListCategoriesWasmArgs,
-    ) -> Self {
-        Self {
-            args_plain: args_plain.map(Into::into),
-            args_json: Some(args_json.unwrap_or_default().into()),
-        }
+    fn from(ListCategoriesWasmArgs { fmt }: ListCategoriesWasmArgs) -> Self {
+        Self { fmt: fmt.into() }
     }
 }
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub struct ListCategoriesPlainWasmArgs {
-    plain: Option<bool>,
+pub enum ListCategoriesFmtWasmArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
 }
 
-#[wasm_bindgen]
-impl ListCategoriesPlainWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(plain: Option<bool>) -> Self {
-        Self { plain }
-    }
-}
-
-impl From<ListCategoriesPlainWasmArgs> for ListCategoriesPlainArgs {
-    fn from(ListCategoriesPlainWasmArgs { plain }: ListCategoriesPlainWasmArgs) -> Self {
-        Self {
-            plain: plain.unwrap_or_else(|| Self::default().plain),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct ListCategoriesJsonWasmArgs {
-    json: Option<bool>,
-    json_raw: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl ListCategoriesJsonWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
-        Self {
-            json,
-            json_raw: jsonRaw,
-        }
-    }
-}
-
-impl Default for ListCategoriesJsonWasmArgs {
-    fn default() -> Self {
-        Self {
-            json: None,
-            json_raw: Some(true),
-        }
-    }
-}
-
-impl From<ListCategoriesJsonWasmArgs> for ListCategoriesJsonArgs {
-    fn from(ListCategoriesJsonWasmArgs { json, json_raw }: ListCategoriesJsonWasmArgs) -> Self {
-        Self {
-            json: json.unwrap_or_else(|| Self::default().json),
-            json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
+impl From<Option<ListCategoriesFmtWasmArgs>> for ListCategoriesFmtArgs {
+    fn from(value: Option<ListCategoriesFmtWasmArgs>) -> Self {
+        match value {
+            Some(ListCategoriesFmtWasmArgs::Plain) => Self::Plain,
+            Some(ListCategoriesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            Some(ListCategoriesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
+            None => Self::JsonRaw,
         }
     }
 }
@@ -366,92 +278,38 @@ impl From<ListCategoriesJsonWasmArgs> for ListCategoriesJsonArgs {
 #[derive(Debug)]
 #[wasm_bindgen]
 pub struct ListLanguagesWasmArgs {
-    args_plain: Option<ListLanguagesPlainWasmArgs>,
-    args_json: Option<ListLanguagesJsonWasmArgs>,
+    fmt: Option<ListLanguagesFmtWasmArgs>,
 }
 
 #[wasm_bindgen]
 impl ListLanguagesWasmArgs {
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        argsPlain: Option<ListLanguagesPlainWasmArgs>,
-        argsJson: Option<ListLanguagesJsonWasmArgs>,
-    ) -> Self {
-        Self {
-            args_plain: argsPlain,
-            args_json: argsJson,
-        }
+    pub fn new(fmt: Option<ListLanguagesFmtWasmArgs>) -> Self {
+        Self { fmt }
     }
 }
 
 impl From<ListLanguagesWasmArgs> for ListLanguagesArgs {
-    fn from(
-        ListLanguagesWasmArgs {
-            args_json,
-            args_plain,
-        }: ListLanguagesWasmArgs,
-    ) -> Self {
-        Self {
-            args_plain: args_plain.map(Into::into),
-            args_json: Some(args_json.unwrap_or_default().into()),
-        }
+    fn from(ListLanguagesWasmArgs { fmt }: ListLanguagesWasmArgs) -> Self {
+        Self { fmt: fmt.into() }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[wasm_bindgen]
-pub struct ListLanguagesPlainWasmArgs {
-    plain: Option<bool>,
+pub enum ListLanguagesFmtWasmArgs {
+    JsonPretty,
+    JsonRaw,
+    Plain,
 }
 
-#[wasm_bindgen]
-impl ListLanguagesPlainWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(plain: Option<bool>) -> Self {
-        Self { plain }
-    }
-}
-
-impl From<ListLanguagesPlainWasmArgs> for ListLanguagesPlainArgs {
-    fn from(ListLanguagesPlainWasmArgs { plain }: ListLanguagesPlainWasmArgs) -> Self {
-        Self {
-            plain: plain.unwrap_or_else(|| Self::default().plain),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[wasm_bindgen]
-pub struct ListLanguagesJsonWasmArgs {
-    json: Option<bool>,
-    json_raw: Option<bool>,
-}
-
-#[wasm_bindgen]
-impl ListLanguagesJsonWasmArgs {
-    #[wasm_bindgen(constructor)]
-    pub fn new(json: Option<bool>, jsonRaw: Option<bool>) -> Self {
-        Self {
-            json,
-            json_raw: jsonRaw,
-        }
-    }
-}
-
-impl Default for ListLanguagesJsonWasmArgs {
-    fn default() -> Self {
-        Self {
-            json: None,
-            json_raw: Some(true),
-        }
-    }
-}
-
-impl From<ListLanguagesJsonWasmArgs> for ListLanguagesJsonArgs {
-    fn from(ListLanguagesJsonWasmArgs { json, json_raw }: ListLanguagesJsonWasmArgs) -> Self {
-        Self {
-            json: json.unwrap_or_else(|| Self::default().json),
-            json_raw: json_raw.unwrap_or_else(|| Self::default().json_raw),
+impl From<Option<ListLanguagesFmtWasmArgs>> for ListLanguagesFmtArgs {
+    fn from(value: Option<ListLanguagesFmtWasmArgs>) -> Self {
+        match value {
+            Some(ListLanguagesFmtWasmArgs::Plain) => Self::Plain,
+            Some(ListLanguagesFmtWasmArgs::JsonRaw) => Self::JsonRaw,
+            Some(ListLanguagesFmtWasmArgs::JsonPretty) => Self::JsonPretty,
+            None => Self::JsonRaw,
         }
     }
 }
