@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use crate::{
     args::internal::{SearchArgs, SearchFmtArgs},
     error::WikiError,
-    formats::format_children_as_plain_text,
     wiki::{fetch_open_search, fetch_text_search},
 };
 
@@ -35,23 +34,22 @@ pub struct TextSearchItem {
 }
 
 impl TextSearchItem {
-    pub fn prettify_snippet(&mut self, search: &str) {
-        let frag = Html::parse_fragment(&self.snippet);
-        let new_snip = frag
-            .root_element()
-            .children()
-            .map(|node| format_children_as_plain_text(node, false))
-            .collect::<String>()
-            .replace('\n', " ");
-
-        if let Ok(rgx) = regex::RegexBuilder::new(&format!("({search})"))
-            .case_insensitive(true)
-            .build()
+    pub fn prettify_snippet(&mut self) {
+        let snip = if let Ok(rgx) =
+            regex::RegexBuilder::new("<span class=\\\"searchmatch\\\">(.*?)</span>")
+                .case_insensitive(true)
+                .build()
         {
-            self.snippet = highlight_results(&rgx, &new_snip);
+            Html::parse_fragment(&highlight_results(&rgx, &self.snippet))
+                .root_element()
+                .inner_html()
         } else {
-            self.snippet = new_snip;
-        }
+            Html::parse_fragment(&self.snippet)
+                .root_element()
+                .inner_html()
+        };
+
+        self.snippet = snip.replace(['\n', '\r'], " ");
     }
 }
 
@@ -80,10 +78,10 @@ pub async fn fetch(
     }: SearchArgs,
 ) -> Result<String, WikiError> {
     let out = if text_search {
-        let search_res = fetch_text_search(&search, &lang, limit).await?;
+        let mut search_res = fetch_text_search(&search, &lang, limit).await?;
 
         match fmt_args {
-            SearchFmtArgs::Plain => fmt_text_search_plain(&search_res),
+            SearchFmtArgs::Plain => fmt_text_search_plain(&mut search_res),
             SearchFmtArgs::JsonRaw => serde_json::to_string(&search_res)?,
             SearchFmtArgs::JsonPretty => serde_json::to_string_pretty(&search_res)?,
         }
@@ -101,7 +99,11 @@ pub async fn fetch(
     Ok(out)
 }
 
-fn fmt_text_search_plain(search_result: &[TextSearchItem]) -> String {
+fn fmt_text_search_plain(search_result: &mut [TextSearchItem]) -> String {
+    for item in &mut *search_result {
+        item.prettify_snippet();
+    }
+
     let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "SNIPPET");
     let body = search_result
         .iter()
@@ -310,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_format_text_search_table() {
-        let items = vec![
+        let mut items = vec![
             TextSearchItem {
                 title: "page 1".to_owned(),
                 snippet: "snippet 1".to_owned(),
@@ -329,7 +331,7 @@ mod tests {
             },
         ];
 
-        let res = fmt_text_search_plain(&items);
+        let res = fmt_text_search_plain(&mut items);
         let res_row_count = res.split('\n').collect_vec().len();
         let third_page = res
             .split('\n')

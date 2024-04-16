@@ -63,11 +63,7 @@ pub async fn fetch_text_search(
 ) -> Result<Vec<TextSearchItem>, WikiError> {
     let url = format!("https://wiki.archlinux.org/api.php?action=query&list=search&format=json&srwhat=text&uselang={lang}&srlimit={limit}&srsearch={search}");
     let body = reqwest::get(url).await?.text().await?;
-    let mut res: Response<TextSearchApiResponse> = serde_json::from_str(&body)?;
-
-    for item in res.query.search.as_mut_slice() {
-        item.prettify_snippet(search);
-    }
+    let res: Response<TextSearchApiResponse> = serde_json::from_str(&body)?;
 
     Ok(res.query.search)
 }
@@ -133,7 +129,7 @@ async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
 /// Gets the names of all pages on the ArchWiki and the categories that they belong to.
 ///
 /// ### Example
-///                                                                                                                                                                                                                                      
+///
 /// ```sh
 /// Wine        # page name
 /// - Emulation # category

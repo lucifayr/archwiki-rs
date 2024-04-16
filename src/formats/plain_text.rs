@@ -10,19 +10,18 @@ pub fn convert_page_to_plain_text(document: &Html, show_urls: bool) -> String {
     document
         .root_element()
         .children()
-        .map(|node| format_children_as_plain_text(node, show_urls))
+        .map(|node| format_children(node, show_urls))
         .collect::<String>()
 }
 
-#[allow(clippy::module_name_repetitions)]
-pub fn format_children_as_plain_text(node: NodeRef<Node>, show_urls: bool) -> String {
+fn format_children(node: NodeRef<Node>, show_urls: bool) -> String {
     match node.value() {
         Node::Text(text) => text.to_string(),
         Node::Element(e) => match e.name() {
             "a" => {
                 let child_text = node
                     .children()
-                    .map(|node| format_children_as_plain_text(node, show_urls))
+                    .map(|node| format_children(node, show_urls))
                     .collect::<String>();
 
                 if show_urls {
@@ -40,12 +39,12 @@ pub fn format_children_as_plain_text(node: NodeRef<Node>, show_urls: bool) -> St
                 .collect::<String>(),
             _ => node
                 .children()
-                .map(|node| format_children_as_plain_text(node, show_urls))
+                .map(|node| format_children(node, show_urls))
                 .collect::<String>(),
         },
         _ => node
             .children()
-            .map(|node| format_children_as_plain_text(node, show_urls))
+            .map(|node| format_children(node, show_urls))
             .collect::<String>(),
     }
 }
@@ -68,9 +67,9 @@ fn format_table(node: NodeRef<Node>, show_urls: bool) -> String {
                     .join(" | ")
                     + "\n"
             }
-            _ => format_children_as_plain_text(node, show_urls),
+            _ => format_children(node, show_urls),
         },
-        _ => format_children_as_plain_text(node, show_urls),
+        _ => format_children(node, show_urls),
     }
 }
 
