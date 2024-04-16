@@ -1,8 +1,7 @@
 # archwiki-rs 📖
 
-A CLI tool to read pages from the ArchWiki
-
 <!--toc:start-->
+
 - [archwiki-rs 📖](#archwiki-rs-📖)
   - [Installation](#installation)
     - [crates.io](#cratesio)
@@ -29,7 +28,7 @@ A CLI tool to read pages from the ArchWiki
     - [Useful info for plugin developers](#useful-info-for-plugin-developers)
       - [Outputting JSON](#outputting-json)
   - [Alternatives](#alternatives)
-<!--toc:end-->
+  <!--toc:end-->
 
 ## Installation
 
@@ -212,8 +211,8 @@ archwiki-rs completions > /home/iusearchbtw/.oh-my-zsh/completions/_archwiki-rs
 
 Here's a list of programs that have plugins for `archwiki-rs` to make your life easier
 
-- [Neovim](https://github.com/Jackboxx/archwiki-nvim)
-- [Obsidian](https://github.com/Jackboxx/archwiki-obsidian) (only supported up to v2.2.3)
+- [Neovim](https://gitlab.com/Jackboxx/archwiki-nvim)
+- [Obsidian](https://gitlab.com/Jackboxx/archwiki-obsidian) (only supported up to v2.2.3)
 
 ### Useful info for plugin developers
 

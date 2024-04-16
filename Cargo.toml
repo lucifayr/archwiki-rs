@@ -3,7 +3,7 @@ name = "archwiki-rs"
 version = "3.1.0"
 description = "A CLI tool to read pages from the ArchWiki"
 edition = "2021"
-authors = ["Lucy Gschwantner lucygschwantner@gmail.com"]
+authors = ["June L. Gschwantner lucygschwantner@gmail.com"]
 homepage = "https://gitlab.com/Jackboxx/archwiki-rs"
 license = "MIT"
 repository = "https://gitlab.com/jackboxx/archwiki-rs"
@@ -52,8 +52,8 @@ version = "4.4.7"
 optional = true
 
 [dependencies.tokio]
-version = "1.33.0" 
-features = ["full"] 
+version = "1.33.0"
+features = ["full"]
 optional = true
 
 [dependencies.unicode-width]
@@ -90,7 +90,7 @@ optional = true
 
 [dependencies.getrandom ]
 version = "0.2.14"
-features = ["js"] 
+features = ["js"]
 optional = true
 
 [dependencies.wasm-bindgen]
@@ -107,7 +107,7 @@ optional = true
 
 [dependencies.console_error_panic_hook]
 version = "0.1.7"
-optional = true 
+optional = true
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
