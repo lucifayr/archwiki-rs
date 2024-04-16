@@ -12,6 +12,10 @@ use crate::error::WikiError;
 
 pub const UNCATEGORIZED_KEY: &str = "Uncategorized";
 
+pub fn is_archwiki_url(str: &str) -> Option<&str> {
+    Some(str.split_once("https://wiki.archlinux.org/title/")?.1)
+}
+
 pub fn extract_tag_attr(element: &Element, tag: &str, attr: &str) -> Option<String> {
     if element.name() == tag {
         element.attr(attr).map(ToOwned::to_owned)

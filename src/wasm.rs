@@ -4,12 +4,15 @@ use futures::TryFutureExt;
 use wasm_bindgen::{convert::IntoWasmAbi, prelude::wasm_bindgen, JsValue};
 
 use crate::{
-    args::wasm::{
-        ListCategoriesArgs, ListLanguagesArgs, ListPagesArgs, ReadPageArgs, SearchArgs,
-        WikiMetadataArgs,
+    args::{
+        internal,
+        wasm::{
+            ListCategoriesArgs, ListLanguagesArgs, ListPagesArgs, ReadPageArgs, SearchArgs,
+            WikiMetadataArgs,
+        },
     },
     langs, list, search,
-    utils::flip_page_tree,
+    utils::{flip_page_tree, is_archwiki_url},
     wiki,
 };
 
@@ -18,7 +21,8 @@ fn main() {
     console_error_panic_hook::set_once();
 }
 
-/// Fetch a single article page from the ArchWiki.
+/// Fetch a single article page from the ArchWiki. Provide either the name of the page or an
+/// absolute URL of the format 'https://wiki.archlinux.org/title/{page}'.
 ///
 /// # Returns
 ///
@@ -30,7 +34,12 @@ fn main() {
 /// - When no page is found
 #[wasm_bindgen(js_name = fetchWikiPage)]
 pub async fn fetch_wiki_page(args: ReadPageArgs) -> Result<String, String> {
-    wiki::fetch_and_format_page(args.into())
+    let mut args: internal::ReadPageArgs = args.into();
+    if let Some(page) = is_archwiki_url(&args.page) {
+        args.page = page.to_owned();
+    };
+
+    wiki::fetch_and_format_page(args)
         .await
         .map_err(|err| err.to_string())
 }

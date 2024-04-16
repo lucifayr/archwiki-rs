@@ -92,7 +92,7 @@ pub struct ReadPageCliArgs {
     #[arg(short, long, value_enum, default_value_t = ReadPageArgs::default().format)]
     /// The format that the page should be displayed in
     pub format: PageFormat,
-    /// The name of the page to read or an absolute URL to the page
+    /// The name of the page to read or an absolute URL of the format 'https://wiki.archlinux.org/title/{page}'
     pub page: String,
 }
 
