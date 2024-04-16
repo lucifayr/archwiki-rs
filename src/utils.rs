@@ -35,6 +35,7 @@ pub fn update_relative_urls(html: &str, base_url: &str) -> String {
         .replace("poster=\"/", &format!("poster=\"{base_url}/"))
 }
 
+#[cfg(feature = "cli")]
 pub fn read_pages_as_tree(
     path: &Path,
     is_default_path: bool,

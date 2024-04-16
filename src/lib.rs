@@ -26,8 +26,14 @@ mod info;
 #[cfg(feature = "cli")]
 mod io;
 
-#[cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]
+#[cfg(all(
+    not(feature = "cli"),
+    any(feature = "wasm-nodejs", feature = "wasm-web")
+))]
 mod wasm;
 
-#[cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]
+#[cfg(all(
+    not(feature = "cli"),
+    any(feature = "wasm-nodejs", feature = "wasm-web")
+))]
 pub use wasm::*;

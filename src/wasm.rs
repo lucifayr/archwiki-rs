@@ -11,7 +11,7 @@ use crate::{
             WikiMetadataArgs,
         },
     },
-    langs, list, search,
+    error, langs, list, search,
     utils::{flip_page_tree, is_archwiki_url},
     wiki,
 };
@@ -33,15 +33,13 @@ fn main() {
 /// - On network errors
 /// - When no page is found
 #[wasm_bindgen(js_name = fetchWikiPage)]
-pub async fn fetch_wiki_page(args: ReadPageArgs) -> Result<String, String> {
+pub async fn fetch_wiki_page(args: ReadPageArgs) -> Result<String, error::WasmWikiError> {
     let mut args: internal::ReadPageArgs = args.into();
     if let Some(page) = is_archwiki_url(&args.page) {
         args.page = page.to_owned();
     };
 
-    wiki::fetch_and_format_page(args)
-        .await
-        .map_err(|err| err.to_string())
+    wiki::fetch_and_format_page(args).await.map_err(Into::into)
 }
 
 /// Search content on the ArchWiki for the specified query. See `SearchArgs` for more details
@@ -57,10 +55,8 @@ pub async fn fetch_wiki_page(args: ReadPageArgs) -> Result<String, String> {
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = searchWikiPages)]
-pub async fn search_wiki_pages(args: SearchArgs) -> Result<String, String> {
-    search::fetch(args.into())
-        .await
-        .map_err(|err| err.to_string())
+pub async fn search_wiki_pages(args: SearchArgs) -> Result<String, error::WasmWikiError> {
+    search::fetch(args.into()).await.map_err(Into::into)
 }
 
 /// Fetch page and category metadata from the ArchWiki. This takes a few seconds depending on
@@ -96,10 +92,8 @@ pub async fn search_wiki_pages(args: SearchArgs) -> Result<String, String> {
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = fetchWikiMetadata)]
-pub async fn fetch_wiki_metadata(args: WikiMetadataArgs) -> Result<String, String> {
-    wiki::fetch_metadata(args.into())
-        .await
-        .map_err(|err| err.to_string())
+pub async fn fetch_wiki_metadata(args: WikiMetadataArgs) -> Result<String, error::WasmWikiError> {
+    wiki::fetch_metadata(args.into()).await.map_err(Into::into)
 }
 
 /// Format the provided `metadata` as a list of pages. See `fetchWikiMetadata` on how to fetch this metadata.
@@ -114,12 +108,15 @@ pub async fn fetch_wiki_metadata(args: WikiMetadataArgs) -> Result<String, Strin
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = listWikiPages)]
-pub fn list_wiki_pages(args: ListPagesArgs, metadata: JsValue) -> Result<String, String> {
+pub fn list_wiki_pages(
+    args: ListPagesArgs,
+    metadata: JsValue,
+) -> Result<String, error::WasmWikiError> {
     let page_to_category_map: HashMap<String, Vec<String>> =
-        serde_wasm_bindgen::from_value(metadata).map_err(|err| err.to_string())?;
+        serde_wasm_bindgen::from_value(metadata)?;
     let wiki_tree = flip_page_tree(page_to_category_map);
 
-    list::fmt_pages(args.into(), &wiki_tree).map_err(|err| err.to_string())
+    list::fmt_pages(args.into(), &wiki_tree).map_err(Into::into)
 }
 
 /// Format the provided `metadata` as a list of categories. See `fetchWikiMetadata` on how to fetch this metadata.
@@ -134,12 +131,15 @@ pub fn list_wiki_pages(args: ListPagesArgs, metadata: JsValue) -> Result<String,
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = listWikiCategories)]
-pub fn list_wiki_categories(args: ListCategoriesArgs, metadata: JsValue) -> Result<String, String> {
+pub fn list_wiki_categories(
+    args: ListCategoriesArgs,
+    metadata: JsValue,
+) -> Result<String, error::WasmWikiError> {
     let page_to_category_map: HashMap<String, Vec<String>> =
-        serde_wasm_bindgen::from_value(metadata).map_err(|err| err.to_string())?;
+        serde_wasm_bindgen::from_value(metadata)?;
     let wiki_tree = flip_page_tree(page_to_category_map);
 
-    list::fmt_categories(args.into(), &wiki_tree).map_err(|err| err.to_string())
+    list::fmt_categories(args.into(), &wiki_tree).map_err(Into::into)
 }
 
 /// Fetch the list of supported languages from the ArchWiki.
@@ -154,7 +154,7 @@ pub fn list_wiki_categories(args: ListCategoriesArgs, metadata: JsValue) -> Resu
 /// - On network errors
 /// - On serialization/deserialization errors
 #[wasm_bindgen(js_name = listWikiLanguages)]
-pub async fn list_wiki_languages(args: ListLanguagesArgs) -> Result<String, String> {
-    let langs = langs::fetch_all().await.map_err(|err| err.to_string())?;
-    langs::fmt(args.into(), &langs).map_err(|err| err.to_string())
+pub async fn list_wiki_languages(args: ListLanguagesArgs) -> Result<String, error::WasmWikiError> {
+    let langs = langs::fetch_all().await?;
+    langs::fmt(args.into(), &langs).map_err(Into::into)
 }
