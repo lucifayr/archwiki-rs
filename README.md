@@ -2,33 +2,34 @@
 
 A CLI tool to read pages from the ArchWiki
 
-<!-- toc -->
-
-- [Installation](#installation)
-  - [crates.io](#cratesio)
-  - [Source](#source)
-- [Usage](#usage)
-  - [Reading Pages](#reading-pages)
-    - [Basic request](#basic-request)
-    - [Using a different format](#using-a-different-format)
-    - [Caching](#caching)
-    - [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found--%CC%A5%CC%A5%CC%A5n-%CC%A5%CC%A5%CC%A5-)
-  - [Searching the ArchWiki](#searching-the-archwiki)
-    - [Search by title](#search-by-title)
-    - [Search for text](#search-for-text)
-  - [Downloading wiki info](#downloading-wiki-info)
-  - [Listing ArchWiki information](#listing-archwiki-information)
-    - [Listing pages](#listing-pages)
-    - [Listing categories](#listing-categories)
-    - [Listing languages](#listing-languages)
-  - [Downloading a local copy of the ArchWiki](#downloading-a-local-copy-of-the-archwiki)
-    - [Possible speed-ups](#possible-speed-ups)
-  - [Other Information](#other-information)
-  - [Setup shell completion](#setup-shell-completion)
-- [Plugins](#plugins)
-- [Alternatives](#alternatives)
-
-<!-- tocstop -->
+<!--toc:start-->
+- [archwiki-rs 📖](#archwiki-rs-📖)
+  - [Installation](#installation)
+    - [crates.io](#cratesio)
+    - [Source](#source)
+  - [Usage](#usage)
+    - [Reading Pages](#reading-pages)
+      - [Basic request](#basic-request)
+      - [Using a different format](#using-a-different-format)
+      - [Caching](#caching)
+      - [404 page not found (-̥̥̥n-̥̥̥ )](#404-page-not-found-̥̥̥n-̥̥̥)
+    - [Searching the ArchWiki](#searching-the-archwiki)
+      - [Search by title](#search-by-title)
+      - [Search for text](#search-for-text)
+    - [Downloading wiki info](#downloading-wiki-info)
+    - [Listing ArchWiki information](#listing-archwiki-information)
+      - [Listing pages](#listing-pages)
+      - [Listing categories](#listing-categories)
+      - [Listing languages](#listing-languages)
+    - [Downloading a local copy of the ArchWiki](#downloading-a-local-copy-of-the-archwiki)
+      - [Possible speed-ups](#possible-speed-ups)
+    - [Application Information](#application-information)
+    - [Setup shell completion](#setup-shell-completion)
+  - [Plugins](#plugins)
+    - [Useful info for plugin developers](#useful-info-for-plugin-developers)
+      - [Outputting JSON](#outputting-json)
+  - [Alternatives](#alternatives)
+<!--toc:end-->
 
 ## Installation
 
