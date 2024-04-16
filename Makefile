@@ -35,7 +35,7 @@ build-wasm-nodejs:
 
 build-wasm: build-wasm-web build-wasm-nodejs
 
-bump-cli : check-version-cli build-wasm-web
+bump-cli : check-version-cli
 	cargo build --release
 	git add Cargo.toml Cargo.lock
 	git commit -m "bump cli version to $(CLI_VERSION)" || printf "WARNING: nothing to commit for cli version bump"
