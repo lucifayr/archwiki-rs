@@ -48,7 +48,9 @@ fn test_cli_read_page_cmd() -> Result<(), Box<dyn std::error::Error>> {
         let mut cmd = Command::cargo_bin("archwiki-rs")?;
         cmd.args(["read-page", "-i", "Neovi"]);
 
-        cmd.assert().failure().stderr(pstr::starts_with("Neovim"));
+        cmd.assert()
+            .failure()
+            .stderr(pstr::starts_with("SIMILAR PAGES\nNeovim"));
     }
 
     Ok(())
@@ -62,9 +64,12 @@ fn test_cli_search_cmd() -> Result<(), Box<dyn std::error::Error>> {
         let mut cmd = Command::cargo_bin("archwiki-rs")?;
         cmd.args(["search", "Neovim"]);
 
-        cmd.assert().success().stdout(pstr::starts_with(
-"PAGE                 | URL                                                                                       
-Neovim               | https://wiki.archlinux.org/title/Neovim"));
+        cmd.assert()
+            .success()
+            .stdout(pstr::starts_with("PAGE                 | URL"))
+            .stdout(pstr::contains(
+                "Neovim               | https://wiki.archlinux.org/title/Neovim",
+            ));
     }
 
     {

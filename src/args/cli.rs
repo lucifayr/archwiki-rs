@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use clap_complete::Shell;
 
 use crate::formats::PageFormat;
@@ -10,7 +10,8 @@ use crate::formats::PageFormat;
 use super::internal::{
     InfoArgs, InfoFmtArgs, InfoPlainArgs, ListCategoriesArgs, ListCategoriesFmtArgs,
     ListLanguagesArgs, ListLanguagesFmtArgs, ListPagesArgs, ListPagesFmtArgs, ListPagesPlainArgs,
-    ReadPageArgs, SearchArgs, SearchFmtArgs, WikiMetadataArgs, WikiMetadataFmtArgs,
+    ReadPageArgs, SearchArgs, SearchFmtArgs, SearchSnippetFmtArgs, WikiMetadataArgs,
+    WikiMetadataFmtArgs,
 };
 
 #[derive(Parser, Debug)]
@@ -108,6 +109,18 @@ pub struct SearchCliArgs {
     #[arg(short, long, default_value_t = SearchArgs::default().text_search)]
     /// Search for pages by text content instead of title
     pub text_search: bool,
+    #[arg(short = 'H', long, requires = "text_search", default_value_t = SearchArgs::default().no_highlight_snippet)]
+    /// Don't highlight search matches in snippets
+    pub no_highlight_snippet: bool,
+    #[arg(
+        short = 'S',
+        long,
+        requires = "json-search",
+        requires = "text_search",
+        value_enum
+    )]
+    /// What format to print snippets in when using JSON output.
+    pub snippet_format: Option<SearchSnippetFmtCliArgs>,
 
     #[command(flatten)]
     pub args_json: Option<SearchJsonCliArgs>,
@@ -120,15 +133,41 @@ impl From<SearchCliArgs> for SearchArgs {
             lang,
             limit,
             text_search,
+            snippet_format,
+            no_highlight_snippet,
             args_json,
         }: SearchCliArgs,
     ) -> Self {
+        let snippet_fmt = if args_json.is_some() {
+            snippet_format.unwrap_or(SearchSnippetFmtCliArgs::Html)
+        } else {
+            snippet_format.unwrap_or(SearchSnippetFmtCliArgs::Plain)
+        };
         Self {
             search,
             lang,
             limit,
             text_search,
+            no_highlight_snippet,
             fmt: args_json.into(),
+            text_snippet_fmt: snippet_fmt.into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum SearchSnippetFmtCliArgs {
+    Plain,
+    Markdown,
+    Html,
+}
+
+impl From<SearchSnippetFmtCliArgs> for SearchSnippetFmtArgs {
+    fn from(value: SearchSnippetFmtCliArgs) -> Self {
+        match value {
+            SearchSnippetFmtCliArgs::Html => Self::Html,
+            SearchSnippetFmtCliArgs::Markdown => Self::Markdown,
+            SearchSnippetFmtCliArgs::Plain => Self::Plain,
         }
     }
 }
@@ -145,6 +184,7 @@ impl From<Option<SearchJsonCliArgs>> for SearchFmtArgs {
 }
 
 #[derive(Args, Debug, Default)]
+#[group(id = "json-search", multiple = false)]
 pub struct SearchJsonCliArgs {
     #[arg(short, long)]
     /// Display data as pretty-printed JSON
@@ -207,7 +247,7 @@ impl From<ListPagesPlainCliArgs> for ListPagesPlainArgs {
 }
 
 #[derive(Args, Debug)]
-#[group(id = "json-list-pages" , conflicts_with_all = ["plain-list-pages"])]
+#[group(id = "json-list-pages" , conflicts_with_all = ["plain-list-pages"], multiple = false)]
 pub struct ListPagesJsonCliArgs {
     #[arg(short, long)]
     /// Display data as pretty-printed JSON
@@ -363,7 +403,7 @@ pub struct WikiMetdataYamlCliArgs {
 }
 
 #[derive(Args, Debug, Clone, Copy)]
-#[group(id = "json-sync-wiki", conflicts_with_all = ["yaml-sync-wiki"])]
+#[group(id = "json-sync-wiki", conflicts_with_all = ["yaml-sync-wiki"], multiple = false)]
 pub struct WikiMetadtaJsonCliArgs {
     #[arg(short, long)]
     /// Format data as pretty-printed JSON
@@ -452,7 +492,7 @@ impl From<InfoPlainCliArgs> for InfoPlainArgs {
 }
 
 #[derive(Args, Debug)]
-#[group(id = "json-info", conflicts_with_all = ["plain-info"])]
+#[group(id = "json-info", conflicts_with_all = ["plain-info"], multiple = false)]
 pub struct InfoJsonCliArgs {
     #[arg(short, long)]
     /// Display data as pretty-printed JSON

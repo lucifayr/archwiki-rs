@@ -1,10 +1,11 @@
+use colored::Colorize;
 use itertools::Itertools;
 use regex::Regex;
 use scraper::Html;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    args::internal::{SearchArgs, SearchFmtArgs},
+    args::internal::{SearchArgs, SearchFmtArgs, SearchSnippetFmtArgs},
     error::WikiError,
     wiki::{fetch_open_search, fetch_text_search},
 };
@@ -34,38 +35,42 @@ pub struct TextSearchItem {
 }
 
 impl TextSearchItem {
-    pub fn prettify_snippet(&mut self) {
+    pub fn prettify_snippet(&mut self, fmt: SearchSnippetFmtArgs, no_highlight: bool) {
         let snip = if let Ok(rgx) =
             regex::RegexBuilder::new("<span class=\\\"searchmatch\\\">(.*?)</span>")
                 .case_insensitive(true)
                 .build()
         {
-            Html::parse_fragment(&highlight_results(&rgx, &self.snippet))
-                .root_element()
-                .inner_html()
-        } else {
+            fmt_match(&rgx, &self.snippet, fmt, no_highlight)
+        } else if fmt != SearchSnippetFmtArgs::Html {
             Html::parse_fragment(&self.snippet)
                 .root_element()
                 .inner_html()
+        } else {
+            return;
         };
 
         self.snippet = snip.replace(['\n', '\r'], " ");
     }
 }
 
-#[cfg(feature = "cli")]
-fn highlight_results(rgx: &Regex, snippet: &str) -> String {
-    use colored::Colorize;
-    rgx.replace_all(snippet, format!("{}", "$1".cyan()))
-        .to_string()
-}
+fn fmt_match(rgx: &Regex, snippet: &str, fmt: SearchSnippetFmtArgs, no_highlight: bool) -> String {
+    let snippet = match fmt {
+        SearchSnippetFmtArgs::Plain
+        | SearchSnippetFmtArgs::Markdown
+        | SearchSnippetFmtArgs::Html
+            if no_highlight =>
+        {
+            rgx.replace_all(snippet, "$1").to_string()
+        }
+        SearchSnippetFmtArgs::Plain => rgx
+            .replace_all(snippet, format!("{}", "$1".cyan()))
+            .to_string(),
+        SearchSnippetFmtArgs::Markdown => rgx.replace_all(snippet, "**$1**").to_string(),
+        SearchSnippetFmtArgs::Html => snippet.to_owned(),
+    };
 
-#[cfg(all(
-    not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs")
-))]
-fn highlight_results(rgx: &Regex, snippet: &str) -> String {
-    rgx.replace_all(snippet, "$1").to_string()
+    Html::parse_fragment(&snippet).root_element().inner_html()
 }
 
 pub async fn fetch(
@@ -74,13 +79,19 @@ pub async fn fetch(
         lang,
         limit,
         text_search,
-        fmt: fmt_args,
+        fmt,
+        text_snippet_fmt,
+        no_highlight_snippet,
     }: SearchArgs,
 ) -> Result<String, WikiError> {
     let out = if text_search {
         let mut search_res = fetch_text_search(&search, &lang, limit).await?;
 
-        match fmt_args {
+        for item in &mut search_res {
+            item.prettify_snippet(text_snippet_fmt, no_highlight_snippet);
+        }
+
+        match fmt {
             SearchFmtArgs::Plain => fmt_text_search_plain(&mut search_res),
             SearchFmtArgs::JsonRaw => serde_json::to_string(&search_res)?,
             SearchFmtArgs::JsonPretty => serde_json::to_string_pretty(&search_res)?,
@@ -89,7 +100,7 @@ pub async fn fetch(
         let search_res = fetch_open_search(&search, &lang, limit).await?;
         let name_url_pairs = open_search_to_page_url_pairs(&search_res)?;
 
-        match fmt_args {
+        match fmt {
             SearchFmtArgs::Plain => fmt_open_search_plain(&name_url_pairs),
             SearchFmtArgs::JsonRaw => serde_json::to_string(&name_url_pairs)?,
             SearchFmtArgs::JsonPretty => serde_json::to_string_pretty(&name_url_pairs)?,
@@ -100,10 +111,6 @@ pub async fn fetch(
 }
 
 fn fmt_text_search_plain(search_result: &mut [TextSearchItem]) -> String {
-    for item in &mut *search_result {
-        item.prettify_snippet();
-    }
-
     let mut table = format!("{c1:20} | {c2:90}\n", c1 = "PAGE", c2 = "SNIPPET");
     let body = search_result
         .iter()

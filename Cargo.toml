@@ -23,7 +23,7 @@ required-features = ["wasm-web"]
 [features]
 default = ["cli"]
 cli = ["dep:clap", "dep:clap_complete", "dep:tokio", "dep:unicode-width", "dep:colored", "dep:indicatif", "dep:directories", "dep:sanitize-filename", "dep:human-panic", "dep:termination", "dep:num_cpus"]
-wasm-web = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:serde-wasm-bindgen", "dep:console_error_panic_hook", "dep:getrandom"]
+wasm-web = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:serde-wasm-bindgen", "dep:console_error_panic_hook", "dep:getrandom", "dep:colored"]
 wasm-nodejs = ["wasm-web"]
 
 [dependencies]

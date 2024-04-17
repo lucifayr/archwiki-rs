@@ -26,6 +26,8 @@ pub struct SearchArgs {
     pub limit: u16,
     pub text_search: bool,
     pub fmt: SearchFmtArgs,
+    pub text_snippet_fmt: SearchSnippetFmtArgs,
+    pub no_highlight_snippet: bool,
 }
 
 impl Default for SearchArgs {
@@ -36,6 +38,8 @@ impl Default for SearchArgs {
             limit: 5,
             text_search: false,
             fmt: SearchFmtArgs::Plain,
+            text_snippet_fmt: SearchSnippetFmtArgs::Plain,
+            no_highlight_snippet: false,
         }
     }
 }
@@ -45,6 +49,13 @@ pub enum SearchFmtArgs {
     JsonPretty,
     JsonRaw,
     Plain,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SearchSnippetFmtArgs {
+    Plain,
+    Markdown,
+    Html,
 }
 
 #[derive(Debug, Clone)]

@@ -98,6 +98,9 @@ impl From<SearchArgs> for internal::SearchArgs {
             limit: limit.unwrap_or_else(|| Self::default().limit),
             text_search: text_search.unwrap_or_else(|| Self::default().text_search),
             fmt: fmt.into(),
+            // TODO add as args
+            no_highlight_snippet: false,
+            text_snippet_fmt: internal::SearchSnippetFmtArgs::Html,
         }
     }
 }
