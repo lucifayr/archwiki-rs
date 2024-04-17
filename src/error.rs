@@ -15,7 +15,7 @@ pub enum WikiError {
     UrlParseError(#[from] url::ParseError),
     #[error("An invalid api response was received.\nERROR: {}", .0)]
     InvalidApiResponse(InvalidApiResponse),
-    #[error("{}", .0)]
+    #[error("SIMILAR PAGES\n{}", .0)]
     NoPageFound(String),
     #[cfg(feature = "cli")]
     #[error("An IO error occurred.\nERROR: {}", .0)]
