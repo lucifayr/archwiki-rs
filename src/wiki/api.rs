@@ -43,6 +43,15 @@ pub async fn fetch_open_search(
     lang: &str,
     limit: u16,
 ) -> Result<Vec<OpenSearchItem>, WikiError> {
+    if search.is_empty() {
+        return Ok(vec![
+            OpenSearchItem::Single(String::new()),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Array(vec![]),
+            OpenSearchItem::Array(vec![]),
+        ]);
+    }
+
     let url = format!("https://wiki.archlinux.org/api.php?action=opensearch&format=json&uselang={lang}&limit={limit}&search={search}");
     let body = reqwest::get(url).await?.text().await?;
     let res: Vec<OpenSearchItem> = serde_json::from_str(&body)?;
