@@ -130,7 +130,7 @@ async fn fetch_page_by_url(url: Url) -> Result<Html, WikiError> {
     );
 
     let body = reqwest::get(url).await?.text().await?;
-    let body_with_abs_urls = update_relative_urls(&body, &base_url);
+    let body_with_abs_urls = update_relative_urls(&body, &base_url, "title");
 
     Ok(Html::parse_document(&body_with_abs_urls))
 }

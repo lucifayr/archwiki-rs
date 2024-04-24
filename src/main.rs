@@ -12,7 +12,7 @@ use crate::{
     args::cli::{CompletionsCliArgs, LocalWikiCliArgs, ReadPageCliArgs},
     formats::format_page,
     io::{app_dirs, page_cache_exists, page_path, AppDirs},
-    utils::{is_archwiki_url, read_pages_as_tree},
+    utils::{archwiki_url_page_title, read_pages_as_tree},
     wiki::{copy_wiki_to_fs, fetch_page},
 };
 
@@ -151,7 +151,7 @@ async fn read_page(
     }: ReadPageCliArgs,
     cache_dir: &Path,
 ) -> Result<(), WikiError> {
-    let page = is_archwiki_url(&page).unwrap_or(&page);
+    let page = archwiki_url_page_title(&page).unwrap_or(&page);
 
     let page_cache_path = page_path(page, &format, cache_dir);
     let use_cached_page = !ignore_cache

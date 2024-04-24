@@ -12,7 +12,7 @@ use crate::error::WikiError;
 
 pub const UNCATEGORIZED_KEY: &str = "Uncategorized";
 
-pub fn is_archwiki_url(str: &str) -> Option<&str> {
+pub fn archwiki_url_page_title(str: &str) -> Option<&str> {
     Some(str.split_once("https://wiki.archlinux.org/title/")?.1)
 }
 
@@ -26,13 +26,21 @@ pub fn extract_tag_attr(element: &Element, tag: &str, attr: &str) -> Option<Stri
 
 /// Replaces relative URLs in certain HTML attributes with absolute URLs.
 /// The list of attributes is taken from <https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes>
-pub fn update_relative_urls(html: &str, base_url: &str) -> String {
-    html.replace("href=\"/", &format!("href=\"{base_url}/"))
-        .replace("src=\"/", &format!("src=\"{base_url}/"))
-        .replace("data=\"/", &format!("data=\"{base_url}/"))
-        .replace("manifest=\"/", &format!("manifest=\"{base_url}/"))
-        .replace("ping=\"/", &format!("ping=\"{base_url}/"))
-        .replace("poster=\"/", &format!("poster=\"{base_url}/"))
+/// Note:
+/// - `/` matter, check implementation
+pub fn update_relative_urls(html: &str, root_url: &str, path: &str) -> String {
+    html.replace("href=\"/", &format!("href=\"{root_url}/"))
+        .replace("src=\"/", &format!("src=\"{root_url}/"))
+        .replace("data=\"/", &format!("data=\"{root_url}/"))
+        .replace("manifest=\"/", &format!("manifest=\"{root_url}/"))
+        .replace("ping=\"/", &format!("ping=\"{root_url}/"))
+        .replace("poster=\"/", &format!("poster=\"{root_url}/"))
+        .replace("href=\"./", &format!("href=\"{root_url}/{path}/"))
+        .replace("src=\"./", &format!("src=\"{root_url}/{path}/"))
+        .replace("data=\"./", &format!("data=\"{root_url}/{path}/"))
+        .replace("manifest=\"./", &format!("manifest=\"{root_url}/{path}/"))
+        .replace("ping=\"./", &format!("ping=\"{root_url}/{path}/"))
+        .replace("poster=\"./", &format!("poster=\"{root_url}{path}/"))
 }
 
 #[cfg(feature = "cli")]
