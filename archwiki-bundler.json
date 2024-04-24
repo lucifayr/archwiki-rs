@@ -1,0 +1,6 @@
+{
+  "name": "archwiki-bundler",
+  "description": "WASM bindings to some of the functionality of the archwiki-rs CLI tool for bundlers to build",
+  "version": "0.4.1",
+  "keywords": ["ArchWiki"]
+}
