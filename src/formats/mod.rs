@@ -10,7 +10,7 @@ use scraper::Html;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
 #[cfg_attr(
-    any(feature = "wasm-web", feature = "wasm-nodejs"),
+    any(feature = "wasm-web", feature = "wasm-nodejs", feature = "wasm-bundler"),
     wasm_bindgen::prelude::wasm_bindgen(js_name = PageFmtArgs)
 )]
 pub enum PageFormat {

@@ -52,7 +52,11 @@ fn progress_spinner(hide_progress: bool) -> Option<std::thread::JoinHandle<()>> 
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs")
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    )
 ))]
 fn progress_spinner(hide_progress: bool) -> Option<std::thread::JoinHandle<()>> {
     None

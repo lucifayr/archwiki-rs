@@ -30,7 +30,11 @@ pub enum WikiError {
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs"),
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    ),
 ))]
 #[derive(Debug)]
 #[wasm_bindgen::prelude::wasm_bindgen]
@@ -42,7 +46,11 @@ pub struct WasmWikiError {
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs"),
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    ),
 ))]
 #[wasm_bindgen::prelude::wasm_bindgen]
 impl WasmWikiError {
@@ -59,7 +67,11 @@ impl WasmWikiError {
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs"),
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    ),
 ))]
 impl From<WikiError> for WasmWikiError {
     fn from(value: WikiError) -> Self {
@@ -72,7 +84,11 @@ impl From<WikiError> for WasmWikiError {
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs"),
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    ),
 ))]
 #[wasm_bindgen::prelude::wasm_bindgen]
 #[derive(Debug, Clone)]
@@ -88,7 +104,11 @@ pub enum WasmWikiErrorKind {
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs"),
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    ),
 ))]
 impl<'a> From<&'a WikiError> for WasmWikiErrorKind {
     fn from(value: &'a WikiError) -> Self {
@@ -105,7 +125,11 @@ impl<'a> From<&'a WikiError> for WasmWikiErrorKind {
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs"),
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    ),
 ))]
 impl From<serde_wasm_bindgen::Error> for WasmWikiError {
     fn from(value: serde_wasm_bindgen::Error) -> Self {

@@ -1,4 +1,8 @@
-#![cfg(any(feature = "wasm-nodejs", feature = "wasm-web"))]
+#![cfg(any(
+    feature = "wasm-nodejs",
+    feature = "wasm-bundler",
+    feature = "wasm-web"
+))]
 #![allow(non_snake_case)]
 
 use wasm_bindgen::prelude::wasm_bindgen;

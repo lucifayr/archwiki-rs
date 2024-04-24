@@ -81,7 +81,11 @@ fn wrap_text_in_url(text: &str, url: &str) -> String {
 
 #[cfg(all(
     not(feature = "cli"),
-    any(feature = "wasm-web", feature = "wasm-nodejs")
+    any(
+        feature = "wasm-web",
+        feature = "wasm-nodejs",
+        feature = "wasm-bundler"
+    )
 ))]
 fn wrap_text_in_url(text: &str, url: &str) -> String {
     format!("{text}[{url}]")
