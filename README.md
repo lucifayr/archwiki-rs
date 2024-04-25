@@ -47,7 +47,7 @@ cargo install archwiki-rs
 
 ```sh
 
-git clone https://gitlab.com/Jackboxx/archwiki-rs
+git clone https://gitlab.com/lucifayr/archwiki-rs
 cd archwiki-rs
 cargo install --path .
 ```
@@ -211,8 +211,8 @@ archwiki-rs completions > /home/iusearchbtw/.oh-my-zsh/completions/_archwiki-rs
 
 Here's a list of programs that have plugins for `archwiki-rs` to make your life easier
 
-- [Neovim](https://gitlab.com/Jackboxx/archwiki-nvim)
-- [Obsidian](https://gitlab.com/Jackboxx/archwiki-obsidian) (only supported up to v2.2.3)
+- [Neovim](https://gitlab.com/lucifayr/archwiki-nvim)
+- [Obsidian](https://gitlab.com/lucifayr/archwiki-obsidian) (only supported up to v2.2.3)
 
 ### Useful info for plugin developers
 
