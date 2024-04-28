@@ -12,6 +12,24 @@ archwiki-rs -- Read pages from the ArchWiki
 
 ## SUB COMMANDS
 
+`archwiki-rs read-page <PAGE> [OPTIONS]...`
+
+`archwiki-rs search <QUERY> [OPTIONS]...`
+
+`archwiki-rs list-pages [OPTIONS]...`
+
+`archwiki-rs list-categories [OPTIONS]...`
+
+`archwiki-rs list-languages [OPTIONS]...`
+
+`archwiki-rs sync-wiki [OPTIONS]...`
+
+`archwiki-rs local-wiki <LOCATION> [OPTIONS]...`
+
+`archwiki-rs info [OPTIONS]...`
+
+`archwiki-rs completions [OPTIONS]...`
+
 ## AUTHOR
 
 June L. Gschwantner lucygschwantner@gmail.com
