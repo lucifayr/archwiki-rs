@@ -6,9 +6,30 @@ archwiki-rs -- Read pages from the ArchWiki
 
 ## DESCRIPTION
 
+Used to read, search for, and list pages on the ArchWiki.
+
+Designed to be used as a standalone CLI tool and to act as the base for developing plugins
+that read data from the ArchWiki. See
+[archwiki-nvim](https://gitlab.com/lucifayr/archwiki-nvim) for an example of such a
+plugin.
+
 
 ## EXAMPLES
 
+`archwiki-rs read-page "ArchWiki"`
+
+> Fetch and print the ArchWiki page about the ArchWiki to `stdout`. See `man
+> archwiki-rs-read-page` for more information.
+
+`archwiki-rs search --text-search --json "gcc"`
+
+> Search for pages on the ArchWiki that contain the text "gcc" and print the output as JSON.
+> See `man archwiki-rs-search` for more information.
+
+`archwiki-rs local-wiki ~/archwiki --format markdown`
+
+> Download a local copy of all ArchWiki pages into the `~/archwiki` directory as markdown
+> files. See `man archwiki-rs-local-wiki` for more information.
 
 ## SUB COMMANDS
 

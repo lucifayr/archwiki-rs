@@ -6,7 +6,24 @@
 .SH "SYNOPSIS"
 \fBarchwiki\-rs <COMMAND>\fR
 .SH "DESCRIPTION"
+Used to read, search for, and list pages on the ArchWiki\.
+.P
+Designed to be used as a standalone CLI tool and to act as the base for developing plugins that read data from the ArchWiki\. See archwiki\-nvim \fIhttps://gitlab\.com/lucifayr/archwiki\-nvim\fR for an example of such a plugin\.
 .SH "EXAMPLES"
+\fBarchwiki\-rs read\-page "ArchWiki"\fR
+.IP "" 4
+Fetch and print the ArchWiki page about the ArchWiki to \fBstdout\fR\. See \fBman archwiki\-rs\-read\-page\fR for more information\.
+.IP "" 0
+.P
+\fBarchwiki\-rs search \-\-text\-search \-\-json "gcc"\fR
+.IP "" 4
+Search for pages on the ArchWiki that contain the text "gcc" and print the output as JSON\. See \fBman archwiki\-rs\-search\fR for more information\.
+.IP "" 0
+.P
+\fBarchwiki\-rs local\-wiki ~/archwiki \-\-format markdown\fR
+.IP "" 4
+Download a local copy of all ArchWiki pages into the \fB~/archwiki\fR directory as markdown files\. See \fBman archwiki\-rs\-local\-wiki\fR for more information\.
+.IP "" 0
 .SH "SUB COMMANDS"
 \fBarchwiki\-rs read\-page <PAGE> [OPTIONS]\|\.\|\.\|\.\fR
 .P
