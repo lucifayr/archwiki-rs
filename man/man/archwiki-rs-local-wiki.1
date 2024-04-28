@@ -4,7 +4,60 @@
 .SH "NAME"
 \fBarchwiki\-rs\-local\-wiki\fR \- Download a copy of the ArchWiki
 .SH "SYNOPSIS"
+\fBarchwiki\-rs local\-wiki <LOCATION> [OPTIONS]\|\.\|\.\|\.\fR
 .SH "DESCRIPTION"
+Preface
+.IP "" 4
+Requiers a page file\. Run \fBarchwiki\-rs sync\-wiki\fR to create a page file or see \fBman archwiki\-rs\-sync\-wiki\fR for more information for more information\.
+.IP "" 0
+.P
+Downloading a local wiki
+.IP "" 4
+This command downloads all pages listed in the provided page file\. If the page file is the default file created by running \fBarchwiki\-rs sync\-wiki\fR this will be over 10,000 pages which will take at least several mintues to download\. If you don\'t mind increasing the load on your CPU and network by a bit you can pick a high value for the \fB\-t|\-\-thread\-count\fR option (e\.g\. \fB\-t 24\fR)\. Be aware that by set this value too high you are effectively DOSing the ArchWiki which might get you rate limited and is also not very nice :\-:
+.IP "" 0
+.P
+Resuming a download
+.IP "" 4
+The default behavior of this command is to not re\-download any page that already exists in the specified \fBLOCATION\fR directory\. So any \fBcategory + page\fR pair listed in the pages file that already exists is skipped over\. If you want to re\-download already existing files, to get any new edits or for other reasons, you can pass the \fB\-o|\-\-override\-existing\-files\fR flag\.
+.IP "" 0
+.P
+Layout inside the \fBLOCATION\fR directory
+.IP "" 4
+Pages are stored in their direct parent \fBcategory\fR\. As a result many pages will appear multiple times\. For example "Neovim" exists both in the "CLI tools" and the "Text Editor" categories\.
+.IP
+Category hierarchies are flattened\. This means that a category that is a child of another category becomes a top level category\. So
+.IP
+\fBCat_A/Page_1\fR
+.br
+\fBCat_A/Cat_B/Page_2\fR
+.br
+\fBCat_A/Cat_B/Page_3\fR
+.br
+\fBCat_A/Cat_B/Cat_C/Page_4\fR
+.br
+.IP
+Becomes
+.IP
+\fBCat_A/Page_1\fR
+.br
+\fBCat_B/Page_2\fR
+.br
+\fBCat_B/Page_3\fR
+.br
+\fBCat_C/Page_4\fR
+.br
+.IP
+Any uncategorized pages are dynamically allocated into dummy categories of the format \fBUncategorized #X\fR\. A maximum of 500 pages can be in one of these dummy categories at once\. This splitting is mainly done to make downloads more parallelizable and faster\.
+.IP "" 0
 .SH "EXAMPLES"
+\fBarchwiki\-rs local\-wiki ~/archwiki\fR
+.IP "" 4
+Download all pages on the ArchWiki in the default format and store them in the \fB~/archwiki\fR directory\. Creates the directory \fB~/archwiki\fR if it doesn\'t already exists (non\-recursive \fBmkdir\fR)\.
+.IP "" 0
+.P
+\fBarchwiki\-rs local\-wiki ~/archwiki \-\-format html\fR
+.IP "" 4
+Download all pages on the ArchWiki formatted as \fBhtml\fR and store them in the \fB~/archwiki\fR directory\.
+.IP "" 0
 .SH "AUTHOR"
 June L\. Gschwantner lucygschwantner@gmail\.com

@@ -3,11 +3,70 @@ archwiki-rs-local-wiki -- Download a copy of the ArchWiki
 
 ## SYNOPSIS
 
+`archwiki-rs local-wiki <LOCATION> [OPTIONS]...`
 
 ## DESCRIPTION
 
+Preface
+
+> Requiers a page file. Run `archwiki-rs sync-wiki` to create a page file or see `man
+> archwiki-rs-sync-wiki` for more information for more information.
+
+Downloading a local wiki
+
+> This command downloads all pages listed in the provided page file. If the page file is the
+> default file created by running `archwiki-rs sync-wiki` this will be over 10,000 pages
+> which will take at least several mintues to download. If you don't mind increasing the
+> load on your CPU and network by a bit you can pick a high value for the
+> `-t|--thread-count` option (e.g. `-t 24`). Be aware that by set this value too high
+> you are effectively DOSing the ArchWiki which might get you rate limited and is also not
+> very nice :-:
+
+Resuming a download
+
+> The default behavior of this command is to not re-download any page that already exists in
+> the specified `LOCATION` directory. So any `category + page` pair listed in the pages file
+> that already exists is skipped over. If you want to re-download already existing files,
+> to get any new edits or for other reasons, you can pass the `-o|--override-existing-files`
+> flag.
+
+Layout inside the `LOCATION` directory
+
+> Pages are stored in their direct parent `category`. As a result many pages will appear
+> multiple times. For example "Neovim" exists both in the "CLI tools" and the "Text Editor"
+> categories.
+>
+> Category hierarchies are flattened. This means that a category that is a child
+> of another category becomes a top level category. So
+>
+> `Cat_A/Page_1`<br>
+> `Cat_A/Cat_B/Page_2`<br>
+> `Cat_A/Cat_B/Page_3`<br>
+> `Cat_A/Cat_B/Cat_C/Page_4`<br>
+>
+> Becomes
+>
+> `Cat_A/Page_1`<br>
+> `Cat_B/Page_2`<br>
+> `Cat_B/Page_3`<br>
+> `Cat_C/Page_4`<br>
+>
+> Any uncategorized pages are dynamically allocated into dummy categories of the format
+> `Uncategorized #X`. A maximum of 500 pages can be in one of these dummy categories at once.
+> This splitting is mainly done to make downloads more parallelizable and faster.
 
 ## EXAMPLES
+
+`archwiki-rs local-wiki ~/archwiki`
+
+> Download all pages on the ArchWiki in the default format and store them in the
+> `~/archwiki` directory. Creates the directory `~/archwiki` if it doesn't already exists
+> (non-recursive `mkdir`).
+
+`archwiki-rs local-wiki ~/archwiki --format html`
+
+> Download all pages on the ArchWiki formatted as `html` and store them in the
+> `~/archwiki` directory.
 
 ## AUTHOR
 
