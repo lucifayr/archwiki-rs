@@ -1,6 +1,5 @@
 #![warn(clippy::pedantic)]
 #![allow(dead_code)]
-#![allow(unused)]
 #![allow(clippy::doc_markdown)]
 
 #[cfg(all(feature = "cli", feature = "wasm-web"))]
