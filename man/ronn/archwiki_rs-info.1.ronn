@@ -3,8 +3,29 @@ archwiki-rs-info -- Retrieve information related to this tool
 
 ## SYNOPSIS
 
+`archwiki-rs info [OPTIONS]...`
 
 ## DESCRIPTION
 
+Useful for getting the values of "variables" that this tool uses. "variables" can be
+things like the default directory used to cache pages.
 
-## EXAMPLE
+## EXAMPLES
+
+`archwiki-rs info`
+
+> Output a table containing the names, values, and a short description
+> of all "variables".
+
+`archwiki-rs info --show-cache-dir --only-values`
+
+> Output the value of the *cache dir* "variable" without any additional information such
+> as a description.
+
+`archwiki-rs info --json`
+
+> Output information in formatted as JSON format.
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com
