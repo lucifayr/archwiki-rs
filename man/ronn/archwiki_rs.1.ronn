@@ -7,7 +7,7 @@ archwiki-rs -- Read pages from the ArchWiki
 ## DESCRIPTION
 
 
-## EXAMPLE
+## EXAMPLES
 
 
 ## SUB COMMANDS

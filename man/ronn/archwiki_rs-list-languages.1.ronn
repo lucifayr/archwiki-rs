@@ -7,4 +7,4 @@ archwiki-rs-list-languages -- List all languages that the ArchWiki supports
 ## DESCRIPTION
 
 
-## EXAMPLE
+## EXAMPLES

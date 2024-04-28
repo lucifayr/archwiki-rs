@@ -7,4 +7,4 @@ archwiki-rs-local-wiki -- Download a copy of the ArchWiki
 ## DESCRIPTION
 
 
-## EXAMPLE
+## EXAMPLES

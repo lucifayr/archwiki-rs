@@ -16,7 +16,7 @@ the [MediaWiki search API](https://www.mediawiki.org/wiki/API:Searchttps://www.m
 For better and for worse this means the results are the same as directly searching on the
 ArchWiki.
 
-## EXAMPLE
+## EXAMPLES
 
 `archwiki-rs search "Neovim"`
 

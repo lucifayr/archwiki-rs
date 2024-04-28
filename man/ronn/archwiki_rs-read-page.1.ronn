@@ -61,7 +61,7 @@ Formats
 > `markdown     : /path/to/cache/dir/Neovim.md`<br>
 > `html         : /path/to/cache/dir/Neovim.html`<br>
 
-## EXAMPLE
+## EXAMPLES
 
 `archwiki-rs read-page "Polkit" --format markdown`
 
