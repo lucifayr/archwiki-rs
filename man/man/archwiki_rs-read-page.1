@@ -4,6 +4,65 @@
 .SH "NAME"
 \fBarchwiki\-rs\-read\-page\fR \- Read a page from the ArchWiki
 .SH "SYNOPSIS"
+\fBarchwiki\-rs read\-page <PAGE> [OPTIONS]\|\.\|\.\|\.\fR
 .SH "DESCRIPTION"
+Fetching Pages
+.IP "" 4
+Pages are queried by name, so passing the arguemt "Polkit" as the value of \fBPAGE\fR will attemted to fetch a page named "Polkit" from the ArchWiki\. If an absolute URL to an ArchWiki page is provided (e\.g\. \fIhttps://wiki\.archlinux\.org/title/Installation_guide\fR) the page name will be extracted from the URL and the page will be fetched in the same way as if only that page name was provided\.
+.IP "" 0
+.P
+Similar Pages
+.IP "" 4
+When no exact match is found for the provided value of \fBPAGE\fR a list of similar pages is returned\. This list is output to \fBstderr\fR and is in the format
+.IP
+\fBSIMILAR PAGES\fR
+.br
+\fBpage 1\fR
+.br
+\fBpage 2\fR
+.br
+\fB\|\.\|\.\|\.\fR
+.IP
+At most 5 similar pages are printed\.
+.IP "" 0
+.P
+Redirects
+.IP "" 4
+Pages on the ArchWiki can redirect to other pages on the wiki (e\.g\. "Nvim" redirects to "Neovim")\. These page redirects are always automatically followed but redirect pages have their own \fBcaches\fR\.
+.IP "" 0
+.P
+Caches
+.IP "" 4
+Any page that is succesfully fetched is cached as a file on disk in the \fBcache directory\fR (see \fBman archwiki\-rs\-info\fR) for more details\. You can pass the \fB\-n|\-\-no\-cache\-write\fR flag to prevent a cache file from bein created or updated after a page is fetched\. By default a cache is invalidated if it has not been updated/modified in the last 14 days\. When a cache is invalidated the page will be re\-feteched from the ArchWiki\.
+.IP
+Caches can also be ignored manually by passing the \fB\-i|\-\-ignore\-cache\fR flag\. If you want to disable cache invalidation you can pass the \fBd|\-\-disable\-cache\-invalidation\fR flag\.
+.IP
+If a page fetch fails but a stale/invalidated cache exists and the \fB\-i|\-\-ignore\-cache\fR flag is not set, the cached file content will be used as a fallback\.
+.IP
+Caches are format specific, meaning each format will have its own cache file\.
+.IP "" 0
+.P
+Formats
+.IP "" 4
+Pages can be output in different formats\. By default pages are output as plain text\. With the \fB\-f|\-\-format\fR option you can set the output format to either \fBplain\-text\fR, \fBmarkdown\fR, or \fBhtml\fR\.
+.IP
+A new cache will be created for every format of a page\. E\.g\.
+.IP
+\fBplain\-text : /path/to/cache/dir/Neovim\fR
+.br
+\fBmarkdown : /path/to/cache/dir/Neovim\.md\fR
+.br
+\fBhtml : /path/to/cache/dir/Neovim\.html\fR
+.br
+.IP "" 0
 .SH "EXAMPLE"
+\fBarchwiki\-rs read\-page "Polkit" \-\-format markdown\fR
+.IP "" 4
+Fetch the page with the name "Polkit" from the ArchWiki and print its content to \fBstdout\fR as markdown\.
+.IP "" 0
+.P
+\fBarchwiki\-rs read\-page "Emacs" \-\-no\-cache\-write \-\-ignore\-cache\fR
+.IP "" 4
+Fetch the page with the name "Emacs" from the ArchWiki and print its content to \fBstdout\fR as plain text while ignoring any existing cache and not creating a cache if the page is successfully fetched\.
+.IP "" 0
 

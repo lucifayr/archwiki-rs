@@ -3,8 +3,73 @@ archwiki-rs-read-page -- Read a page from the ArchWiki
 
 ## SYNOPSIS
 
+`archwiki-rs read-page <PAGE> [OPTIONS]...`
 
 ## DESCRIPTION
 
+Fetching Pages
+
+> Pages are queried by name, so passing the arguemt "Polkit" as the value of `PAGE` will
+> attemted to fetch a page named "Polkit" from the ArchWiki. If an absolute URL to an
+> ArchWiki page is provided (e.g. _https://wiki.archlinux.org/title/Installation_guide_) the
+> page name will be extracted from the URL and the page will be fetched in the same way as
+> if only that page name was provided.
+
+Similar Pages
+
+> When no exact match is found for the provided value of `PAGE` a list of similar pages is returned.
+> This list is output to `stderr` and is in the format
+>
+> `SIMILAR PAGES`<br>
+> `page 1`<br>
+> `page 2`<br>
+> `...`
+>
+> At most 5 similar pages are printed.
+
+Redirects
+
+> Pages on the ArchWiki can redirect to other pages on the wiki (e.g. "Nvim" redirects to
+> "Neovim"). These page redirects are always automatically followed but redirect pages have
+> their own `caches`.
+
+Caches
+
+> Any page that is succesfully fetched is cached as a file on disk in the `cache directory`
+> (see `man archwiki-rs-info`) for more details. You can pass the `-n|--no-cache-write` flag
+> to prevent a cache file from bein created or updated after a page is fetched. By default a
+> cache is invalidated if it has not been updated/modified in the last 14 days.
+> When a cache is invalidated the page will be re-feteched from the ArchWiki.
+>
+> Caches can also be ignored manually by passing the `-i|--ignore-cache` flag. If you want to
+> disable cache invalidation you can pass the `d|--disable-cache-invalidation` flag.
+>
+> If a page fetch fails but a stale/invalidated cache exists and the `-i|--ignore-cache`
+> flag is not set, the cached file content will be used as a fallback.
+>
+> Caches are format specific, meaning each format will have its own cache file.
+
+Formats
+
+> Pages can be output in different formats. By default pages are output as plain text. With
+> the `-f|--format` option you can set the output format to either `plain-text`, `markdown`,
+> or `html`.
+>
+> A new cache will be created for every format of a page. E.g.
+>
+> `plain-text   : /path/to/cache/dir/Neovim`<br>
+> `markdown     : /path/to/cache/dir/Neovim.md`<br>
+> `html         : /path/to/cache/dir/Neovim.html`<br>
 
 ## EXAMPLE
+
+`archwiki-rs read-page "Polkit" --format markdown`
+
+> Fetch the page with the name "Polkit" from the ArchWiki and print its content to `stdout`
+> as markdown.
+
+`archwiki-rs read-page "Emacs" --no-cache-write --ignore-cache`
+
+> Fetch the page with the name "Emacs" from the ArchWiki and print its content to `stdout`
+> as plain text while ignoring any existing cache and not creating a cache if the page is
+> successfully fetched.
