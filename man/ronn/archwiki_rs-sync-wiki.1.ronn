@@ -8,3 +8,7 @@ archwiki-rs-sync-wiki -- Download metadata information about the pages and categ
 
 
 ## EXAMPLES
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com

@@ -8,3 +8,7 @@ archwiki-rs-completions -- Generate scripts for shell auto-completion
 
 
 ## EXAMPLES
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com

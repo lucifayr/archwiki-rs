@@ -11,3 +11,7 @@ archwiki-rs -- Read pages from the ArchWiki
 
 
 ## SUB COMMANDS
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com

@@ -8,3 +8,7 @@ archwiki-rs-local-wiki -- Download a copy of the ArchWiki
 
 
 ## EXAMPLES
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com

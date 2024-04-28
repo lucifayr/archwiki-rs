@@ -8,3 +8,7 @@ archwiki-rs-list-languages -- List all languages that the ArchWiki supports
 
 
 ## EXAMPLES
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com

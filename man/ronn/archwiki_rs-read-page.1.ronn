@@ -73,3 +73,7 @@ Formats
 > Fetch the page with the name "Emacs" from the ArchWiki and print its content to `stdout`
 > as plain text while ignoring any existing cache and not creating a cache if the page is
 > successfully fetched.
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com

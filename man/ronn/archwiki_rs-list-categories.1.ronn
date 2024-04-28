@@ -8,3 +8,7 @@ archwiki-rs-list-categories -- List all categories from the ArchWiki
 
 
 ## EXAMPLES
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com

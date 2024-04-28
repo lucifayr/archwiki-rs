@@ -30,3 +30,7 @@ ArchWiki.
 > JSON array where each element containings a `title` and a `snippet` field. The `snippet`
 > field contains the text that was matched by the query and is formated as `markdown`
 > because of the value of the `--snippet-format` option.
+
+## AUTHOR
+
+June L. Gschwantner lucygschwantner@gmail.com
