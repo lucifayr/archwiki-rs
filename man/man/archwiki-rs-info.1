@@ -1,0 +1,26 @@
+.\" generated with Ronn-NG/v0.9.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.9.1
+.TH "ARCHWIKI\-RS\-INFO" "1" "April 2024" ""
+.SH "NAME"
+\fBarchwiki\-rs\-info\fR \- Retrieve information related to this tool
+.SH "SYNOPSIS"
+\fBarchwiki\-rs info [OPTIONS]\|\.\|\.\|\.\fR
+.SH "DESCRIPTION"
+Useful for getting the values of "variables" that this tool uses\. "variables" can be things like the default directory used to cache pages\.
+.SH "EXAMPLES"
+\fBarchwiki\-rs info\fR
+.IP "" 4
+Output a table containing the names, values, and a short description of all "variables"\.
+.IP "" 0
+.P
+\fBarchwiki\-rs info \-\-show\-cache\-dir \-\-only\-values\fR
+.IP "" 4
+Output the value of the \fIcache dir\fR "variable" without any additional information such as a description\.
+.IP "" 0
+.P
+\fBarchwiki\-rs info \-\-json\fR
+.IP "" 4
+Output information in formatted as JSON format\.
+.IP "" 0
+.SH "AUTHOR"
+June L\. Gschwantner lucygschwantner@gmail\.com
