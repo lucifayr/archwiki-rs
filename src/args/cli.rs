@@ -35,12 +35,12 @@ pub enum Commands {
     )]
     Search(SearchCliArgs),
     #[command(
-        about = "List all pages from the ArchWiki (requires metadata to be synced)",
+        about = "List all pages from the ArchWiki",
         long_about = "List metadata information of pages from the ArchWiki that has been downloaded. See 'sync-wiki' for information on downloading metadata."
     )]
     ListPages(ListPagesCliArgs),
     #[command(
-        about = "List all categories from the ArchWiki (requires metadata to be synced)",
+        about = "List all categories from the ArchWiki",
         long_about = "List metadata information of categories from the ArchWiki that has been downloaded. See 'sync-wiki' for information on downloading metadata."
     )]
     ListCategories(ListCategoriesCliArgs),
@@ -55,17 +55,17 @@ pub enum Commands {
     )]
     SyncWiki(WikiMetadataCliArgs),
     #[command(
-        about = "Download a copy of the ArchWiki. Will take a long time :)",
+        about = "Download a copy of the ArchWiki",
         long_about = "Download a copy of the ArchWiki. Will take a long time :). The exact hierarchy of the wiki is not mainted, sub-categories are put at the top level of the wiki directory."
     )]
     LocalWiki(LocalWikiCliArgs),
     #[command(
-        about = "Retrive information related to this tool",
+        about = "Retrieve information related to this tool",
         long_about = "Retrive information related to this tool"
     )]
     Info(InfoCliArgs),
     #[command(
-        about = "Generate scripts for shell autocompletion",
+        about = "Generate scripts for shell auto-completion",
         long_about = "Generate scripts for shell autocompletion"
     )]
     Completions(CompletionsCliArgs),

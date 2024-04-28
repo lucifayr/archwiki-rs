@@ -1,0 +1,10 @@
+archwiki-rs-read-page -- Read a page from the ArchWiki
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

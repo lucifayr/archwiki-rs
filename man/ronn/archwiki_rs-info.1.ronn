@@ -1,0 +1,10 @@
+archwiki-rs-info -- Retrieve information related to this tool
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

@@ -1,0 +1,10 @@
+archwiki-rs-sync-wiki -- Download metadata information about the pages and categories on the ArchWiki
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

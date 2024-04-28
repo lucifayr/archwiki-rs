@@ -1,0 +1,10 @@
+archwiki-rs-local-wiki -- Download a copy of the ArchWiki
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

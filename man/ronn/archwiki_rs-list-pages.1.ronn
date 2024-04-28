@@ -1,0 +1,10 @@
+archwiki-rs-list-pages -- List all pages from the ArchWiki
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

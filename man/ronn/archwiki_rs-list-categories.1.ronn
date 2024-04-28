@@ -1,0 +1,10 @@
+archwiki-rs-list-categories -- List all categories from the ArchWiki
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

@@ -1,0 +1,13 @@
+archwiki-rs -- Read pages from the ArchWiki
+=====
+
+## SYNOPSIS
+`archwiki-rs <COMMAND>`
+
+## DESCRIPTION
+
+
+## EXAMPLE
+
+
+## SUB COMMANDS

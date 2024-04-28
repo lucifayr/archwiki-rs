@@ -17,6 +17,9 @@ WASM_WEB_VERSION=$(shell jq -r '.version' $(WASM_WEB_PKG_NAME).json)
 WASM_NODEJS_VERSION=$(shell jq -r '.version' $(WASM_NODEJS_PKG_NAME).json)
 WASM_BUNDLER_VERSION=$(shell jq -r '.version' $(WASM_BUNDLER_PKG_NAME).json)
 
+manual :
+	ronn --roff man/ronn/*.ronn -o man/man
+
 check-version-cli :
 	(! git diff --quiet Cargo.toml && git diff Cargo.toml | grep  '+version = ' -B 2 | head -n 1 | grep -q ' name = "archwiki-rs"') || printf "WARNING: version change not detected in diff\n"
 

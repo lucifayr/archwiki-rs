@@ -1,0 +1,10 @@
+archwiki-rs-search -- Search the ArchWiki for pages
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

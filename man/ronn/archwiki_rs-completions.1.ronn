@@ -1,0 +1,10 @@
+archwiki-rs-completions -- Generate scripts for shell auto-completion
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE

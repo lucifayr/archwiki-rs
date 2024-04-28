@@ -1,0 +1,10 @@
+archwiki-rs-list-languages -- List all languages that the ArchWiki supports
+=====
+
+## SYNOPSIS
+
+
+## DESCRIPTION
+
+
+## EXAMPLE
