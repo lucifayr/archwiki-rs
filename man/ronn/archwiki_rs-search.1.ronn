@@ -3,8 +3,30 @@ archwiki-rs-search -- Search the ArchWiki for pages
 
 ## SYNOPSIS
 
+`archwiki-rs search <QUERY> [OPTIONS]...`
 
 ## DESCRIPTION
 
+Search for content on the ArchWiki. Can either search for page titles that match the
+`query` (default) or search for text content contain in pages that matches the `query`
+string. Pass the `-t|--text-search` option to enable text search.
+
+Searches are made directly through the ArchWiki search API which is just a deployment of
+the [MediaWiki search API](https://www.mediawiki.org/wiki/API:Searchttps://www.mediawiki.org/wiki/API:Search).
+For better and for worse this means the results are the same as directly searching on the
+ArchWiki.
 
 ## EXAMPLE
+
+`archwiki-rs search "Neovim"`
+
+> Search for pages that have a similar name to "Neovim" and output a table containing the
+> names and URLs of any pages found. By default a maximum of 5 items are returned. You can
+> override this limit with the `-L|--limit` option.
+
+`archwiki-rs search "/usr/share" --text-search --snippet-format markdown --json`
+
+> Search for pages that contain text matchs for the query string "/usr/share" and output a
+> JSON array where each element containings a `title` and a `snippet` field. The `snippet`
+> field contains the text that was matched by the query and is formated as `markdown`
+> because of the value of the `--snippet-format` option.
