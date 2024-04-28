@@ -3,11 +3,19 @@ archwiki-rs-completions -- Generate scripts for shell auto-completion
 
 ## SYNOPSIS
 
+`archwiki-rs completions <SHELL>`
 
 ## DESCRIPTION
 
+> Print a shell script that enable tab completion for the specified shell. Write the output
+> of this command to where auto-completion scripts are stored for your shell. For
+> `oh-my-zsh` that would be `~/.oh-my-zsh/completions/_archwiki-rs`.
 
 ## EXAMPLES
+
+`archwiki-rs completions fish`
+
+> Generate auto-completion scripts for the fish shell.
 
 ## AUTHOR
 
