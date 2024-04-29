@@ -4,7 +4,28 @@
 .SH "NAME"
 \fBarchwiki\-rs\-list\-languages\fR \- List all languages that the ArchWiki supports
 .SH "SYNOPSIS"
+\fBarchwiki\-rs list\-languages [OPTIONS]\|\.\|\.\|\.\fR
 .SH "DESCRIPTION"
+List Languages
+.IP "" 4
+Prints a table of language names and codes to \fBstdout\fR\. By passing the \fB\-j|\-\-json\fR flag the output is printed as a JSON array containing objects with a \fBname\fR and a \fBcode\fR field\.
+.IP "" 0
+.P
+Difference from list\-pages and list\-categories
+.IP "" 4
+Unlike other list commands, fetching every supported language from the ArchWiki only takes a short amount of time\. Because of this no page/language file is required and everytime the command is executed all languages are simply re\-fetched from the ArchWiki API\.
+.IP
+This does mean that this command does not work without an internet connection, unlike list\-pages and list\-categories after downloading a page file\.
+.IP "" 0
 .SH "EXAMPLES"
+\fBarchwiki\-rs list\-languages\fR
+.IP "" 4
+Fetch language info from the ArchWiki and print it to \fBstdout\fR as a table with a CODE and NAME column\.
+.IP "" 0
+.P
+\fBarchwiki\-rs list\-languages \-\-json\fR
+.IP "" 4
+Fetch language info from the ArchWiki and print it to \fBstdout\fR as a JSON object array\.
+.IP "" 0
 .SH "AUTHOR"
 June L\. Gschwantner lucygschwantner@gmail\.com

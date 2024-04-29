@@ -3,11 +3,35 @@ archwiki-rs-list-languages -- List all languages that the ArchWiki supports
 
 ## SYNOPSIS
 
+`archwiki-rs list-languages [OPTIONS]...`
 
 ## DESCRIPTION
 
+List Languages
+
+> Prints a table of language names and codes to `stdout`. By passing the
+> `-j|--json` flag the output is printed as a JSON array containing objects with a `name`
+> and a `code` field.
+
+Difference from list-pages and list-categories
+
+> Unlike other list commands, fetching every supported language from the ArchWiki only takes
+> a short amount of time. Because of this no page/language file is required and everytime
+> the command is executed all languages are simply re-fetched from the ArchWiki API.
+>
+> This does mean that this command does not work without an internet connection, unlike
+> list-pages and list-categories after downloading a page file.
 
 ## EXAMPLES
+
+`archwiki-rs list-languages`
+
+> Fetch language info from the ArchWiki and print it to `stdout` as a table with a CODE and
+> NAME column.
+
+`archwiki-rs list-languages --json`
+
+> Fetch language info from the ArchWiki and print it to `stdout` as a JSON object array.
 
 ## AUTHOR
 
