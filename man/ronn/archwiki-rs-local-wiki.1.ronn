@@ -10,7 +10,7 @@ archwiki-rs-local-wiki -- Download a copy of the ArchWiki
 Preface
 
 > Requiers a page file. Run `archwiki-rs sync-wiki` to create a page file or see `man
-> archwiki-rs-sync-wiki` for more information for more information.
+> archwiki-rs-sync-wiki` for more information.
 
 Downloading a local wiki
 

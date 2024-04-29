@@ -4,7 +4,31 @@
 .SH "NAME"
 \fBarchwiki\-rs\-list\-pages\fR \- List all pages from the ArchWiki
 .SH "SYNOPSIS"
+\fBarchwiki\-rs list\-pages [OPTIONS]\|\.\|\.\|\.\fR
 .SH "DESCRIPTION"
+Preface
+.IP "" 4
+Requiers a page file\. Run \fBarchwiki\-rs sync\-wiki\fR to create a page file or see \fBman archwiki\-rs\-sync\-wiki\fR for more information\.
+.IP "" 0
+.P
+Listing pages
+.IP "" 4
+By default this command prints a formatted tree of categories and their descendant pages\. If you only want to display the pages in a specific set of categories you can pass the \fB\-c|\-\-categories\fR option with a "," delimited string of categories that you want to print\.
+.IP "" 0
+.P
+Parsing output
+.IP "" 4
+If you are creating a CLI tool or other application that needs a list of pages you can either pass the \fB\-f|\-\-flatten\fR flag for a newline delimited list that only contains unique page names or you can pass the \fB\-j|\-\-json\fR flag to print the output (including categories) as JSON\.
+.IP "" 0
 .SH "EXAMPLES"
+\fBarchwiki\-rs list\-pages\fR
+.IP "" 4
+Print a formatted tree of categories and the pages that they contain\.
+.IP "" 0
+.P
+\fBarchwiki\-rs list\-pages \-\-categories "Email clients,Xorg commands" \-\-flatten\fR
+.IP "" 4
+Print a newline separated list of all unique page names that are contained in on or more of the categories "Email clients" and "Xorg commands"\.
+.IP "" 0
 .SH "AUTHOR"
 June L\. Gschwantner lucygschwantner@gmail\.com

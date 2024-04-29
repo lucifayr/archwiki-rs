@@ -3,11 +3,38 @@ archwiki-rs-list-pages -- List all pages from the ArchWiki
 
 ## SYNOPSIS
 
+`archwiki-rs list-pages [OPTIONS]...`
 
 ## DESCRIPTION
 
+Preface
+
+> Requiers a page file. Run `archwiki-rs sync-wiki` to create a page file or see `man
+> archwiki-rs-sync-wiki` for more information.
+
+Listing pages
+
+> By default this command prints a formatted tree of categories and their descendant pages. If
+> you only want to display the pages in a specific set of categories you can pass the
+> `-c|--categories` option with a "," delimited string of categories that you want to print.
+
+Parsing output
+
+> If you are creating a CLI tool or other application that needs a list of pages you can
+> either pass the `-f|--flatten` flag for a newline delimited list that only contains unique
+> page names or you can pass the `-j|--json` flag to print the output (including categories)
+> as JSON.
 
 ## EXAMPLES
+
+`archwiki-rs list-pages`
+
+> Print a formatted tree of categories and the pages that they contain.
+
+`archwiki-rs list-pages --categories "Email clients,Xorg commands" --flatten`
+
+> Print a newline separated list of all unique page names that are contained in on or more
+> of the categories "Email clients" and "Xorg commands".
 
 ## AUTHOR
 
