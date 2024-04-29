@@ -4,7 +4,35 @@
 .SH "NAME"
 \fBarchwiki\-rs\-sync\-wiki\fR \- Download metadata information about the pages and categories on the ArchWiki
 .SH "SYNOPSIS"
+\fBarchwiki\-rs sync\-wiki [OPTIONS]\|\.\|\.\|\.\fR
 .SH "DESCRIPTION"
+Fetches a list of page and category names from the ArchWiki and stores it to disk for later use\. By default data is stored in \fBdata direcotry\fR (see \fBman archwiki\-rs\-info\fR) as a YAML file\.
+.P
+Structure
+.IP "" 4
+The file contains a list of all pages and any categories that reference them in the following format
+.IP
+\fBpage_1\fR
+.br
+\fB\- cat_1\fR
+.br
+\fB\- cat_2\fR
+.br
+.IP
+\fBpage_2\fR
+.br
+\fB\- cat_1\fR
+.br
+.IP "" 0
 .SH "EXAMPLES"
+\fBarchwiki\-rs sync\-wiki \-\-hide\-progress\fR
+.IP "" 4
+Download metadata without displaying any loading indicators or info text when the download is finished\.
+.IP "" 0
+.P
+\fBarchwiki\-rs sync\-wiki \-\-print \-\-json\fR
+.IP "" 4
+Download metadata and print it to \fBstdout\fR as JSON instead of writing it to a file\.
+.IP "" 0
 .SH "AUTHOR"
 June L\. Gschwantner lucygschwantner@gmail\.com

@@ -3,11 +3,36 @@ archwiki-rs-sync-wiki -- Download metadata information about the pages and categ
 
 ## SYNOPSIS
 
+`archwiki-rs sync-wiki [OPTIONS]...`
 
 ## DESCRIPTION
 
+Fetches a list of page and category names from the ArchWiki and stores it to disk for
+later use. By default data is stored in `data direcotry` (see `man archwiki-rs-info`) as a
+YAML file.
+
+Structure
+
+> The file contains a list of all pages and any categories that reference them in the
+> following format
+>
+> `page_1`<br>
+> `- cat_1`<br>
+> `- cat_2`<br>
+>
+> `page_2`<br>
+> `- cat_1`<br>
 
 ## EXAMPLES
+
+`archwiki-rs sync-wiki --hide-progress`
+
+> Download metadata without displaying any loading indicators or info text when the download
+> is finished.
+
+`archwiki-rs sync-wiki --print --json`
+
+> Download metadata and print it to `stdout` as JSON instead of writing it to a file.
 
 ## AUTHOR
 
