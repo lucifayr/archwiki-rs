@@ -3,11 +3,28 @@ archwiki-rs-list-categories -- List all categories from the ArchWiki
 
 ## SYNOPSIS
 
+`archwiki-rs list-categories [OPTIONS]...`
 
 ## DESCRIPTION
 
+Preface
+
+> Requiers a page file. Run `archwiki-rs sync-wiki` to create a page file or see `man
+> archwiki-rs-sync-wiki` for more information.
+
+Listing pages
+
+> Prints a newline separated list of category names fetched from the ArchWiki.
 
 ## EXAMPLES
+
+`archwiki-rs list-categories`
+
+> Print the list of categories.
+
+`archwiki-rs list-categories --json`
+
+> Print the list of categories as a JSON array.
 
 ## AUTHOR
 

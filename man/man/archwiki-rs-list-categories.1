@@ -4,7 +4,26 @@
 .SH "NAME"
 \fBarchwiki\-rs\-list\-categories\fR \- List all categories from the ArchWiki
 .SH "SYNOPSIS"
+\fBarchwiki\-rs list\-categories [OPTIONS]\|\.\|\.\|\.\fR
 .SH "DESCRIPTION"
+Preface
+.IP "" 4
+Requiers a page file\. Run \fBarchwiki\-rs sync\-wiki\fR to create a page file or see \fBman archwiki\-rs\-sync\-wiki\fR for more information\.
+.IP "" 0
+.P
+Listing pages
+.IP "" 4
+Prints a newline separated list of category names fetched from the ArchWiki\.
+.IP "" 0
 .SH "EXAMPLES"
+\fBarchwiki\-rs list\-categories\fR
+.IP "" 4
+Print the list of categories\.
+.IP "" 0
+.P
+\fBarchwiki\-rs list\-categories \-\-json\fR
+.IP "" 4
+Print the list of categories as a JSON array\.
+.IP "" 0
 .SH "AUTHOR"
 June L\. Gschwantner lucygschwantner@gmail\.com
