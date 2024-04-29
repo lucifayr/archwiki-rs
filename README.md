@@ -26,6 +26,7 @@
     - [Setup shell completion](#setup-shell-completion)
   - [Plugins](#plugins)
     - [Useful info for plugin developers](#useful-info-for-plugin-developers)
+      - [Manual pages](#manual-pages)
       - [Outputting JSON](#outputting-json)
   - [Alternatives](#alternatives)
   <!--toc:end-->
@@ -215,6 +216,14 @@ Here's a list of programs that have plugins for `archwiki-rs` to make your life 
 - [Obsidian](https://gitlab.com/lucifayr/archwiki-obsidian) (only supported up to v2.2.3)
 
 ### Useful info for plugin developers
+
+#### Manual pages
+
+Every command/sub-command has a manual page that goes into more detail about the technical
+details of the command and its behavior. See `man archwiki-rs` to get started.
+
+> Keep in mind that not all info in the man pages is guaranteed to be correct. If you find
+> any mistakes you are welcome to let me know or to file a PR.
 
 #### Outputting JSON
 
