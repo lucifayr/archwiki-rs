@@ -49,7 +49,7 @@ build-wasm-bundler:
 
 build-wasm: build-wasm-web build-wasm-nodejs build-wasm-bundler
 
-bump-cli : check-version-cli
+bump-cli : check-version-cli manual
 	cargo build --release
 	git add Cargo.toml Cargo.lock
 	git commit -m "bump cli version to $(CLI_VERSION)" || printf "WARNING: nothing to commit for cli version bump"
@@ -79,10 +79,14 @@ push-tags:
 	git push --follow-tags
 	git push --follow-tags github
 
-publish-no-bump-cli :
+artifacts-cli :
+	mkdir -p artifacts
+	tar -czf artifacts/man.tar.gz man/man
+
+publish-no-bump-cli : artifacts-cli
 	cargo publish
-	glab release create "v$(CLI_VERSION)" -n "cli v$(CLI_VERSION)"
-	gh release create "v$(CLI_VERSION)" -t "cli v$(CLI_VERSION)" --generate-notes --target main --latest=true
+	glab release create "v$(CLI_VERSION)" -n "cli v$(CLI_VERSION)" './artifacts/man.tar.gz#manual pages'
+	gh release create "v$(CLI_VERSION)" -t "cli v$(CLI_VERSION)" './artifacts/man.tar.gz#manual pages' --generate-notes --target main --latest=true
 
 publish-no-bump-wasm-web :
 	wasm-pack publish $(WASM_WEB_PKG_DIR)
