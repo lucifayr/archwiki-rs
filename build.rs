@@ -21,8 +21,10 @@ fn main() {
 
 #[cfg(not(debug_assertions))]
 fn save_man_pages() -> Result<(), Box<dyn std::error::Error>> {
-    let home = std::env::var("HOME")?;
-    let man_dir = std::path::Path::new(&home).join(".local/share/man/man1");
+    let man_dir = manpath_from_env()
+        .or(manpath_from_cmd())
+        .or(manpath_from_data_dir())
+        .ok_or("No directory for manual pages found")?;
 
     let man_pages = std::fs::read_dir(std::path::Path::new("./man/man/"))?;
     for page in man_pages {
@@ -32,6 +34,48 @@ fn save_man_pages() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+#[cfg(not(debug_assertions))]
+fn manpath_from_env() -> Option<std::path::PathBuf> {
+    let man_path_list = std::env::var("MANPATH").ok()?;
+    let paths = man_path_list.split(':');
+    for path_str in paths {
+        let path = std::path::Path::new(path_str).join("man1");
+        if path.exists() && !std::fs::metadata(&path).ok()?.permissions().readonly() {
+            return Some(path.to_path_buf());
+        }
+    }
+
+    None
+}
+
+#[cfg(not(debug_assertions))]
+fn manpath_from_cmd() -> Option<std::path::PathBuf> {
+    let cmd_out = std::process::Command::new("manpath").output().ok()?;
+    let man_path_list = String::from_utf8(cmd_out.stdout).ok()?;
+    let paths = man_path_list.split(':');
+    for path_str in paths {
+        let path = std::path::Path::new(path_str).join("man1");
+        if path.exists() && !std::fs::metadata(&path).ok()?.permissions().readonly() {
+            return Some(path.to_path_buf());
+        }
+    }
+
+    None
+}
+
+#[cfg(not(debug_assertions))]
+fn manpath_from_data_dir() -> Option<std::path::PathBuf> {
+    let home = std::env::var("HOME").ok()?;
+    let data_dir = std::path::Path::new(&home).join(".local/share/");
+    if data_dir.exists() && !std::fs::metadata(&data_dir).ok()?.permissions().readonly() {
+        let path = data_dir.join("man/man1");
+        std::fs::create_dir_all(&path).ok()?;
+        Some(path.to_path_buf())
+    } else {
+        None
+    }
 }
 
 #[cfg(debug_assertions)]
